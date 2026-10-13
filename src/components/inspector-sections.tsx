@@ -144,7 +144,7 @@ export const StyleSection: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.style_presets_label}
         </label>
