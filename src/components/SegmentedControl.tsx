@@ -49,7 +49,11 @@ export function SegmentedControl<T extends string>({
                 : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
             }`}
           >
-            {opt.icon && <span className="w-3.5 h-3.5">{opt.icon}</span>}
+            {/* Lucide icons default to 24px regardless of the slot; force
+                them into it or they overflow and overlap the label. */}
+            {opt.icon && (
+              <span className="w-3.5 h-3.5 shrink-0 [&_svg]:size-full">{opt.icon}</span>
+            )}
             <span>{opt.label}</span>
           </Radio.Root>
         );
