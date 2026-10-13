@@ -61,7 +61,6 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           style={{
             width: `${width}px`,
             height: `${height}px`,
-            fontFamily: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif",
           }}
           className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden shadow-2xl rounded-2xl`}
         >
