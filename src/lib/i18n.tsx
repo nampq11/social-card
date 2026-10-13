@@ -39,6 +39,9 @@ const vi = {
   reset_title: 'Đặt lại mặc định',
   reset_button: 'Mặc định',
   presets_label: 'Mẫu nhanh (Presets)',
+  preset_original: 'Mẫu gốc (Tậu đất)',
+  preset_ship_ai: 'Ship dự án AI mới',
+  preset_tech_note: 'Tech Note / Quote',
   ratio_label: 'Tỉ lệ khung hình (Aspect Ratio)',
   ratio_square: '1:1 Vuông',
   ratio_portrait: '4:5 Dọc',
@@ -62,6 +65,7 @@ const vi = {
   qr_cta_label: 'Nội dung CTA bên cạnh QR',
   avatar_read_error: 'Không đọc được nội dung ảnh. Vui lòng thử file khác!',
   avatar_file_error: 'Không thể đọc file ảnh. Vui lòng thử lại!',
+  avatar_too_large: 'Ảnh quá lớn (tối đa 5 MB). Vui lòng chọn file nhỏ hơn!',
 
   copy_processing: 'Đang xử lý ảnh Retina...',
   copy_success: 'Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.',
@@ -85,6 +89,9 @@ const vi = {
   empty_headline_hint: 'NHẬP TIÊU ĐỀ TẠI ĐÂY',
 };
 
+/** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
+export type UiCopyKey = keyof typeof vi;
+
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
   language_toggle_title: 'Switch interface language',
@@ -96,6 +103,9 @@ const en: typeof vi = {
   reset_title: 'Reset to defaults',
   reset_button: 'Reset',
   presets_label: 'Quick presets',
+  preset_original: 'Original sample (Bought land)',
+  preset_ship_ai: 'Just shipped an AI project',
+  preset_tech_note: 'Tech Note / Quote',
   ratio_label: 'Aspect ratio',
   ratio_square: '1:1 Square',
   ratio_portrait: '4:5 Portrait',
@@ -119,6 +129,7 @@ const en: typeof vi = {
   qr_cta_label: 'CTA text beside QR',
   avatar_read_error: 'Couldn\'t read that image. Try a different file!',
   avatar_file_error: 'Couldn\'t read the image file. Please try again!',
+  avatar_too_large: 'That image is over 5 MB. Please choose a smaller file!',
 
   copy_processing: 'Processing Retina image...',
   copy_success: 'Image copied! Paste (Ctrl+V) straight into Threads or X.',

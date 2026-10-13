@@ -87,12 +87,12 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="flex flex-wrap gap-1.5">
           {SAMPLE_PRESETS.map((p) => (
             <button
-              key={p.name}
+              key={p.id}
               type="button"
               onClick={() => onChange({ ...data, ...p.state })}
               className="px-2.5 py-1 text-xs font-medium rounded-lg bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-neutral-700 dark:text-neutral-300 border border-black/[0.04] dark:border-white/[0.06] apple-button transition-all cursor-pointer"
             >
-              {p.name}
+              {copy[p.nameKey]}
             </button>
           ))}
         </div>
