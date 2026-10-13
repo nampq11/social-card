@@ -8,9 +8,11 @@ import { Header } from './components/Header';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
 import { toFilename } from './lib/card-text';
 import { logDebug } from './lib/log-debug';
+import { useUiCopy } from './lib/i18n';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 export function App() {
+  const { language } = useUiCopy();
   const [cardState, setCardState] = useState<CardState>(DEFAULT_CARD_STATE);
   const [scale, setScale] = useState<number>(0.85);
   const [isCopied, setIsCopied] = useState<boolean>(false);
@@ -101,7 +103,7 @@ export function App() {
           <div className="w-full flex items-center justify-between px-3 py-2 mb-3 text-xs text-neutral-500">
             <div className="flex items-center gap-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              <span>{ratioLabel(cardState.ratio)}</span>
+              <span>{ratioLabel(cardState.ratio, language)}</span>
             </div>
 
             {/* Zoom Controls */}
