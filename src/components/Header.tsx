@@ -1,6 +1,7 @@
 import React from 'react';
 import { Copy, Check, Download, Layers, Globe } from 'lucide-react';
 import { useUiCopy } from '../lib/i18n';
+import { Button } from './ui/Button';
 
 interface HeaderProps {
   onCopy: () => void;
@@ -42,15 +43,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
           {/* Copy to Clipboard (Hero action) */}
-          <button
-            type="button"
+          <Button
             onClick={onCopy}
             disabled={isExporting}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-[background-color,color,box-shadow] duration-150 ease-out apple-button cursor-pointer ${
-              isCopied
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                : 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 shadow-sm'
-            }`}
+            variant={isCopied ? 'success' : 'primary'}
+            size="lg"
           >
             {isCopied ? (
               <>
@@ -63,30 +60,23 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>{copy.copy_button}</span>
               </>
             )}
-          </button>
+          </Button>
 
           {/* Download PNG */}
-          <button
-            type="button"
-            onClick={onDownload}
-            disabled={isExporting}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-colors duration-150 ease-out cursor-pointer"
-          >
+          <Button onClick={onDownload} disabled={isExporting}>
             <Download className="w-3.5 h-3.5" />
             <span>{copy.download_button}</span>
-          </button>
+          </Button>
 
           {/* Interface Language toggle (compact; provider owns persistence/sync) */}
-          <button
-            type="button"
+          <Button
             onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
             title={copy.language_toggle_title}
             aria-label={copy.language_toggle_title}
-            className="flex items-center gap-1 px-2.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-colors duration-150 ease-out cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5" />
             <span>{language === 'vi' ? 'VI' : 'EN'}</span>
-          </button>
+          </Button>
         </div>
       </div>
     </header>

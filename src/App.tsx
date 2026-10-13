@@ -9,6 +9,7 @@ import { toFilename } from './lib/card-text';
 import { useFlash } from './lib/use-flash';
 import { logDebug } from './lib/log-debug';
 import { useUiCopy } from './lib/i18n';
+import { Button } from './components/ui/Button';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 export function App() {
@@ -99,23 +100,21 @@ export function App() {
 
             {/* Zoom Controls */}
             <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-lg p-0.5 border border-black/[0.03]">
-              <button
-                type="button"
+              <Button
+                size="icon"
                 onClick={() => setScale((s) => Math.max(0.4, Number((s - 0.1).toFixed(2))))}
-                className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
                 title={copy.zoom_out_title}
               >
                 <ZoomOut className="w-3.5 h-3.5" />
-              </button>
+              </Button>
               <span className="px-1.5 font-mono text-[11px]">{Math.round(scale * 100)}%</span>
-              <button
-                type="button"
+              <Button
+                size="icon"
                 onClick={() => setScale((s) => Math.min(1.2, Number((s + 0.1).toFixed(2))))}
-                className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
                 title={copy.zoom_in_title}
               >
                 <ZoomIn className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
 
