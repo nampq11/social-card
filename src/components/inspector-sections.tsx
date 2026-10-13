@@ -233,10 +233,10 @@ export const StyleSection: React.FC = () => {
           onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
           className="flex w-full cursor-pointer select-none"
         >
-          <Slider.Control className="flex w-full touch-none items-center py-1">
+          <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
             <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
               <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-              <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+              <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>

@@ -5,6 +5,27 @@
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Be Vietnam Pro", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Touch polish: no gray tap flash, and the viewport-locked shell never
+       rubber-bands or chains scrolls past its own overflow. */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Touch ergonomics (Apple HIG 44pt minimum): every control row grows to
+     44px on coarse pointers, and text entry renders at 16px so iOS Safari
+     doesn't auto-zoom the locked viewport on focus. !important is required
+     against per-field utility font sizes; base-ui's visually-hidden native
+     inputs stay excluded so their sr-only boxes are untouched. */
+  @media (pointer: coarse) {
+    .apple-button {
+      min-height: 2.75rem;
+    }
+    input:where(:not([type='radio'], [type='checkbox'], [type='range'], [type='file'])),
+    textarea,
+    select {
+      min-height: 2.75rem;
+      font-size: 1rem !important;
+    }
   }
 }
 
