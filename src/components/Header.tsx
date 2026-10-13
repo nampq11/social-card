@@ -69,38 +69,41 @@ export const Header: React.FC<HeaderProps> = ({
             <Redo2 />
           </Button>
 
-          {/* Copy to Clipboard (Hero action) */}
-          <Button
-            onClick={onCopy}
-            disabled={isExporting}
-            variant={isCopied ? 'success' : 'primary'}
-            size="lg"
-            className="whitespace-nowrap"
-            aria-label={isCopied ? copy.copy_button_done : copy.copy_button}
-          >
-            {isCopied ? (
-              <>
-                <Check className="text-white stroke-[2.5]" />
-                <span className="hidden sm:inline">{copy.copy_button_done}</span>
-              </>
-            ) : (
-              <>
-                <Copy className="stroke-[2]" />
-                <span className="hidden sm:inline">{copy.copy_button}</span>
-              </>
-            )}
-          </Button>
+          {/* Export actions — one spotlight anchor for the tour (data-tour). */}
+          <div data-tour="export" className="flex items-center gap-2 sm:gap-2.5">
+            {/* Copy to Clipboard (Hero action) */}
+            <Button
+              onClick={onCopy}
+              disabled={isExporting}
+              variant={isCopied ? 'success' : 'primary'}
+              size="lg"
+              className="whitespace-nowrap"
+              aria-label={isCopied ? copy.copy_button_done : copy.copy_button}
+            >
+              {isCopied ? (
+                <>
+                  <Check className="text-white stroke-[2.5]" />
+                  <span className="hidden sm:inline">{copy.copy_button_done}</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="stroke-[2]" />
+                  <span className="hidden sm:inline">{copy.copy_button}</span>
+                </>
+              )}
+            </Button>
 
-          {/* Download PNG */}
-          <Button
-            onClick={onDownload}
-            disabled={isExporting}
-            className="whitespace-nowrap"
-            aria-label={copy.download_button}
-          >
-            <Download />
-            <span className="hidden sm:inline">{copy.download_button}</span>
-          </Button>
+            {/* Download PNG */}
+            <Button
+              onClick={onDownload}
+              disabled={isExporting}
+              className="whitespace-nowrap"
+              aria-label={copy.download_button}
+            >
+              <Download />
+              <span className="hidden sm:inline">{copy.download_button}</span>
+            </Button>
+          </div>
 
           {/* Interface Language toggle (compact; provider owns persistence/sync) */}
           <Button

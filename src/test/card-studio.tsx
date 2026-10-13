@@ -5,6 +5,7 @@ import { afterEach, beforeEach } from 'vitest';
 import { UiCopyProvider } from '../lib/i18n';
 import { useCardStore } from '../lib/card-store';
 import { DEFAULT_CARD_STATE } from '../constants/presets';
+import { ONBOARDING_STORAGE_KEY } from '../lib/onboarding';
 import './match-media';
 
 // Shared jsdom scaffolding for studio component tests: every suite starts
@@ -16,6 +17,10 @@ export function setupCardStudioTest() {
     // localStorage, which jsdom keeps across tests in a file — clear it so
     // every suite starts in the default language regardless of order.
     window.localStorage.clear();
+    // Component suites test a returning visitor: the first-run welcome card
+    // (a modal) would otherwise gate every interaction. First-run behavior
+    // has its own onboarding suites without this seeding.
+    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, '"done"');
     // Merge-set to factory-fresh state (state AND history). resetCard() is
     // itself an undoable edit now, so it can't serve as test isolation.
     useCardStore.setState({

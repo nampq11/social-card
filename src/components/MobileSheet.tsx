@@ -23,8 +23,12 @@ export function MobileSheet() {
   const tabTitle = copy[active.nameKey];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
-      <nav aria-label={copy.inspector_title} className="flex justify-center px-3 pb-1.5">
+    <div data-tour="inspector" className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
+      <nav
+        data-tour="inspector-tabs"
+        aria-label={copy.inspector_title}
+        className="flex justify-center px-3 pb-1.5"
+      >
         <SegmentedControl<InspectorTabId>
           value={tab}
           onChange={setTab}

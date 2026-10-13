@@ -7,6 +7,9 @@ import { useStudioShortcuts } from './lib/use-studio-shortcuts';
 import { Inspector } from './components/Inspector';
 import { MobileSheet } from './components/MobileSheet';
 import { TipsPopover } from './components/TipsPopover';
+import { WelcomeCard } from './components/WelcomeCard';
+import { OnboardingTour } from './components/OnboardingTour';
+import { useOnboarding } from './lib/onboarding';
 import { CardPreview } from './components/CardPreview';
 import { Header } from './components/Header';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
@@ -43,6 +46,10 @@ export function App() {
   // Export feedback is Sonner's job (promise toasts); the only transient
   // button state left here is the copy action's "Copied!" flag on useFlash.
   const [isCopied, copiedFlag] = useFlash<boolean>(false);
+
+  // First-run onboarding lives purely in the UI layer — it never touches
+  // Card State; both paths (tour taken or skipped) persist via localStorage.
+  const { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour } = useOnboarding();
 
   const cardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -131,7 +138,7 @@ export function App() {
                 </Button>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                 <span className="font-medium">{ratioLabel(cardState.ratio, language)}</span>
-                <TipsPopover />
+                <TipsPopover onReplayTour={startTour} />
               </div>
 
               {/* Zoom Controls — manual override on top of Fit-to-View */}
@@ -158,6 +165,7 @@ export function App() {
           {/* Card Desk Canvas — bounded by the shell; the card fits inside it */}
           <div
             ref={canvasRef}
+            data-tour="canvas"
             // pb-48 on mobile reserves room for the sheet's peek + toolbar
             // (their combined height) so Fit-to-View never hides behind them.
             className={`relative w-full flex-1 min-h-0 bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-inner ${
@@ -173,7 +181,7 @@ export function App() {
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                   {ratioLabel(cardState.ratio, language)}
                 </span>
-                <TipsPopover />
+                <TipsPopover onReplayTour={startTour} />
               </div>
             )}
           </div>
@@ -181,6 +189,10 @@ export function App() {
       </main>
 
       {!isDesktop && <MobileSheet />}
+
+      {/* First-run onboarding: welcome gate + opt-in spotlight tour. */}
+      <WelcomeCard open={isWelcomeOpen} onStartTour={startTour} onSkip={dismissWelcome} />
+      <OnboardingTour open={isTourOpen} onOpenChange={(next) => !next && endTour()} />
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
       <Toaster position="bottom-center" />

@@ -19,7 +19,10 @@ export const Inspector: React.FC = () => {
   const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0];
 
   return (
-    <aside className="w-96 shrink-0 flex flex-col gap-4 p-6 rounded-3xl glass-panel shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-y-auto min-h-0">
+    <aside
+      data-tour="inspector"
+      className="w-96 shrink-0 flex flex-col gap-4 p-6 rounded-3xl glass-panel shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-y-auto min-h-0"
+    >
       {/* Header & Quick Reset */}
       <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
         <div className="flex items-center gap-2">
@@ -34,7 +37,7 @@ export const Inspector: React.FC = () => {
         </Button>
       </div>
 
-      <nav aria-label={copy.inspector_title} className="flex justify-center">
+      <nav data-tour="inspector-tabs" aria-label={copy.inspector_title} className="flex justify-center">
         <SegmentedControl<InspectorTabId>
           value={tab}
           onChange={setTab}
