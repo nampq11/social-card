@@ -1,20 +1,27 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CardPreview } from './CardPreview';
 import { UiCopyProvider } from '../lib/i18n';
-import { DEFAULT_CARD_STATE, FALLBACK_AUTHOR_NAME } from '../constants/presets';
+import { useCardStore } from '../lib/card-store';
+import { FALLBACK_AUTHOR_NAME } from '../constants/presets';
 import type { CardState } from '../types';
 
 afterEach(() => {
   cleanup();
 });
 
+beforeEach(() => {
+  useCardStore.getState().resetCard();
+});
+
 const renderCard = (state: Partial<CardState> = {}) => {
-  const data: CardState = { ...DEFAULT_CARD_STATE, ...state };
+  act(() => {
+    useCardStore.getState().patchCard(state);
+  });
   return render(
     <UiCopyProvider>
-      <CardPreview data={data} />
+      <CardPreview />
     </UiCopyProvider>
   );
 };
@@ -40,20 +47,14 @@ describe('CardPreview', () => {
   });
 
   it('applies uppercase styling when uppercaseHeadline is enabled', () => {
-    const { rerender } = render(
-      <UiCopyProvider>
-        <CardPreview data={{ ...DEFAULT_CARD_STATE, uppercaseHeadline: true }} />
-      </UiCopyProvider>
-    );
+    renderCard({ uppercaseHeadline: true });
 
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1.className).toContain('uppercase');
 
-    rerender(
-      <UiCopyProvider>
-        <CardPreview data={{ ...DEFAULT_CARD_STATE, uppercaseHeadline: false }} />
-      </UiCopyProvider>
-    );
+    act(() => {
+      useCardStore.getState().patchCard({ uppercaseHeadline: false });
+    });
     expect(h1.className).not.toContain('uppercase');
   });
 

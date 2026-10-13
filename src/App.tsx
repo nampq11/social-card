@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-import type { CardState } from './types';
-import { DEFAULT_CARD_STATE } from './constants/presets';
+import { useCardStore } from './lib/card-store';
 import { ratioLabel } from './constants/ratios';
 import { Inspector } from './components/Inspector';
 import { CardPreview } from './components/CardPreview';
@@ -10,66 +9,70 @@ import { toFilename } from './lib/card-text';
 import { useFlash } from './lib/use-flash';
 import { logDebug } from './lib/log-debug';
 import { useUiCopy } from './lib/i18n';
+import { Button } from './components/ui/Button';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 export function App() {
   const { copy, language } = useUiCopy();
-  const [cardState, setCardState] = useState<CardState>(DEFAULT_CARD_STATE);
+  // The Card State lives in its store; the app root only reads it for the
+  // canvas toolbar label and the export filename — no threading, no copies.
+  const cardState = useCardStore((s) => s.card);
   const [scale, setScale] = useState<number>(0.85);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Transient feedback (status toast, "Copied!" flag) is owned by the
-  // useFlash module: sticky progress via set, auto-hidden results via flash.
-  const [statusMessage, status] = useFlash<string | null>(null, 3000);
+  // Export feedback is Sonner's job (promise toasts); the only transient
+  // button state left here is the copy action's "Copied!" flag on useFlash.
   const [isCopied, copiedFlag] = useFlash<boolean>(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Shared shell for export actions: guards re-entry, shows a progress
-  // message, then runs the success path or logs the failure with a toast.
-  const runExport = async (
-    processingMessage: string,
-    action: (card: HTMLDivElement) => Promise<void>,
-    onSuccess: () => void,
-    errorMessage: string
+  // Shared shell for export actions: guards re-entry, then flows the action
+  // through one promise-style toast (processing → success/error) — Sonner
+  // owns queueing, timing and interruption, the UI Copy stays ours.
+  const runExport = (
+    action: (card: HTMLDivElement) => Promise<unknown>,
+    messages: { loading: string; success: string; error: string },
+    onSuccess?: () => void
   ) => {
     const card = cardRef.current;
     if (!card || isExporting) return;
     setIsExporting(true);
-    status.set(processingMessage);
-
-    try {
-      await action(card);
-      onSuccess();
-    } catch (err) {
-      logDebug('App.runExport', `export failed during "${processingMessage}"`, err);
-      status.flash(errorMessage);
-    } finally {
-      setIsExporting(false);
-    }
+    const request = action(card);
+    toast.promise(request, {
+      loading: messages.loading,
+      success: () => {
+        onSuccess?.();
+        return messages.success;
+      },
+      error: messages.error,
+    });
+    // Sonner turns the rejection into the error toast; this catch keeps the
+    // failure log and clears the re-entry guard on either outcome.
+    request
+      .catch((err) => logDebug('App.runExport', `export failed during "${messages.loading}"`, err))
+      .finally(() => setIsExporting(false));
   };
 
   const handleCopy = () =>
     runExport(
-      copy.copy_processing,
-      async (card) => {
-        await copyCardToClipboard(card);
+      (card) => copyCardToClipboard(card),
+      {
+        loading: copy.copy_processing,
+        success: copy.copy_success,
+        error: copy.copy_error,
       },
-      () => {
-        copiedFlag.flash(true, 3500);
-        status.flash(copy.copy_success, 3500);
-      },
-      copy.copy_error
+      () => copiedFlag.flash(true, 3500)
     );
 
   const handleDownload = () =>
     runExport(
-      copy.download_processing,
-      async (card) => {
-        await downloadCardImage(card, toFilename(cardState.headline));
-      },
-      () => status.flash(copy.download_success),
-      copy.download_error
+      (card) => downloadCardImage(card, toFilename(cardState.headline)),
+      {
+        loading: copy.download_processing,
+        success: copy.download_success,
+        error: copy.download_error,
+      }
     );
 
   return (
@@ -85,12 +88,7 @@ export function App() {
       {/* Main Studio Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 pb-12 flex flex-col lg:flex-row gap-8 items-start justify-center">
         {/* Left: Apple Inspector Sidebar */}
-        <Inspector
-          data={cardState}
-          onChange={setCardState}
-          onReset={() => setCardState(DEFAULT_CARD_STATE)}
-          onError={(message) => status.flash(message)}
-        />
+        <Inspector />
 
         {/* Center / Right: Live Canvas Studio */}
         <div className="flex-1 w-full flex flex-col items-center">
@@ -103,37 +101,28 @@ export function App() {
 
             {/* Zoom Controls */}
             <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-lg p-0.5 border border-black/[0.03]">
-              <button
-                type="button"
+              <Button
+                size="icon"
                 onClick={() => setScale((s) => Math.max(0.4, Number((s - 0.1).toFixed(2))))}
-                className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
                 title={copy.zoom_out_title}
               >
                 <ZoomOut className="w-3.5 h-3.5" />
-              </button>
+              </Button>
               <span className="px-1.5 font-mono text-[11px]">{Math.round(scale * 100)}%</span>
-              <button
-                type="button"
+              <Button
+                size="icon"
                 onClick={() => setScale((s) => Math.min(1.2, Number((s + 0.1).toFixed(2))))}
-                className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
                 title={copy.zoom_in_title}
               >
                 <ZoomIn className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Card Desk Canvas */}
           <div className="w-full min-h-[580px] bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl p-8 flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-auto shadow-inner relative">
-            <CardPreview ref={cardRef} data={cardState} scale={scale} />
+            <CardPreview ref={cardRef} scale={scale} />
           </div>
-
-          {/* Floating Status Notification / Toast */}
-          {statusMessage && (
-            <div className="status-toast mt-4 px-4 py-2 rounded-full glass-panel border border-black/10 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-neutral-200 shadow-lg">
-              {statusMessage}
-            </div>
-          )}
 
           {/* Social Platform Tips */}
           <div className="w-full mt-6 flex items-start gap-2.5 p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] text-xs text-neutral-500 leading-relaxed">
@@ -142,6 +131,8 @@ export function App() {
           </div>
         </div>
       </main>
+      {/* Export feedback lives in this toast region — bottom-center per spec. */}
+      <Toaster position="bottom-center" />
     </div>
   );
 }
