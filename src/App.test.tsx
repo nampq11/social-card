@@ -121,4 +121,42 @@ describe('App', () => {
     deferred.resolve(true);
     expect(await within(await toastRegion()).findByText(dictionaries.en.copy_success)).toBeTruthy();
   });
+
+  it('editing enables Header undo; undoing restores the previous Card State', () => {
+    renderApp();
+
+    fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
+      target: { value: 'Ship ngày mai:' },
+    });
+    expect(cardHeadline()).toBe('Ship ngày mai:');
+
+    fireEvent.click(screen.getByRole('button', { name: /Hoàn tác/ }));
+    expect(cardHeadline()).toBe(DEFAULT_CARD_STATE.headline);
+
+    fireEvent.click(screen.getByRole('button', { name: /Làm lại/ }));
+    expect(cardHeadline()).toBe('Ship ngày mai:');
+  });
+
+  it('Cmd+Z / Cmd+Shift+Z undo and redo from the keyboard', () => {
+    renderApp();
+
+    fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
+      target: { value: 'Ship ngày mai:' },
+    });
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(cardHeadline()).toBe(DEFAULT_CARD_STATE.headline);
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true, shiftKey: true });
+    expect(cardHeadline()).toBe('Ship ngày mai:');
+  });
+
+  it('the panel toggle (button and Ctrl+\\) collapses and restores the Inspector', () => {
+    renderApp();
+
+    fireEvent.click(screen.getByRole('button', { name: /bảng điều khiển/ }));
+    expect(screen.queryByLabelText(/Tiêu đề chính/)).toBeNull();
+
+    fireEvent.keyDown(window, { key: '\\', ctrlKey: true });
+    expect(screen.getByLabelText(/Tiêu đề chính/)).toBeTruthy();
+  });
 });

@@ -31,6 +31,14 @@ export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language';
 const vi = {
   header_tagline: 'Tạo ảnh chuẩn mẫu cho X, Threads & Facebook',
   language_toggle_title: 'Đổi ngôn ngữ giao diện',
+  style_presets_label: 'Mẫu phong cách',
+  style_preset_classic: 'Cổ điển',
+  style_preset_midnight: 'Đêm thẫm',
+  style_preset_minimal: 'Tối giản',
+  style_preset_billboard: 'Áp phích',
+  undo_button_title: 'Hoàn tác (Ctrl+Z)',
+  redo_button_title: 'Làm lại (Ctrl+Shift+Z)',
+  inspector_toggle_title: 'Ẩn/hiện bảng điều khiển (Ctrl+\\)',
   copy_button: 'Copy ảnh (Ctrl+V)',
   copy_button_done: 'Đã copy vào Clipboard!',
   download_button: 'Tải PNG 2x',
@@ -76,10 +84,16 @@ const vi = {
   download_error: 'Lỗi khi tải ảnh. Vui lòng thử lại!',
   zoom_out_title: 'Thu nhỏ xem trước',
   zoom_in_title: 'Phóng to xem trước',
+  zoom_fit_title: 'Vừa khung xem trước',
+
+  tab_content: 'Nội dung',
+  tab_style: 'Kiểu',
+  tab_identity: 'Định danh',
+  sheet_toggle_title: 'Mở hoặc thu gọn bảng tùy chỉnh',
+  tips_title: 'Gợi ý đăng bài',
 
   posting_tips: (
     <>
-      <strong className="text-neutral-700 dark:text-neutral-300">Gợi ý đăng bài:</strong>{' '}
       Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code>{' '}
       và <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị
       hoàn hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
@@ -93,9 +107,26 @@ const vi = {
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
 export type UiCopyKey = keyof typeof vi;
 
+/**
+ * UI Copy keys whose value is plain text (excludes JSX fragments like the
+ * posting tips). Use it wherever a copy key must yield a string — aria
+ * labels, option labels — not just children content.
+ */
+export type UiStringKey = {
+  [K in keyof typeof vi]: (typeof vi)[K] extends string ? K : never;
+}[keyof typeof vi];
+
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
   language_toggle_title: 'Switch interface language',
+  style_presets_label: 'Style presets',
+  style_preset_classic: 'Classic',
+  style_preset_midnight: 'Midnight',
+  style_preset_minimal: 'Minimal',
+  style_preset_billboard: 'Billboard',
+  undo_button_title: 'Undo (Ctrl+Z)',
+  redo_button_title: 'Redo (Ctrl+Shift+Z)',
+  inspector_toggle_title: 'Toggle panel (Ctrl+\\)',
   copy_button: 'Copy image (Ctrl+V)',
   copy_button_done: 'Copied to clipboard!',
   download_button: 'Download PNG 2x',
@@ -141,10 +172,17 @@ const en: typeof vi = {
   download_error: 'Download failed. Please try again!',
   zoom_out_title: 'Zoom out preview',
   zoom_in_title: 'Zoom in preview',
+  zoom_fit_title: 'Fit preview to view',
+
+  tab_content: 'Content',
+  tab_style: 'Style',
+  tab_identity: 'Identity',
+  sheet_toggle_title: 'Expand or collapse the panel',
+  tips_title: 'Posting tips',
 
   posting_tips: (
     <>
-      <strong className="text-neutral-700 dark:text-neutral-300">Posting tips:</strong> The{' '}
+      The{' '}
       <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> and{' '}
       <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> ratios look
       best on the mobile timelines of Threads and X. Use <strong>Copy image</strong> to paste

@@ -1,0 +1,64 @@
+// @vitest-environment jsdom
+import { fireEvent, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { MobileSheet } from './MobileSheet';
+import { useCardStore } from '../lib/card-store';
+import { DEFAULT_CARD_STATE } from '../constants/presets';
+import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio';
+
+setupCardStudioTest();
+
+const renderSheet = () => renderWithUiCopy(<MobileSheet />);
+
+describe('MobileSheet', () => {
+  it('opens on the Content tab: presets and headline, no style controls', () => {
+    renderSheet();
+
+    expect(screen.getByText(/Mẫu nhanh/)).not.toBeNull();
+    expect(screen.getByLabelText(/Tiêu đề chính/)).not.toBeNull();
+    expect(screen.queryByLabelText(/Tỉ lệ khung hình/)).toBeNull();
+  });
+
+  it('swaps the hosted Inspector group when a tab is activated', () => {
+    renderSheet();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }));
+
+    expect(screen.getByLabelText(/Tỉ lệ khung hình/)).not.toBeNull();
+    expect(screen.getByRole('slider', { name: /Cỡ chữ tiêu đề/ })).not.toBeNull();
+    expect(screen.queryByLabelText(/Tiêu đề chính/)).toBeNull();
+  });
+
+  it('hosts the Identity group: author fields and the QR toggle', () => {
+    renderSheet();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Định danh/ }));
+
+    expect(screen.getByLabelText(/^Tên$/)).not.toBeNull();
+    expect(screen.getByRole('switch', { name: /Mã QR & Kêu gọi/ })).not.toBeNull();
+  });
+
+  it('the drag handle expands and collapses the sheet as a button', () => {
+    renderSheet();
+
+    const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ });
+    expect(handle.getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.click(handle);
+    expect(handle.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(handle);
+    expect(handle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('Reset in the sheet header restores the default Card State', () => {
+    renderSheet();
+
+    fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
+      target: { value: 'Sửa thử trên mobile' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Mặc định/ }));
+
+    expect(useCardStore.getState().card.headline).toBe(DEFAULT_CARD_STATE.headline);
+  });
+});

@@ -66,3 +66,41 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
     },
   },
 ];
+
+// Style Presets (GLOSSARY.md) restyle the card without touching any Card
+// Content field: one click writes the full style quadruple as a single
+// undoable step. Preset names are UI Copy — resolved through the dictionary
+// at render time, never stored on the state.
+export type StylePresetState = Pick<
+  CardState,
+  'theme' | 'ratio' | 'headlineSize' | 'uppercaseHeadline'
+>;
+
+export interface StylePreset {
+  id: string;
+  nameKey: UiCopyKey;
+  state: StylePresetState;
+}
+
+export const STYLE_PRESETS: StylePreset[] = [
+  {
+    id: 'classic',
+    nameKey: 'style_preset_classic',
+    state: { theme: 'paper', ratio: '1:1', headlineSize: 42, uppercaseHeadline: true },
+  },
+  {
+    id: 'midnight',
+    nameKey: 'style_preset_midnight',
+    state: { theme: 'dark', ratio: '4:5', headlineSize: 46, uppercaseHeadline: true },
+  },
+  {
+    id: 'minimal',
+    nameKey: 'style_preset_minimal',
+    state: { theme: 'white', ratio: '1:1', headlineSize: 34, uppercaseHeadline: false },
+  },
+  {
+    id: 'billboard',
+    nameKey: 'style_preset_billboard',
+    state: { theme: 'dark', ratio: '16:9', headlineSize: 54, uppercaseHeadline: true },
+  },
+];
