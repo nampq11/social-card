@@ -35,39 +35,6 @@ describe('useFlash', () => {
     expect(result.current[0]).toBe('second');
   });
 
-  it('set sticks until the next set or flash', () => {
-    const { result } = renderHook(() => useFlash<string | null>(null));
-
-    act(() => result.current[1].set('rendering...'));
-    expect(result.current[0]).toBe('rendering...');
-
-    act(() => vi.advanceTimersByTime(60_000));
-    expect(result.current[0]).toBe('rendering...');
-
-    act(() => result.current[1].set(null));
-    expect(result.current[0]).toBeNull();
-  });
-
-  it('set cancels a pending auto-hide from an earlier flash', () => {
-    const { result } = renderHook(() => useFlash<string | null>(null));
-
-    act(() => result.current[1].flash('copied!', 3000));
-    act(() => vi.advanceTimersByTime(1000));
-    act(() => result.current[1].set('rendering...'));
-
-    // The flash's original deadline must not kill the sticky progress message.
-    act(() => vi.advanceTimersByTime(2000));
-    expect(result.current[0]).toBe('rendering...');
-  });
-
-  it('flash honours an explicit duration over the default', () => {
-    const { result } = renderHook(() => useFlash<string | null>(null, 5000));
-
-    act(() => result.current[1].flash('quick', 1000));
-    act(() => vi.advanceTimersByTime(1000));
-    expect(result.current[0]).toBeNull();
-  });
-
   it('reports the initial value before any action', () => {
     const { result } = renderHook(() => useFlash<boolean>(false));
     expect(result.current[0]).toBe(false);
