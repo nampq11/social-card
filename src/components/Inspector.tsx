@@ -271,7 +271,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset })
                 type="text"
                 value={data.qrUrl}
                 onChange={(e) => update('qrUrl', e.target.value)}
-                placeholder="https://github.com/nampq"
+                placeholder="https://github.com/nampq11"
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>

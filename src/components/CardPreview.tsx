@@ -114,7 +114,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border border-black/5 dark:border-white/10`}
                 >
                   <QRCodeSVG
-                    value={data.qrUrl || 'https://github.com/nampq'}
+                    value={data.qrUrl || 'https://github.com/nampq11'}
                     size={48}
                     fgColor={themeStyles.qrFg}
                     bgColor="transparent"

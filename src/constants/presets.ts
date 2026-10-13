@@ -2,12 +2,12 @@ import type { CardState } from '../types';
 
 export const DEFAULT_CARD_STATE: CardState = {
   headline: 'EM VỪA ĐƯỢC TẬU ĐẤT:',
-  sublines: 'github.com/nampq\nthreads.net/@nampq',
+  sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: 'Nam Pham',
   authorBio: 'AI Engineer • Building AI Agents',
   avatarUrl: '/avatar.png',
   qrEnabled: true,
-  qrUrl: 'https://github.com/nampq',
+  qrUrl: 'https://github.com/nampq11',
   qrCta: 'Build Trợ lý AI cho riêng bạn!',
   ratio: '1:1',
   theme: 'paper',
@@ -30,7 +30,7 @@ export const SAMPLE_PRESETS: { name: string; state: Partial<CardState> }[] = [
     name: 'Ship dự án AI mới',
     state: {
       headline: 'VỪA SHIP XONG DỰ ÁN AI MỚI:',
-      sublines: 'github.com/nampq/social-card\nTrải nghiệm ngay tại link bên dưới 👇',
+      sublines: 'github.com/nampq11/social-card\nTrải nghiệm ngay tại link bên dưới 👇',
       qrCta: 'Quét để xem mã nguồn dự án!',
       theme: 'paper',
       uppercaseHeadline: true,
