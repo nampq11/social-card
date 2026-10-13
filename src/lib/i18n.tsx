@@ -29,11 +29,13 @@ export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language';
  */
 const vi = {
   header_tagline: 'Tạo ảnh chuẩn mẫu cho X, Threads & Facebook',
+  language_toggle_title: 'Đổi ngôn ngữ giao diện',
   copy_button: 'Copy ảnh (Ctrl+V)',
 };
 
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
+  language_toggle_title: 'Switch interface language',
   copy_button: 'Copy image (Ctrl+V)',
 };
 

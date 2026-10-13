@@ -1,5 +1,6 @@
 import React from 'react';
-import { Copy, Check, Download, Layers } from 'lucide-react';
+import { Copy, Check, Download, Layers, Globe } from 'lucide-react';
+import { useUiCopy } from '../lib/i18n';
 
 interface HeaderProps {
   onCopy: () => void;
@@ -14,6 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
   isCopied,
   isExporting,
 }) => {
+  const { language, setLanguage, copy } = useUiCopy();
   return (
     <header className="sticky top-4 z-40 w-full max-w-6xl mx-auto mb-6 px-4">
       <div className="flex items-center justify-between px-5 py-3 rounded-2xl glass-panel shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-black/[0.05] dark:border-white/[0.08]">
@@ -72,6 +74,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Download className="w-3.5 h-3.5" />
             <span>Tải PNG 2x</span>
+          </button>
+
+          {/* Interface Language toggle (compact; provider owns persistence/sync) */}
+          <button
+            type="button"
+            onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+            title={copy.language_toggle_title}
+            aria-label={copy.language_toggle_title}
+            className="flex items-center gap-1 px-2.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-all cursor-pointer"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>{language === 'vi' ? 'VI' : 'EN'}</span>
           </button>
         </div>
       </div>
