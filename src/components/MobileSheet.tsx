@@ -39,11 +39,12 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
   const tabTitle = copy[active.nameKey];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
+    <div data-tour="inspector" className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
       {/* The drag hook transforms this nav with the sheet: the pill docks to
           the sheet's live top edge — at peek it hugs the peeked sheet below
           the canvas instead of floating over the card. */}
       <nav
+        data-tour="inspector-tabs"
         ref={navRef}
         aria-label={copy.inspector_title}
         className="flex justify-center px-3 pb-1.5 will-change-transform"

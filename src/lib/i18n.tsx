@@ -102,6 +102,30 @@ const vi = {
   ) as ReactNode,
 
   empty_headline_hint: 'NHẬP TIÊU ĐỀ TẠI ĐÂY',
+
+  onboarding_welcome_title: 'Chào mừng đến Social Card!',
+  onboarding_welcome_body:
+    'Tạo ảnh chia sẻ chuẩn tỉ lệ cho Threads, X & Facebook trong vài chục giây.',
+  onboarding_tour_cta: 'Khám phá 30 giây',
+  onboarding_skip: 'Bỏ qua, dùng ngay',
+
+  tour_step_canvas_title: 'Ảnh xem trước trực tiếp',
+  tour_step_canvas_body: 'Mọi chỉnh sửa cập nhật ngay tại đây. Card luôn sẵn sàng để chia sẻ.',
+  tour_step_inspector_title: 'Bảng điều khiển',
+  tour_step_inspector_body:
+    'Sửa tiêu đề, nội dung chi tiết và chọn Mẫu nhanh trong tab Nội dung.',
+  tour_step_tabs_title: 'Đổi kiểu & định danh',
+  tour_step_tabs_body:
+    'Tab Kiểu đổi tỉ lệ khung hình và màu nền; tab Định danh cho avatar, tên và mã QR.',
+  tour_step_export_title: 'Xuất ảnh trong 1 nhấp',
+  tour_step_export_body:
+    'Copy ảnh rồi dán (Ctrl+V) thẳng vào Threads/X, hoặc tải PNG chuẩn Retina.',
+  tour_next: 'Tiếp',
+  tour_prev: 'Lùi',
+  tour_skip: 'Bỏ qua',
+  tour_finish: 'Xong',
+  tour_close: 'Đóng hướng dẫn',
+  replay_tour: 'Xem lại hướng dẫn',
 };
 
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
@@ -191,6 +215,28 @@ const en: typeof vi = {
   ) as ReactNode,
 
   empty_headline_hint: 'ENTER YOUR HEADLINE HERE',
+
+  onboarding_welcome_title: 'Welcome to Social Card!',
+  onboarding_welcome_body:
+    'Create share-ready card images for Threads, X & Facebook in under a minute.',
+  onboarding_tour_cta: 'Take the 30s tour',
+  onboarding_skip: 'Skip, I will explore',
+
+  tour_step_canvas_title: 'Live preview',
+  tour_step_canvas_body: 'Every edit updates this card instantly. It is always ready to share.',
+  tour_step_inspector_title: 'The Inspector',
+  tour_step_inspector_body: 'Edit the headline, sublines and pick a Preset in the Content tab.',
+  tour_step_tabs_title: 'Style & identity',
+  tour_step_tabs_body:
+    'The Style tab switches ratio and background; Identity holds your avatar, name and QR.',
+  tour_step_export_title: 'Export in one click',
+  tour_step_export_body: 'Copy the image and paste (Ctrl+V) straight into Threads/X, or download Retina PNG.',
+  tour_next: 'Next',
+  tour_prev: 'Back',
+  tour_skip: 'Skip',
+  tour_finish: 'Finish',
+  tour_close: 'Close tour',
+  replay_tour: 'Replay the guide',
 };
 
 export const dictionaries: Record<Language, typeof vi> = { vi, en };

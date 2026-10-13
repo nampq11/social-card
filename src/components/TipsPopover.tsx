@@ -1,13 +1,19 @@
 import { Popover } from '@base-ui/react/popover';
-import { Info } from 'lucide-react';
+import { Info, Sparkles } from 'lucide-react';
 import { useUiCopy } from '../lib/i18n';
 import { Button } from './ui/Button';
 
+interface TipsPopoverProps {
+  /** Restarts the first-run tour on demand (NN/g: easy to dismiss, easy to recall). */
+  onReplayTour: () => void;
+}
+
 /**
  * The posting-tips note (one per canvas toolbar). A popover keeps the tips
- * reachable without spending viewport height — ADR 0002.
+ * reachable without spending viewport height — ADR 0002. Also hosts the tour
+ * replay so the onboarding stays recallable after the first run.
  */
-export function TipsPopover() {
+export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
   const { copy } = useUiCopy();
 
   return (
@@ -31,6 +37,19 @@ export function TipsPopover() {
               {copy.tips_title}
             </Popover.Title>
             <Popover.Description>{copy.posting_tips}</Popover.Description>
+            <Popover.Close
+              render={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 -ml-1 text-blue-600 dark:text-blue-400"
+                >
+                  <Sparkles />
+                  <span>{copy.replay_tour}</span>
+                </Button>
+              }
+              onClick={onReplayTour}
+            />
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
