@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createRef } from 'react';
 import { fireEvent, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MobileSheet } from './MobileSheet';
 import { useCardStore } from '../lib/card-store';
 import { DEFAULT_CARD_STATE } from '../constants/presets';
@@ -61,5 +61,24 @@ describe('MobileSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: /Mặc định/ }));
 
     expect(useCardStore.getState().card.headline).toBe(DEFAULT_CARD_STATE.headline);
+  });
+
+  it('a drag from the sheet header captures the pointer only past the tap threshold', () => {
+    // jsdom implements no pointer capture; the contract under test is that
+    // the hook takes the stream over — without it, a mouse leaving the row
+    // mid-drag strands the sheet between resting points (regression, #18).
+    renderSheet();
+    const row = document.querySelector(
+      'section .flex.items-center.justify-between'
+    ) as HTMLElement;
+    const capture = vi.fn();
+    row.setPointerCapture = capture;
+
+    fireEvent.pointerDown(row, { pointerId: 1, clientY: 500 });
+    fireEvent.pointerMove(row, { pointerId: 1, clientY: 496 });
+    expect(capture).not.toHaveBeenCalled();
+
+    fireEvent.pointerMove(row, { pointerId: 1, clientY: 460 });
+    expect(capture).toHaveBeenCalledWith(1);
   });
 });

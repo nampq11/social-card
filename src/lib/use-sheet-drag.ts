@@ -18,6 +18,17 @@ import {
 
 // Below this travel a pointer sequence is a tap, not a drag (gesture hysteresis).
 const TAP_THRESHOLD_PX = 10;
+
+/** jsdom implements no pointer capture; in browsers a dead pointer id is
+ * rejected (InvalidPointerId) — both must degrade to an uncaptured drag. */
+function takePointerCapture(el: HTMLElement, pointerId: number) {
+  if (typeof el.setPointerCapture !== 'function') return;
+  try {
+    el.setPointerCapture(pointerId);
+  } catch {
+    // The pointer is already gone; the release handlers will no-op.
+  }
+}
 // Velocity is measured over a short trailing window of pointer positions.
 const VELOCITY_WINDOW_MS = 100;
 
@@ -33,6 +44,8 @@ interface DragState {
   startY: number;
   startOffset: number;
   moved: number;
+  /** True once this gesture owns the pointer stream (explicit capture). */
+  captured: boolean;
   history: { t: number; y: number }[];
 }
 
@@ -63,6 +76,7 @@ export function useSheetDrag(
     startY: 0,
     startOffset: 0,
     moved: 0,
+    captured: false,
     history: [],
   }).current;
   const rafId = useRef<number | null>(null);
@@ -172,9 +186,9 @@ export function useSheetDrag(
 
   // Shared grab: interrupts any spring and starts 1:1 tracking. `capture`
   // retargets the pointer stream to that element — right for the bare
-  // handle, wrong above live buttons: an explicit capture would carry the
-  // trailing click away from them. Touch pointers are implicitly captured
-  // to their target, so chrome drags keep streaming moves either way.
+  // handle at pointerdown, wrong above live buttons: an explicit capture
+  // would carry the trailing click away from them. Chrome rows therefore
+  // capture late, in the move handler, once travel proves a drag.
   const makePointerDown = useCallback(
     (capture: boolean) => (e: ReactPointerEvent<HTMLElement>) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -184,8 +198,12 @@ export function useSheetDrag(
       drag.startY = e.clientY;
       drag.startOffset = drag.offset;
       drag.moved = 0;
+      drag.captured = false;
       drag.history = [{ t: performance.now(), y: e.clientY }];
-      if (capture) e.currentTarget.setPointerCapture(e.pointerId);
+      if (capture) {
+        drag.captured = true;
+        takePointerCapture(e.currentTarget, e.pointerId);
+      }
     },
     [cancelSpring, drag]
   );
@@ -201,6 +219,17 @@ export function useSheetDrag(
 
       const dy = e.clientY - drag.startY;
       drag.moved = Math.max(drag.moved, Math.abs(dy));
+
+      // Capture late: chrome drags must not capture at pointerdown (that
+      // would steal taps from the buttons inside), but only touch pointers
+      // are implicitly captured — a mouse leaving the row mid-drag would
+      // stop streaming moves and never deliver its release, stranding the
+      // sheet between resting points. Past the tap threshold this is a
+      // real drag, so take the stream over from there.
+      if (!drag.captured && drag.moved >= TAP_THRESHOLD_PX) {
+        drag.captured = true;
+        takePointerCapture(e.currentTarget, e.pointerId);
+      }
 
       let next = drag.startOffset + dy;
       if (next < 0) {
