@@ -4,8 +4,10 @@ import { clsx } from 'clsx';
 // Shared primitives layer: one visual language for every button in the
 // studio (Header actions, Inspector controls, app-root toolbar).
 // `apple-button` carries the tactile press feedback defined in index.css.
+// focus-visible ring: the one keyboard affordance every studio button shares.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center text-xs apple-button cursor-pointer [&_svg]:size-3.5 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center text-xs apple-button cursor-pointer [&_svg]:size-3.5 [&_svg]:shrink-0 ' +
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60',
   {
     variants: {
       variant: {
@@ -22,7 +24,7 @@ const buttonVariants = cva(
         sm: 'gap-1 rounded-lg px-2.5 py-1',
         md: 'gap-1.5 rounded-xl px-3.5 py-2',
         lg: 'gap-1.5 rounded-xl px-4 py-2',
-        icon: 'rounded-lg p-1',
+        icon: 'rounded-lg p-1 [@media(pointer:coarse)]:min-w-11',
       },
     },
     defaultVariants: {
