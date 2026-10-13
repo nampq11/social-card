@@ -101,7 +101,6 @@ describe('Inspector segmented controls a11y', () => {
     expect(paper.getAttribute('aria-checked')).toBe('true');
     expect(dark.getAttribute('aria-checked')).toBe('false');
   });
-});
 
   it('keeps one tab stop per control group, on the checked option', async () => {
     renderInspector();
@@ -158,3 +157,4 @@ describe('Inspector segmented controls a11y', () => {
     });
     expect(useCardStore.getState().card.ratio).toBe('16:9');
   });
+});
