@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
 import type { CardState } from './types';
 import { DEFAULT_CARD_STATE } from './constants/presets';
+import { ratioLabel } from './constants/ratios';
 import { Inspector } from './components/Inspector';
 import { CardPreview } from './components/CardPreview';
 import { Header } from './components/Header';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
+import { toFilename } from './lib/card-text';
+import { logDebug } from './lib/log-debug';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 export function App() {
@@ -21,50 +24,56 @@ export function App() {
     setTimeout(() => setStatusMessage(null), durationMs);
   };
 
-  const handleCopy = async () => {
-    if (!cardRef.current || isExporting) return;
+  // Shared shell for export actions: guards re-entry, shows a progress
+  // message, then runs the success path or logs the failure with a toast.
+  const runExport = async (
+    processingMessage: string,
+    action: (card: HTMLDivElement) => Promise<void>,
+    onSuccess: () => void,
+    errorMessage: string
+  ) => {
+    const card = cardRef.current;
+    if (!card || isExporting) return;
     setIsExporting(true);
-    setStatusMessage('Đang xử lý ảnh Retina...');
+    setStatusMessage(processingMessage);
 
     try {
-      await copyCardToClipboard(cardRef.current);
-      setIsCopied(true);
-      setStatusMessage('Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.');
-      setTimeout(() => {
-        setIsCopied(false);
-        setStatusMessage(null);
-      }, 3500);
+      await action(card);
+      onSuccess();
     } catch (err) {
-      console.error(err);
-      setStatusMessage('Không thể copy vào clipboard. Hãy thử tải ảnh PNG!');
-      setTimeout(() => setStatusMessage(null), 3000);
+      logDebug('App.runExport', `export failed during "${processingMessage}"`, err);
+      flashStatus(errorMessage);
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleDownload = async () => {
-    if (!cardRef.current || isExporting) return;
-    setIsExporting(true);
-    setStatusMessage('Đang kết xuất file PNG 2x...');
+  const handleCopy = () =>
+    runExport(
+      'Đang xử lý ảnh Retina...',
+      async (card) => {
+        await copyCardToClipboard(card);
+      },
+      () => {
+        setIsCopied(true);
+        setStatusMessage('Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.');
+        setTimeout(() => {
+          setIsCopied(false);
+          setStatusMessage(null);
+        }, 3500);
+      },
+      'Không thể copy vào clipboard. Hãy thử tải ảnh PNG!'
+    );
 
-    try {
-      const slug = cardState.headline
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      const filename = `${slug || 'social-card'}.png`;
-      await downloadCardImage(cardRef.current, filename);
-      setStatusMessage('Đã tải ảnh về máy thành công!');
-      setTimeout(() => setStatusMessage(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setStatusMessage('Lỗi khi tải ảnh. Vui lòng thử lại!');
-      setTimeout(() => setStatusMessage(null), 3000);
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  const handleDownload = () =>
+    runExport(
+      'Đang kết xuất file PNG 2x...',
+      async (card) => {
+        await downloadCardImage(card, toFilename(cardState.headline));
+      },
+      () => flashStatus('Đã tải ảnh về máy thành công!'),
+      'Lỗi khi tải ảnh. Vui lòng thử lại!'
+    );
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#0B0B0C] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans transition-colors duration-200">
@@ -92,13 +101,7 @@ export function App() {
           <div className="w-full flex items-center justify-between px-3 py-2 mb-3 text-xs text-neutral-500">
             <div className="flex items-center gap-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              <span>
-                {cardState.ratio === '1:1'
-                  ? 'Square (2048 × 2048 px) — Threads, X, Instagram'
-                  : cardState.ratio === '4:5'
-                  ? 'Portrait (1080 × 1350 px) — Tối ưu màn hình Mobile'
-                  : 'Landscape (1920 × 1080 px) — X Card, Facebook Post'}
-              </span>
+              <span>{ratioLabel(cardState.ratio)}</span>
             </div>
 
             {/* Zoom Controls */}

@@ -1,6 +1,9 @@
 import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { CardState } from '../types';
+import { RATIO_INFO } from '../constants/ratios';
+import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets';
+import { splitSublines } from '../lib/card-text';
 
 interface CardPreviewProps {
   data: CardState;
@@ -9,12 +12,7 @@ interface CardPreviewProps {
 
 export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
   ({ data, scale = 1 }, ref) => {
-    // Dimension presets in standard pixels for high-quality export
-    const dimensions = {
-      '1:1': { width: 720, height: 720 },
-      '4:5': { width: 640, height: 800 },
-      '16:9': { width: 800, height: 450 },
-    }[data.ratio];
+    const { width, height } = RATIO_INFO[data.ratio];
 
     // Theme styles
     const themeStyles = {
@@ -47,10 +45,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
       },
     }[data.theme];
 
-    const sublineList = data.sublines
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
+    const sublineList = splitSublines(data.sublines);
 
     return (
       <div
@@ -64,8 +59,8 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           ref={ref}
           id="social-card-node"
           style={{
-            width: `${dimensions.width}px`,
-            height: `${dimensions.height}px`,
+            width: `${width}px`,
+            height: `${height}px`,
             fontFamily: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif",
           }}
           className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden shadow-2xl rounded-2xl`}
@@ -114,7 +109,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border border-black/5 dark:border-white/10`}
                 >
                   <QRCodeSVG
-                    value={data.qrUrl || 'https://github.com/nampq11'}
+                    value={data.qrUrl || FALLBACK_QR_URL}
                     size={48}
                     fgColor={themeStyles.qrFg}
                     bgColor="transparent"
@@ -137,7 +132,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             <div className="flex items-center gap-3.5 shrink-0 ml-auto">
               <div className="text-right">
                 <h3 className="text-sm font-bold tracking-tight leading-tight">
-                  {data.authorName || 'Nam Pham'}
+                  {data.authorName || FALLBACK_AUTHOR_NAME}
                 </h3>
                 {data.authorBio && (
                   <p

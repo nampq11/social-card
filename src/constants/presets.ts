@@ -1,13 +1,19 @@
 import type { CardState } from '../types';
 
+// Shared fallbacks so the preview placeholders and the default state never
+// drift apart.
+export const FALLBACK_AUTHOR_NAME = 'Nam Pham';
+export const FALLBACK_QR_URL = 'https://github.com/nampq11';
+export const PLACEHOLDER_HEADLINE = 'NHẬP TIÊU ĐỀ TẠI ĐÂY';
+
 export const DEFAULT_CARD_STATE: CardState = {
   headline: 'EM VỪA ĐƯỢC TẬU ĐẤT:',
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
-  authorName: 'Nam Pham',
+  authorName: FALLBACK_AUTHOR_NAME,
   authorBio: 'AI Engineer • Building AI Agents',
   avatarUrl: '/avatar.png',
   qrEnabled: true,
-  qrUrl: 'https://github.com/nampq11',
+  qrUrl: FALLBACK_QR_URL,
   qrCta: 'Build Trợ lý AI cho riêng bạn!',
   ratio: '1:1',
   theme: 'paper',
