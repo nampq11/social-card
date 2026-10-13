@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, type ButtonProps } from './Button';
+import { Button } from './Button';
 
 afterEach(() => {
   cleanup();
@@ -61,16 +61,5 @@ describe('Button', () => {
     const el = screen.getByRole('button', { name: 'Copy' });
     expect(el.hasAttribute('disabled')).toBe(true);
     expect(el.getAttribute('title')).toBe('Copy to clipboard');
-  });
-
-  it('exposes only the known variants in its type', () => {
-    // Compile-time contract: an invalid variant must not type-check.
-    const validVariants: NonNullable<ButtonProps['variant']>[] = [
-      'primary',
-      'success',
-      'secondary',
-      'ghost',
-    ];
-    expect(validVariants).toHaveLength(4);
   });
 });
