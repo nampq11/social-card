@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-import type { CardState } from './types';
-import { DEFAULT_CARD_STATE } from './constants/presets';
+import { useCardStore } from './lib/card-store';
 import { ratioLabel } from './constants/ratios';
 import { Inspector } from './components/Inspector';
 import { CardPreview } from './components/CardPreview';
@@ -14,7 +13,9 @@ import { ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 export function App() {
   const { copy, language } = useUiCopy();
-  const [cardState, setCardState] = useState<CardState>(DEFAULT_CARD_STATE);
+  // The Card State lives in its store; the app root only reads it for the
+  // canvas toolbar label and the export filename — no threading, no copies.
+  const cardState = useCardStore((s) => s.card);
   const [scale, setScale] = useState<number>(0.85);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -85,12 +86,7 @@ export function App() {
       {/* Main Studio Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 pb-12 flex flex-col lg:flex-row gap-8 items-start justify-center">
         {/* Left: Apple Inspector Sidebar */}
-        <Inspector
-          data={cardState}
-          onChange={setCardState}
-          onReset={() => setCardState(DEFAULT_CARD_STATE)}
-          onError={(message) => status.flash(message)}
-        />
+        <Inspector onError={(message) => status.flash(message)} />
 
         {/* Center / Right: Live Canvas Studio */}
         <div className="flex-1 w-full flex flex-col items-center">
@@ -125,7 +121,7 @@ export function App() {
 
           {/* Card Desk Canvas */}
           <div className="w-full min-h-[580px] bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl p-8 flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-auto shadow-inner relative">
-            <CardPreview ref={cardRef} data={cardState} scale={scale} />
+            <CardPreview ref={cardRef} scale={scale} />
           </div>
 
           {/* Floating Status Notification / Toast */}

@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import type { CardState, AspectRatio, CardTheme } from '../types';
 import { SegmentedControl } from './SegmentedControl';
+import { useCardStore } from '../lib/card-store';
 import { SAMPLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets';
 import {
   Square,
@@ -23,18 +24,18 @@ import { useUiCopy } from '../lib/i18n';
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 interface InspectorProps {
-  data: CardState;
-  onChange: (updated: CardState) => void;
-  onReset: () => void;
   onError: (message: string) => void;
 }
 
-export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, onError }) => {
+export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
   const { copy } = useUiCopy();
+  const data = useCardStore((s) => s.card);
+  const patchCard = useCardStore((s) => s.patchCard);
+  const resetCard = useCardStore((s) => s.resetCard);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = <K extends keyof CardState>(key: K, value: CardState[K]) => {
-    onChange({ ...data, [key]: value });
+    patchCard({ [key]: value });
   };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +87,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         </div>
         <button
           type="button"
-          onClick={onReset}
+          onClick={resetCard}
           className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300 apple-button transition-colors cursor-pointer"
           title={copy.reset_title}
         >
@@ -105,7 +106,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             <button
               key={p.id}
               type="button"
-              onClick={() => onChange({ ...data, ...p.state })}
+              onClick={() => patchCard(p.state)}
               className="px-2.5 py-1 text-xs font-medium rounded-lg bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-neutral-700 dark:text-neutral-300 border border-black/[0.04] dark:border-white/[0.06] apple-button transition-colors duration-150 ease-out cursor-pointer"
             >
               {copy[p.nameKey]}
