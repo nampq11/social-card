@@ -18,6 +18,10 @@ import {
 import { logDebug } from '../lib/log-debug';
 import { useUiCopy } from '../lib/i18n';
 
+// Data-URL avatars live in state and get re-encoded on every export; cap the
+// source file so a stray photo-library original can't stall the studio.
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
 interface InspectorProps {
   data: CardState;
   onChange: (updated: CardState) => void;
@@ -36,6 +40,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      onError(copy.avatar_too_large);
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (uploadEvent) => {
