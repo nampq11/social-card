@@ -107,6 +107,15 @@ const vi = {
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
 export type UiCopyKey = keyof typeof vi;
 
+/**
+ * UI Copy keys whose value is plain text (excludes JSX fragments like the
+ * posting tips). Use it wherever a copy key must yield a string — aria
+ * labels, option labels — not just children content.
+ */
+export type UiStringKey = {
+  [K in keyof typeof vi]: (typeof vi)[K] extends string ? K : never;
+}[keyof typeof vi];
+
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
   language_toggle_title: 'Switch interface language',

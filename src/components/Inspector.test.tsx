@@ -12,16 +12,23 @@ setupCardStudioTest();
 
 // The Inspector itself renders no toast region; its error-toast assertions
 // need one beside it (App mounts its own inside <App />).
-const renderInspector = () => renderWithUiCopy(
-  <>
-    <Inspector />
-    <Toaster />
-  </>
-);
+const TAB_NAMES = { style: /Kiểu/, identity: /Định danh/ } as const;
+const renderInspector = (tab?: keyof typeof TAB_NAMES) => {
+  const result = renderWithUiCopy(
+    <>
+      <Inspector />
+      <Toaster />
+    </>
+  );
+  // Sections live behind Inspector tabs mirroring the Mobile Sheet groups;
+  // tests targeting a non-default group open its tab first.
+  if (tab) fireEvent.click(screen.getByRole('radio', { name: TAB_NAMES[tab] }));
+  return result;
+};
 
 describe('Inspector style presets', () => {
   it('applies theme, ratio, headline size and casing in one undoable step', () => {
-    renderInspector();
+    renderInspector('style');
 
     fireEvent.click(screen.getByRole('button', { name: /Áp phích/i }));
 
@@ -37,7 +44,7 @@ describe('Inspector style presets', () => {
   });
 
   it('marks the active style preset while its style still matches', () => {
-    renderInspector();
+    renderInspector('style');
 
     const billboard = screen.getByRole('button', { name: /Áp phích/i });
     expect(billboard.getAttribute('aria-pressed')).toBe('false');
@@ -48,13 +55,33 @@ describe('Inspector style presets', () => {
 });
 
 describe('Inspector', () => {
-  it('associates inputs with their corresponding labels', () => {
+  it('hosts the same tab groups as the Mobile Sheet, one group visible at a time', () => {
+    renderInspector();
+
+    // Content (default): Presets + Headline only.
+    expect(screen.getByLabelText(/Tiêu đề chính/i)).not.toBeNull();
+    expect(screen.queryByRole('radiogroup', { name: /Tỉ lệ khung hình/i })).toBeNull();
+    expect(screen.queryByLabelText(/^Tên$/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }));
+    expect(screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i })).not.toBeNull();
+    expect(screen.queryByLabelText(/Tiêu đề chính/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Định danh/ }));
+    expect(screen.getByLabelText(/^Tên$/i)).not.toBeNull();
+    expect(screen.queryByRole('radiogroup', { name: /Tỉ lệ khung hình/i })).toBeNull();
+  });
+
+  it('associates Content-tab inputs with their corresponding labels', () => {
     renderInspector();
 
     expect(screen.getByLabelText(/Tiêu đề chính/i)).not.toBeNull();
-    expect(screen.getByRole('checkbox', { name: /In hoa/i })).not.toBeNull();
-    expect(screen.getByRole('slider', { name: /Cỡ chữ tiêu đề/i })).not.toBeNull();
     expect(screen.getByLabelText(/Nội dung chi tiết/i)).not.toBeNull();
+  });
+
+  it('associates Identity-tab inputs with their corresponding labels', () => {
+    renderInspector('identity');
+
     expect(screen.getByLabelText(/^Tên$/i)).not.toBeNull();
     expect(screen.getByLabelText(/Bio \/ Chức danh/i)).not.toBeNull();
     expect(screen.getByLabelText(/Link liên kết/i)).not.toBeNull();
@@ -62,13 +89,13 @@ describe('Inspector', () => {
   });
 
   it('provides an accessible name and state for the QR toggle switch', () => {
-    renderInspector();
+    renderInspector('identity');
     const qrToggle = screen.getByRole('switch', { name: /Mã QR & Kêu gọi/i });
     expect(qrToggle.getAttribute('aria-checked')).toBe('true');
   });
 
   it('toggles uppercase Headline through the base-ui checkbox', () => {
-    renderInspector();
+    renderInspector('style');
     const upper = screen.getByRole('checkbox', { name: /In hoa/i });
     expect(upper.getAttribute('aria-checked')).toBe('true');
 
@@ -79,7 +106,7 @@ describe('Inspector', () => {
   });
 
   it('adjusts headline size from the slider thumb with the arrow keys', async () => {
-    renderInspector();
+    renderInspector('style');
     const thumb = screen.getByRole('slider', { name: /Cỡ chữ tiêu đề/i });
     expect(thumb.getAttribute('aria-valuenow')).toBe('42');
 
@@ -104,7 +131,7 @@ describe('Inspector', () => {
   });
 
   it('offers "use original avatar" only while the avatar differs from the default', () => {
-    renderInspector();
+    renderInspector('identity');
     expect(screen.queryByRole('button', { name: /Dùng avatar gốc/i })).toBeNull();
 
     act(() => {
@@ -119,7 +146,7 @@ describe('Inspector', () => {
   });
 
   it('rejects files exceeding MAX_AVATAR_BYTES with an error toast', async () => {
-    const { container } = renderInspector();
+    const { container } = renderInspector('identity');
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     const largeFile = new File(['x'.repeat(6 * 1024 * 1024)], 'huge.png', {
@@ -131,7 +158,7 @@ describe('Inspector', () => {
   });
 
   it('rejects non-image files with an error toast', async () => {
-    const { container } = renderInspector();
+    const { container } = renderInspector('identity');
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     const pdfFile = new File(['%PDF-1.4 dummy'], 'doc.pdf', {
@@ -143,7 +170,7 @@ describe('Inspector', () => {
   });
 
   it('resets file input value so re-selecting the same file fires change event', () => {
-    const { container } = renderInspector();
+    const { container } = renderInspector('identity');
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     const imgFile = new File(['valid-image-bytes'], 'me.png', {
@@ -159,7 +186,7 @@ describe('Headline size numeric input', () => {
   const spinbutton = () => screen.getByRole('spinbutton', { name: /Cỡ chữ tiêu đề/i });
 
   it('commits a typed size on blur', () => {
-    renderInspector();
+    renderInspector('style');
 
     fireEvent.change(spinbutton(), { target: { value: '50' } });
     fireEvent.blur(spinbutton());
@@ -169,7 +196,7 @@ describe('Headline size numeric input', () => {
   });
 
   it('clamps out-of-range sizes to the slider range', () => {
-    renderInspector();
+    renderInspector('style');
 
     fireEvent.change(spinbutton(), { target: { value: '99' } });
     fireEvent.blur(spinbutton());
@@ -181,7 +208,7 @@ describe('Headline size numeric input', () => {
   });
 
   it('keeps the previous size when the draft is not a number', () => {
-    renderInspector();
+    renderInspector('style');
 
     fireEvent.change(spinbutton(), { target: { value: 'big' } });
     fireEvent.blur(spinbutton());
@@ -191,7 +218,7 @@ describe('Headline size numeric input', () => {
   });
 
   it('follows external size changes (Style Preset applies 54)', () => {
-    renderInspector();
+    renderInspector('style');
 
     fireEvent.click(screen.getByRole('button', { name: /Áp phích/i }));
 
@@ -201,7 +228,7 @@ describe('Headline size numeric input', () => {
 
 describe('Inspector segmented controls a11y', () => {
   it('announces ratio and theme as named radio groups with the checked option identified', () => {
-    renderInspector();
+    renderInspector('style');
 
     const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
     const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
@@ -219,7 +246,7 @@ describe('Inspector segmented controls a11y', () => {
   });
 
   it('keeps one tab stop per control group, on the checked option', async () => {
-    renderInspector();
+    renderInspector('style');
 
     const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
     const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
@@ -240,7 +267,7 @@ describe('Inspector segmented controls a11y', () => {
   });
 
   it('moves the selection with the arrow keys, roving focus with it', async () => {
-    renderInspector();
+    renderInspector('style');
 
     const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
     const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
@@ -258,7 +285,7 @@ describe('Inspector segmented controls a11y', () => {
   });
 
   it('wraps arrow navigation around the ends of the group', async () => {
-    renderInspector();
+    renderInspector('style');
 
     const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
     const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });

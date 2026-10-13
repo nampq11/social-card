@@ -14,3 +14,14 @@ Users rejected the scrolling page: the studio must fit the viewport everywhere �
 - Mobile is fit-only: no zoom UI, no pinch-zoom (YAGNI for now).
 - The shell uses dynamic viewport height so browser chrome and the virtual keyboard shrink the canvas (which refits) rather than producing page scroll.
 - The posting-tips box moves into an info popover on the canvas toolbar so it stops consuming viewport height.
+
+- The Inspector itself never scrolls either (research-backed, Oct 2026): its
+  sections are grouped behind tabs from one shared registry
+  (`inspector-tabs.tsx`) that both the desktop Inspector and the Mobile Sheet
+  render — same grouping everywhere, only the container differs (Canva's
+  tab-panel convention; W3C APG's accordion scroll-reduction; NN/g in-page
+  tabs). Each tab fits a laptop-height panel (verified at 1366×768).
+  `overflow-y-auto` remains only as a degradation floor for unrealistically
+  short windows. Style Presets exist to keep cross-group work cheap: resting
+  a style is one click from any tab, so tab separation doesn't tax the
+  workflow (NN/g's cross-tab-comparison caveat).
