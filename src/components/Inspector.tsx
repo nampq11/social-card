@@ -16,6 +16,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { logDebug } from '../lib/log-debug';
+import { useUiCopy } from '../lib/i18n';
 
 interface InspectorProps {
   data: CardState;
@@ -25,6 +26,7 @@ interface InspectorProps {
 }
 
 export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, onError }) => {
+  const { copy } = useUiCopy();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = <K extends keyof CardState>(key: K, value: CardState[K]) => {
@@ -42,7 +44,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         update('avatarUrl', result as string);
       } else {
         logDebug('Inspector.handleAvatarUpload', `read "${file.name}" returned no data`);
-        onError('Không đọc được nội dung ảnh. Vui lòng thử file khác!');
+        onError(copy.avatar_read_error);
       }
     };
     reader.onerror = () => {
@@ -51,7 +53,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         `failed to read avatar file "${file.name}" (${file.size} bytes)`,
         reader.error
       );
-      onError('Không thể đọc file ảnh. Vui lòng thử lại!');
+      onError(copy.avatar_file_error);
     };
     reader.readAsDataURL(file);
   };
@@ -63,24 +65,24 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-500" />
           <h2 className="text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
-            Tùy chỉnh Card
+            {copy.inspector_title}
           </h2>
         </div>
         <button
           type="button"
           onClick={onReset}
           className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300 apple-button transition-colors cursor-pointer"
-          title="Đặt lại mặc định"
+          title={copy.reset_title}
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Mặc định</span>
+          <span>{copy.reset_button}</span>
         </button>
       </div>
 
       {/* Preset Quick Picks */}
       <div className="space-y-2">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-          Mẫu nhanh (Presets)
+          {copy.presets_label}
         </label>
         <div className="flex flex-wrap gap-1.5">
           {SAMPLE_PRESETS.map((p) => (
@@ -100,32 +102,32 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Tỉ lệ khung hình (Aspect Ratio)
+            {copy.ratio_label}
           </label>
           <SegmentedControl<AspectRatio>
             value={data.ratio}
             onChange={(r) => update('ratio', r)}
             className="w-full"
             options={[
-              { value: '1:1', label: '1:1 Vuông', icon: <Square /> },
-              { value: '4:5', label: '4:5 Dọc', icon: <RectangleVertical /> },
-              { value: '16:9', label: '16:9 Ngang', icon: <RectangleHorizontal /> },
+              { value: '1:1', label: copy.ratio_square, icon: <Square /> },
+              { value: '4:5', label: copy.ratio_portrait, icon: <RectangleVertical /> },
+              { value: '16:9', label: copy.ratio_landscape, icon: <RectangleHorizontal /> },
             ]}
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Màu nền (Theme Style)
+            {copy.theme_label}
           </label>
           <SegmentedControl<CardTheme>
             value={data.theme}
             onChange={(t) => update('theme', t)}
             className="w-full"
             options={[
-              { value: 'paper', label: 'Giấy ngà', icon: <Scroll /> },
-              { value: 'white', label: 'Trắng tinh', icon: <Sun /> },
-              { value: 'dark', label: 'Tối OLED', icon: <Moon /> },
+              { value: 'paper', label: copy.theme_paper, icon: <Scroll /> },
+              { value: 'white', label: copy.theme_white, icon: <Sun /> },
+              { value: 'dark', label: copy.theme_dark, icon: <Moon /> },
             ]}
           />
         </div>
@@ -136,7 +138,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              Tiêu đề chính (Hook)
+              {copy.headline_label}
             </label>
             <label className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
               <input
@@ -145,14 +147,14 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
                 onChange={(e) => update('uppercaseHeadline', e.target.checked)}
                 className="rounded border-neutral-300 text-blue-600 focus:ring-0 cursor-pointer"
               />
-              <span>In hoa (UPPERCASE)</span>
+              <span>{copy.uppercase_label}</span>
             </label>
           </div>
           <textarea
             rows={2}
             value={data.headline}
             onChange={(e) => update('headline', e.target.value)}
-            placeholder="EM VỪA ĐƯỢC TẬU ĐẤT:"
+            placeholder={copy.empty_headline_hint}
             className="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-neutral-400"
           />
         </div>
@@ -161,7 +163,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              Cỡ chữ tiêu đề
+              {copy.headline_size_label}
             </span>
             <span className="font-mono text-neutral-500">{data.headlineSize}px</span>
           </div>
@@ -178,7 +180,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
 
         <div className="space-y-1.5">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Nội dung chi tiết / Links (Mỗi dòng 1 ý)
+            {copy.sublines_label}
           </label>
           <textarea
             rows={3}
@@ -195,7 +197,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="flex items-center gap-1.5">
           <User className="w-3.5 h-3.5 text-neutral-500" />
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Thông tin tác giả
+            {copy.author_label}
           </span>
         </div>
 
@@ -203,7 +205,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
           <div className="relative group w-12 h-12 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
             <img
               src={data.avatarUrl}
-              alt="Avatar"
+              alt={copy.avatar_alt}
               className="w-full h-full object-cover object-top"
             />
           </div>
@@ -214,14 +216,14 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.1] text-neutral-700 dark:text-neutral-200 apple-button transition-all cursor-pointer"
             >
               <Upload className="w-3 h-3" />
-              <span>Đổi ảnh</span>
+              <span>{copy.change_photo}</span>
             </button>
             <button
               type="button"
               onClick={() => update('avatarUrl', DEFAULT_CARD_STATE.avatarUrl)}
               className="px-2 py-1.5 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 apple-button cursor-pointer"
             >
-              Dùng avatar gốc
+              {copy.original_avatar}
             </button>
             <input
               type="file"
@@ -235,7 +237,9 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-neutral-400 uppercase font-semibold">Tên</label>
+            <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              {copy.author_name_label}
+            </label>
             <input
               type="text"
               value={data.authorName}
@@ -244,7 +248,9 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             />
           </div>
           <div>
-            <label className="text-[10px] text-neutral-400 uppercase font-semibold">Bio / Chức danh</label>
+            <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              {copy.author_bio_label}
+            </label>
             <input
               type="text"
               value={data.authorBio}
@@ -261,7 +267,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
           <div className="flex items-center gap-1.5">
             <QrCode className="w-3.5 h-3.5 text-neutral-500" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              Mã QR & Kêu gọi (CTA)
+              {copy.qr_label}
             </span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -279,7 +285,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
           <div className="space-y-2">
             <div>
               <label className="text-[10px] text-neutral-400 uppercase font-semibold">
-                Link liên kết (QR URL)
+                {copy.qr_url_label}
               </label>
               <input
                 type="text"
@@ -291,7 +297,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             </div>
             <div>
               <label className="text-[10px] text-neutral-400 uppercase font-semibold">
-                Nội dung CTA bên cạnh QR
+                {copy.qr_cta_label}
               </label>
               <input
                 type="text"

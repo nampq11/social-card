@@ -4,7 +4,6 @@ import type { CardState } from '../types';
 // drift apart.
 export const FALLBACK_AUTHOR_NAME = 'Nam Pham';
 export const FALLBACK_QR_URL = 'https://github.com/nampq11';
-export const PLACEHOLDER_HEADLINE = 'NHẬP TIÊU ĐỀ TẠI ĐÂY';
 
 export const DEFAULT_CARD_STATE: CardState = {
   headline: 'EM VỪA ĐƯỢC TẬU ĐẤT:',

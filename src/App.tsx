@@ -8,9 +8,11 @@ import { Header } from './components/Header';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
 import { toFilename } from './lib/card-text';
 import { logDebug } from './lib/log-debug';
+import { useUiCopy } from './lib/i18n';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 export function App() {
+  const { copy, language } = useUiCopy();
   const [cardState, setCardState] = useState<CardState>(DEFAULT_CARD_STATE);
   const [scale, setScale] = useState<number>(0.85);
   const [isCopied, setIsCopied] = useState<boolean>(false);
@@ -50,29 +52,29 @@ export function App() {
 
   const handleCopy = () =>
     runExport(
-      'Đang xử lý ảnh Retina...',
+      copy.copy_processing,
       async (card) => {
         await copyCardToClipboard(card);
       },
       () => {
         setIsCopied(true);
-        setStatusMessage('Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.');
+        setStatusMessage(copy.copy_success);
         setTimeout(() => {
           setIsCopied(false);
           setStatusMessage(null);
         }, 3500);
       },
-      'Không thể copy vào clipboard. Hãy thử tải ảnh PNG!'
+      copy.copy_error
     );
 
   const handleDownload = () =>
     runExport(
-      'Đang kết xuất file PNG 2x...',
+      copy.download_processing,
       async (card) => {
         await downloadCardImage(card, toFilename(cardState.headline));
       },
-      () => flashStatus('Đã tải ảnh về máy thành công!'),
-      'Lỗi khi tải ảnh. Vui lòng thử lại!'
+      () => flashStatus(copy.download_success),
+      copy.download_error
     );
 
   return (
@@ -101,7 +103,7 @@ export function App() {
           <div className="w-full flex items-center justify-between px-3 py-2 mb-3 text-xs text-neutral-500">
             <div className="flex items-center gap-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              <span>{ratioLabel(cardState.ratio)}</span>
+              <span>{ratioLabel(cardState.ratio, language)}</span>
             </div>
 
             {/* Zoom Controls */}
@@ -110,7 +112,7 @@ export function App() {
                 type="button"
                 onClick={() => setScale((s) => Math.max(0.4, Number((s - 0.1).toFixed(2))))}
                 className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
-                title="Thu nhỏ xem trước"
+                title={copy.zoom_out_title}
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
@@ -119,7 +121,7 @@ export function App() {
                 type="button"
                 onClick={() => setScale((s) => Math.min(1.2, Number((s + 0.1).toFixed(2))))}
                 className="p-1 hover:bg-white dark:hover:bg-neutral-800 rounded apple-button transition-colors cursor-pointer"
-                title="Phóng to xem trước"
+                title={copy.zoom_in_title}
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
@@ -141,13 +143,7 @@ export function App() {
           {/* Social Platform Tips */}
           <div className="w-full mt-6 flex items-start gap-2.5 p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] text-xs text-neutral-500 leading-relaxed">
             <Info className="w-4 h-4 shrink-0 text-blue-500 mt-0.5" />
-            <p>
-              <strong className="text-neutral-700 dark:text-neutral-300">Gợi ý đăng bài:</strong>{' '}
-              Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code>{' '}
-              và <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị
-              hoàn hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
-              <strong>Copy ảnh</strong> để dán trực tiếp vào bài viết mà không cần tải và lưu file rác.
-            </p>
+            <p>{copy.posting_tips}</p>
           </div>
         </div>
       </main>
