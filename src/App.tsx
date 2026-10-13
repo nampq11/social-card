@@ -21,9 +21,8 @@ export function App() {
   const [scale, setScale] = useState<number>(0.85);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Transient feedback (status toast, "Copied!" flag) is owned by the
-  // useFlash module: sticky progress via set, auto-hidden results via flash.
-  const [statusMessage] = useFlash<string | null>(null, 3000);
+  // Export feedback is Sonner's job (promise toasts); the only transient
+  // button state left here is the copy action's "Copied!" flag on useFlash.
   const [isCopied, copiedFlag] = useFlash<boolean>(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -124,13 +123,6 @@ export function App() {
           <div className="w-full min-h-[580px] bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl p-8 flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-auto shadow-inner relative">
             <CardPreview ref={cardRef} scale={scale} />
           </div>
-
-          {/* Floating Status Notification / Toast */}
-          {statusMessage && (
-            <div className="status-toast mt-4 px-4 py-2 rounded-full glass-panel border border-black/10 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-neutral-200 shadow-lg">
-              {statusMessage}
-            </div>
-          )}
 
           {/* Social Platform Tips */}
           <div className="w-full mt-6 flex items-start gap-2.5 p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] text-xs text-neutral-500 leading-relaxed">

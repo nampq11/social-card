@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useFlash<T>(initial: T, defaultDurationMs?: number) {
+/**
+ * Transient button feedback that auto-hides after its duration (the copy
+ * action's "Copied!" flag). Toast-style messaging belongs to Sonner; this
+ * hook is only for state that lives on a button, not in a live region.
+ */
+export function useFlash<T>(initial: T) {
   const [value, setValue] = useState<T>(initial);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const cancelPendingAutoHide = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
   // A new flash owns the slot: any pending auto-hide from an earlier flash
   // must not clear this one early.
-  const flash = (next: T, durationMs = defaultDurationMs) => {
-    cancelPendingAutoHide();
+  const flash = (next: T, durationMs: number) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
     setValue(next);
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
@@ -22,16 +22,15 @@ export function useFlash<T>(initial: T, defaultDurationMs?: number) {
     }, durationMs);
   };
 
-  // Sticky replacement with no auto-hide: for in-progress messages that are
-  // cleared by a later action, not by the clock. Cancels any pending
-  // auto-hide so an earlier flash can't kill the sticky value mid-flight.
-  const set = (next: T) => {
-    cancelPendingAutoHide();
-    setValue(next);
-  };
-
   // No late setState after unmount: the pending auto-hide dies with the hook.
-  useEffect(() => cancelPendingAutoHide, []);
+  useEffect(
+    () => () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    },
+    []
+  );
 
-  return [value, { set, flash }] as const;
+  return [value, { flash }] as const;
 }
