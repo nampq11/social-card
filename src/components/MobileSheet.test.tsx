@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { createRef } from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MobileSheet } from './MobileSheet';
@@ -8,7 +9,7 @@ import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio';
 
 setupCardStudioTest();
 
-const renderSheet = () => renderWithUiCopy(<MobileSheet />);
+const renderSheet = () => renderWithUiCopy(<MobileSheet canvasRef={createRef()} />);
 
 describe('MobileSheet', () => {
   it('opens on the Content tab: presets and headline, no style controls', () => {

@@ -33,8 +33,9 @@ drag-driven sheet following Apple's _Designing Fluid Interfaces_: 1:1
 pointer tracking with rubber-banded edges, momentum projection picks the
 resting point on release, and a critically damped spring carries the
 release velocity (`lib/sheet-drag.ts`, `lib/use-sheet-drag.ts`). The
-transform-only animation writes `--sheet-reserve` every frame, and the
-canvas uses that var as its bottom padding — combined with content-box
+transform-only animation writes the canvas's bottom padding directly every
+frame (not through an inherited CSS variable, which would recalculate the
+whole document's styles per frame) — combined with content-box
 Fit-to-View, the card refits continuously and stays fully visible at
 every sheet position instead of hiding behind the expanded sheet.
 Expanded height stays 58dvh but is clamped to leave the canvas a visible

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { RotateCcw, Undo2, Redo2 } from 'lucide-react';
 import { SegmentedControl } from './SegmentedControl';
 import { useCardStore } from '../lib/card-store';
@@ -13,9 +13,14 @@ import { useSheetDrag } from '../lib/use-sheet-drag';
 // module) and slides between peek and expanded via transform, driven by the
 // gesture hook: 1:1 drag with rubber-banded edges, momentum projection on
 // release, and a critically damped spring carrying the release velocity.
-// --sheet-reserve (written every frame) tells the canvas how much room the
-// sheet currently occupies, so Fit-to-View keeps the card fully visible.
-export function MobileSheet() {
+// The hook writes the live reserve (nav + visible sheet height) straight to
+// the canvas padding, so Fit-to-View keeps the card fully visible as the
+// sheet moves.
+interface MobileSheetProps {
+  canvasRef: RefObject<HTMLElement | null>;
+}
+
+export function MobileSheet({ canvasRef }: MobileSheetProps) {
   const { copy } = useUiCopy();
   const resetCard = useCardStore((s) => s.resetCard);
   // Edit history joins Reset here on mobile — the Header keeps its copy only
@@ -28,7 +33,7 @@ export function MobileSheet() {
 
   const sheetRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
-  const { expanded, handleProps } = useSheetDrag(sheetRef, navRef);
+  const { expanded, handleProps, dragProps } = useSheetDrag(sheetRef, navRef, canvasRef);
 
   const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0];
   const tabTitle = copy[active.nameKey];
@@ -64,7 +69,12 @@ export function MobileSheet() {
           <span className="w-10 h-1.5 rounded-full bg-neutral-400/70 dark:bg-neutral-500/70" />
         </button>
 
-        <div className="flex items-center justify-between px-5 pb-2 shrink-0">
+        {/* Draggable chrome: taps fall through to the buttons; a real drag
+            grabs the sheet (the hook swallows the trailing click). */}
+        <div
+          {...dragProps}
+          className="flex items-center justify-between px-5 pb-2 shrink-0 touch-none"
+        >
           <span className="text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
             {tabTitle}
           </span>

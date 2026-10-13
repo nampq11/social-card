@@ -16,10 +16,6 @@ import {
   springStep,
 } from './sheet-drag';
 
-// The canvas reads this var for its bottom padding (App shell): the drag and
-// the spring keep it in lockstep with the sheet's visible height, so
-// Fit-to-View refits the card live as the sheet moves.
-const RESERVE_VAR = '--sheet-reserve';
 // Below this travel a pointer sequence is a tap, not a drag (gesture hysteresis).
 const TAP_THRESHOLD_PX = 10;
 // Velocity is measured over a short trailing window of pointer positions.
@@ -46,12 +42,14 @@ interface DragState {
  * the pointer velocity to pick a resting point, springing there with that
  * velocity carried over (Apple, "Designing Fluid Interfaces").
  *
- * All per-frame output is written straight to the DOM (transform + reserve
- * var); React state is only the settled `expanded` flag the UI Copy needs.
+ * All per-frame output is written straight to the DOM (sheet transform +
+ * canvas reserve padding); React state is only the settled `expanded` flag
+ * the UI Copy needs.
  */
 export function useSheetDrag(
   sheetRef: RefObject<HTMLElement | null>,
-  navRef: RefObject<HTMLElement | null>
+  navRef: RefObject<HTMLElement | null>,
+  canvasRef: RefObject<HTMLElement | null>
 ) {
   const [expanded, setExpanded] = useState(false);
   const drag = useRef<DragState>({
@@ -72,11 +70,16 @@ export function useSheetDrag(
   const writePosition = useCallback(() => {
     const sheet = sheetRef.current;
     if (sheet) sheet.style.transform = `translateY(${drag.offset}px)`;
-    document.documentElement.style.setProperty(
-      RESERVE_VAR,
-      `${Math.round(drag.navHeight + Math.max(0, drag.expandedPx - drag.offset))}px`
-    );
-  }, [drag, sheetRef]);
+    // Straight to the canvas element: the reserve must update per frame, but
+    // an inherited CSS variable (it would have to live on an ancestor to be
+    // readable) recalculates styles for the whole document on every write.
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.style.paddingBottom = `${Math.round(
+        drag.navHeight + Math.max(0, drag.expandedPx - drag.offset)
+      )}px`;
+    }
+  }, [canvasRef, drag, sheetRef]);
 
   const cancelSpring = useCallback(() => {
     if (rafId.current !== null) {
@@ -111,6 +114,15 @@ export function useSheetDrag(
   }, [cancelSpring, measure]);
 
   useEffect(() => cancelSpring, [cancelSpring]);
+
+  // Breakpoint crossings unmount the sheet (mobile → desktop): give the
+  // canvas its class padding back, or the inline reserve would stick.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    return () => {
+      if (canvas) canvas.style.paddingBottom = '';
+    };
+  }, [canvasRef]);
 
   const springTo = useCallback(
     (target: number, initialVelocity: number) => {
@@ -158,8 +170,13 @@ export function useSheetDrag(
     springTo(target, 0);
   }, [drag, springTo, expanded]);
 
-  const onPointerDown = useCallback(
-    (e: ReactPointerEvent<HTMLElement>) => {
+  // Shared grab: interrupts any spring and starts 1:1 tracking. `capture`
+  // retargets the pointer stream to that element — right for the bare
+  // handle, wrong above live buttons: an explicit capture would carry the
+  // trailing click away from them. Touch pointers are implicitly captured
+  // to their target, so chrome drags keep streaming moves either way.
+  const makePointerDown = useCallback(
+    (capture: boolean) => (e: ReactPointerEvent<HTMLElement>) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       // A fresh grab interrupts any running spring from the live offset.
       cancelSpring();
@@ -168,7 +185,7 @@ export function useSheetDrag(
       drag.startOffset = drag.offset;
       drag.moved = 0;
       drag.history = [{ t: performance.now(), y: e.clientY }];
-      e.currentTarget.setPointerCapture(e.pointerId);
+      if (capture) e.currentTarget.setPointerCapture(e.pointerId);
     },
     [cancelSpring, drag]
   );
@@ -246,11 +263,21 @@ export function useSheetDrag(
     expanded,
     toggle,
     handleProps: {
-      onPointerDown,
+      onPointerDown: makePointerDown(true),
       onPointerMove,
       onPointerUp,
       onPointerCancel,
       onClick: toggle,
+      onClickCapture,
+    },
+    // For chrome around live controls: taps reach the buttons untouched,
+    // a dragged gesture grabs the sheet, and its trailing click is
+    // swallowed by the shared click capture.
+    dragProps: {
+      onPointerDown: makePointerDown(false),
+      onPointerMove,
+      onPointerUp,
+      onPointerCancel,
       onClickCapture,
     },
   };

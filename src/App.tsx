@@ -159,14 +159,16 @@ export function App() {
           <div
             ref={canvasRef}
             // On mobile the bottom reserve tracks the sheet live: the drag
-            // hook writes --sheet-reserve every frame (toolbar + visible
-            // sheet height), so Fit-to-View keeps the card fully visible at
-            // every sheet position — peek, dragging, or expanded.
+            // hook writes the padding straight to this element (toolbar +
+            // visible sheet height), so Fit-to-View keeps the card fully
+            // visible at every sheet position — peek, dragging, or expanded.
             className={`relative w-full flex-1 min-h-0 bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-inner ${
-              isDesktop ? 'p-8' : 'p-4 pb-[var(--sheet-reserve,196px)]'
+              isDesktop ? 'p-8' : 'p-4'
             }`}
           >
-            <CardPreview ref={cardRef} scale={scale} />
+            {/* Fit refits per frame while the sheet drags — only manual
+                zoom steps may animate the scale. */}
+            <CardPreview ref={cardRef} scale={scale} animated={mode === 'manual'} />
 
             {/* Mobile overlay chips (ratio + tips) — no toolbar row below lg */}
             {!isDesktop && (
@@ -182,7 +184,7 @@ export function App() {
         </div>
       </main>
 
-      {!isDesktop && <MobileSheet />}
+      {!isDesktop && <MobileSheet canvasRef={canvasRef} />}
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
       <Toaster position="bottom-center" />
