@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { afterEach, beforeEach } from 'vitest';
 import { UiCopyProvider } from '../lib/i18n';
 import { useCardStore } from '../lib/card-store';
+import { DEFAULT_CARD_STATE } from '../constants/presets';
 import './match-media';
 
 // Shared jsdom scaffolding for studio component tests: every suite starts
@@ -11,7 +12,15 @@ import './match-media';
 // module-global toast queue so tests stay isolated. Call once per test file.
 export function setupCardStudioTest() {
   beforeEach(() => {
-    useCardStore.getState().resetCard();
+    // Merge-set to factory-fresh state (state AND history). resetCard() is
+    // itself an undoable edit now, so it can't serve as test isolation.
+    useCardStore.setState({
+      card: DEFAULT_CARD_STATE,
+      past: [],
+      future: [],
+      canUndo: false,
+      canRedo: false,
+    });
   });
 
   afterEach(() => {
