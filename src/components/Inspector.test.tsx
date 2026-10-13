@@ -155,6 +155,50 @@ describe('Inspector', () => {
   });
 });
 
+describe('Headline size numeric input', () => {
+  const spinbutton = () => screen.getByRole('spinbutton', { name: /Cỡ chữ tiêu đề/i });
+
+  it('commits a typed size on blur', () => {
+    renderInspector();
+
+    fireEvent.change(spinbutton(), { target: { value: '50' } });
+    fireEvent.blur(spinbutton());
+
+    expect(useCardStore.getState().card.headlineSize).toBe(50);
+    expect((spinbutton() as HTMLInputElement).value).toBe('50');
+  });
+
+  it('clamps out-of-range sizes to the slider range', () => {
+    renderInspector();
+
+    fireEvent.change(spinbutton(), { target: { value: '99' } });
+    fireEvent.blur(spinbutton());
+    expect(useCardStore.getState().card.headlineSize).toBe(60);
+
+    fireEvent.change(spinbutton(), { target: { value: '4' } });
+    fireEvent.blur(spinbutton());
+    expect(useCardStore.getState().card.headlineSize).toBe(24);
+  });
+
+  it('keeps the previous size when the draft is not a number', () => {
+    renderInspector();
+
+    fireEvent.change(spinbutton(), { target: { value: 'big' } });
+    fireEvent.blur(spinbutton());
+
+    expect(useCardStore.getState().card.headlineSize).toBe(DEFAULT_CARD_STATE.headlineSize);
+    expect((spinbutton() as HTMLInputElement).value).toBe(String(DEFAULT_CARD_STATE.headlineSize));
+  });
+
+  it('follows external size changes (Style Preset applies 54)', () => {
+    renderInspector();
+
+    fireEvent.click(screen.getByRole('button', { name: /Áp phích/i }));
+
+    expect((spinbutton() as HTMLInputElement).value).toBe('54');
+  });
+});
+
 describe('Inspector segmented controls a11y', () => {
   it('announces ratio and theme as named radio groups with the checked option identified', () => {
     renderInspector();

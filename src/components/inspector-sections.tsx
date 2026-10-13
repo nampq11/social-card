@@ -80,6 +80,55 @@ export const PresetsSection: React.FC = () => {
   );
 };
 
+const HEADLINE_SIZE_MIN = 24;
+const HEADLINE_SIZE_MAX = 60;
+
+// Direct numeric entry beside the slider (slider for exploration, typed
+// value for precision). Drafts locally and commits on blur/Enter — clamping
+// on every keystroke would fight mid-typing ("5" of "50").
+function HeadlineSizeInput({
+  value,
+  onCommit,
+}: {
+  value: number;
+  onCommit: (n: number) => void;
+}) {
+  const [draft, setDraft] = React.useState(String(value));
+  const [seenValue, setSeenValue] = React.useState(value);
+  if (seenValue !== value) {
+    // Derived state during render: an external size change (slider drag,
+    // preset, undo) resets the draft without an effect or remount.
+    setSeenValue(value);
+    setDraft(String(value));
+  }
+  const commit = () => {
+    const parsed = Number.parseInt(draft, 10);
+    const clamped = Number.isNaN(parsed)
+      ? value
+      : Math.min(HEADLINE_SIZE_MAX, Math.max(HEADLINE_SIZE_MIN, parsed));
+    onCommit(clamped);
+    setDraft(String(clamped));
+  };
+  return (
+    <span className="inline-flex items-center gap-1 font-mono text-neutral-500">
+      <input
+        type="number"
+        min={HEADLINE_SIZE_MIN}
+        max={HEADLINE_SIZE_MAX}
+        aria-labelledby="inspector-headline-size-label"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+        }}
+        className="w-12 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+      />
+      <span>px</span>
+    </span>
+  );
+}
+
 export const StyleSection: React.FC = () => {
   const { copy } = useUiCopy();
   const data = useCardStore((s) => s.card);
@@ -171,7 +220,7 @@ export const StyleSection: React.FC = () => {
           >
             {copy.headline_size_label}
           </label>
-          <span className="font-mono text-neutral-500">{data.headlineSize}px</span>
+          <HeadlineSizeInput value={data.headlineSize} onCommit={(n) => update('headlineSize', n)} />
         </div>
         <Slider.Root
           value={data.headlineSize}
