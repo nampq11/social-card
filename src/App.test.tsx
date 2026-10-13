@@ -1,13 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { toast } from 'sonner';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
-import { UiCopyProvider } from './lib/i18n';
-import { useCardStore } from './lib/card-store';
+import { dictionaries } from './lib/i18n';
 import { DEFAULT_CARD_STATE } from './constants/presets';
-import './test/match-media';
+import { renderWithUiCopy, setupCardStudioTest } from './test/card-studio';
 import { toastRegion } from './test/toast-region';
 
 // html-to-image cannot run in a jsdom DOM — the export module is the single
@@ -17,22 +15,9 @@ vi.mock('./lib/export', () => ({
   downloadCardImage: vi.fn(async () => undefined),
 }));
 
-beforeEach(() => {
-  useCardStore.getState().resetCard();
-});
+setupCardStudioTest();
 
-afterEach(() => {
-  cleanup();
-  // Sonner's toast queue is module-global; drop toasts so tests stay isolated.
-  toast.dismiss();
-});
-
-const renderApp = () =>
-  render(
-    <UiCopyProvider>
-      <App />
-    </UiCopyProvider>
-  );
+const renderApp = () => renderWithUiCopy(<App />);
 
 // The card's headline h1 (the Header brand is an h1 too) — query within the
 // exported card node so the assertion targets what the Card renders.
@@ -84,14 +69,10 @@ describe('App', () => {
     const region = await toastRegion();
     expect(region.getAttribute('data-y-position')).toBe('bottom');
     expect(region.getAttribute('data-x-position')).toBe('center');
-    expect(within(region).getByText('Đang xử lý ảnh Retina...')).toBeTruthy();
+    expect(within(region).getByText(dictionaries.vi.copy_processing)).toBeTruthy();
 
     deferred.resolve(true);
-    expect(
-      await within(region).findByText(
-        'Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.'
-      )
-    ).toBeTruthy();
+    expect(await within(region).findByText(dictionaries.vi.copy_success)).toBeTruthy();
   });
 
   it('copy success keeps the Copied! button flash — button state, not a toast', async () => {
@@ -102,9 +83,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Copy ảnh/ }));
 
     deferred.resolve(true);
-    await within(await toastRegion()).findByText(
-      'Đã copy ảnh! Bạn có thể dán (Ctrl+V) ngay vào Threads hoặc X.'
-    );
+    await within(await toastRegion()).findByText(dictionaries.vi.copy_success);
     expect(screen.getByRole('button', { name: 'Đã copy vào Clipboard!' })).toBeTruthy();
   });
 
@@ -116,10 +95,10 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Tải PNG/ }));
 
     const region = await toastRegion();
-    expect(within(region).getByText('Đang kết xuất file PNG 2x...')).toBeTruthy();
+    expect(within(region).getByText(dictionaries.vi.download_processing)).toBeTruthy();
 
     deferred.resolve();
-    expect(await within(region).findByText('Đã tải ảnh về máy thành công!')).toBeTruthy();
+    expect(await within(region).findByText(dictionaries.vi.download_success)).toBeTruthy();
   });
 
   it('copy failure is reported as an error toast, not a silent failure', async () => {
@@ -128,11 +107,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Copy ảnh/ }));
 
-    expect(
-      await within(await toastRegion()).findByText(
-        'Không thể copy vào clipboard. Hãy thử tải ảnh PNG!'
-      )
-    ).toBeTruthy();
+    expect(await within(await toastRegion()).findByText(dictionaries.vi.copy_error)).toBeTruthy();
   });
 
   it('toasts follow the active Interface Language', async () => {
@@ -144,10 +119,6 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Copy image/ }));
 
     deferred.resolve(true);
-    expect(
-      await within(await toastRegion()).findByText(
-        'Image copied! Paste (Ctrl+V) straight into Threads or X.'
-      )
-    ).toBeTruthy();
+    expect(await within(await toastRegion()).findByText(dictionaries.en.copy_success)).toBeTruthy();
   });
 });

@@ -1,30 +1,22 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Toaster, toast } from 'sonner';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { Toaster } from 'sonner';
 import { Inspector } from './Inspector';
-import { UiCopyProvider } from '../lib/i18n';
 import { useCardStore } from '../lib/card-store';
 import { toastRegion } from '../test/toast-region';
-import '../test/match-media';
+import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio';
 
-afterEach(() => {
-  cleanup();
-  // Sonner's toast queue is module-global; drop toasts so tests stay isolated.
-  toast.dismiss();
-});
+setupCardStudioTest();
 
-beforeEach(() => {
-  useCardStore.getState().resetCard();
-});
-
-const renderInspector = () =>
-  render(
-    <UiCopyProvider>
-      <Inspector />
-      <Toaster />
-    </UiCopyProvider>
-  );
+// The Inspector itself renders no toast region; its error-toast assertions
+// need one beside it (App mounts its own inside <App />).
+const renderInspector = () => renderWithUiCopy(
+  <>
+    <Inspector />
+    <Toaster />
+  </>
+);
 
 describe('Inspector', () => {
   it('associates inputs with their corresponding labels', () => {
