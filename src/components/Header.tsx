@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-none mt-0.5">
-              Tạo ảnh chuẩn mẫu cho X, Threads & Facebook
+              {copy.header_tagline}
             </p>
           </div>
         </div>
@@ -55,12 +55,12 @@ export const Header: React.FC<HeaderProps> = ({
             {isCopied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
-                <span>Đã copy vào Clipboard!</span>
+                <span>{copy.copy_button_done}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 stroke-[2]" />
-                <span>Copy ảnh (Ctrl+V)</span>
+                <span>{copy.copy_button}</span>
               </>
             )}
           </button>
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-all cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Tải PNG 2x</span>
+            <span>{copy.download_button}</span>
           </button>
 
           {/* Interface Language toggle (compact; provider owns persistence/sync) */}
