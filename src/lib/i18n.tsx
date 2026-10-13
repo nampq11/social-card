@@ -31,6 +31,9 @@ export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language';
 const vi = {
   header_tagline: 'Tạo ảnh chuẩn mẫu cho X, Threads & Facebook',
   language_toggle_title: 'Đổi ngôn ngữ giao diện',
+  undo_button_title: 'Hoàn tác (Ctrl+Z)',
+  redo_button_title: 'Làm lại (Ctrl+Shift+Z)',
+  inspector_toggle_title: 'Ẩn/hiện bảng điều khiển (Ctrl+\\)',
   copy_button: 'Copy ảnh (Ctrl+V)',
   copy_button_done: 'Đã copy vào Clipboard!',
   download_button: 'Tải PNG 2x',
@@ -102,6 +105,9 @@ export type UiCopyKey = keyof typeof vi;
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
   language_toggle_title: 'Switch interface language',
+  undo_button_title: 'Undo (Ctrl+Z)',
+  redo_button_title: 'Redo (Ctrl+Shift+Z)',
+  inspector_toggle_title: 'Toggle panel (Ctrl+\\)',
   copy_button: 'Copy image (Ctrl+V)',
   copy_button_done: 'Copied to clipboard!',
   download_button: 'Download PNG 2x',

@@ -12,6 +12,10 @@ import './match-media';
 // module-global toast queue so tests stay isolated. Call once per test file.
 export function setupCardStudioTest() {
   beforeEach(() => {
+    // The language provider persists the chosen Interface Language to
+    // localStorage, which jsdom keeps across tests in a file — clear it so
+    // every suite starts in the default language regardless of order.
+    window.localStorage.clear();
     // Merge-set to factory-fresh state (state AND history). resetCard() is
     // itself an undoable edit now, so it can't serve as test isolation.
     useCardStore.setState({

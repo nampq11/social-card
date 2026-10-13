@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useCardStore } from './lib/card-store';
 import { RATIO_INFO, ratioLabel } from './constants/ratios';
 import { useFitScale } from './lib/use-fit-scale';
 import { useMediaQuery } from './lib/use-media-query';
+import { useStudioShortcuts } from './lib/use-studio-shortcuts';
 import { Inspector } from './components/Inspector';
 import { MobileSheet } from './components/MobileSheet';
 import { TipsPopover } from './components/TipsPopover';
@@ -14,7 +15,7 @@ import { useFlash } from './lib/use-flash';
 import { logDebug } from './lib/log-debug';
 import { useUiCopy } from './lib/i18n';
 import { Button } from './components/ui/Button';
-import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 const DESKTOP_QUERY = '(min-width: 1024px)';
@@ -25,6 +26,19 @@ export function App() {
   // canvas toolbar label, the export filename, and the Fit-to-View sizes.
   const cardState = useCardStore((s) => s.card);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  // Desktop focus mode: collapsing the Inspector gives the card the whole
+  // width; Fit-to-View refills the freed space via its ResizeObserver. The
+  // state survives breakpoint crossings harmlessly (mobile renders the sheet,
+  // not the sidebar).
+  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(false);
+  const toggleInspector = useCallback(
+    () => setIsInspectorCollapsed((collapsed) => !collapsed),
+    [],
+  );
+  const undo = useCardStore((s) => s.undo);
+  const redo = useCardStore((s) => s.redo);
+  useStudioShortcuts({ onUndo: undo, onRedo: redo, onToggleInspector: toggleInspector });
 
   // Export feedback is Sonner's job (promise toasts); the only transient
   // button state left here is the copy action's "Copied!" flag on useFlash.
@@ -96,13 +110,25 @@ export function App() {
       />
 
       <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 pb-3 flex gap-6 items-stretch">
-        {isDesktop && <Inspector />}
+        {isDesktop && !isInspectorCollapsed && <Inspector />}
 
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
           {/* Canvas Viewport Toolbar (desktop) — tips live in the popover */}
           {isDesktop && (
             <div className="flex items-center justify-between px-3 py-2 text-xs text-neutral-500">
               <div className="flex items-center gap-1.5">
+                <Button
+                  size="icon"
+                  onClick={toggleInspector}
+                  title={copy.inspector_toggle_title}
+                  aria-label={copy.inspector_toggle_title}
+                >
+                  {isInspectorCollapsed ? (
+                    <PanelLeftOpen className="w-3.5 h-3.5" />
+                  ) : (
+                    <PanelLeftClose className="w-3.5 h-3.5" />
+                  )}
+                </Button>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                 <span className="font-medium">{ratioLabel(cardState.ratio, language)}</span>
                 <TipsPopover />

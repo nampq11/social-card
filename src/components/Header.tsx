@@ -1,6 +1,7 @@
 import React from 'react';
-import { Copy, Check, Download, Layers, Globe } from 'lucide-react';
+import { Copy, Check, Download, Layers, Globe, Undo2, Redo2 } from 'lucide-react';
 import { useUiCopy } from '../lib/i18n';
+import { useCardStore } from '../lib/card-store';
 import { Button } from './ui/Button';
 
 interface HeaderProps {
@@ -17,6 +18,12 @@ export const Header: React.FC<HeaderProps> = ({
   isExporting,
 }) => {
   const { language, setLanguage, copy } = useUiCopy();
+  // Edit history lives in the Card Store like every other control host;
+  // disabled flags come straight off the undo stacks.
+  const canUndo = useCardStore((s) => s.canUndo);
+  const canRedo = useCardStore((s) => s.canRedo);
+  const undo = useCardStore((s) => s.undo);
+  const redo = useCardStore((s) => s.redo);
   return (
     <header className="shrink-0 z-40 w-full max-w-6xl mx-auto px-4 pt-4 pb-2">
       <div className="flex items-center justify-between px-5 py-3 rounded-2xl glass-panel shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-black/[0.05] dark:border-white/[0.08]">
@@ -43,6 +50,25 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Buttons — below sm the row must fit a phone: brand text
             hides and export actions go icon-only (labels stay for readers). */}
         <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Undo / Redo — icon-only everywhere (history is a keyboard-first
+              action; the buttons are its visible affordance). */}
+          <Button
+            onClick={undo}
+            disabled={!canUndo}
+            title={copy.undo_button_title}
+            aria-label={copy.undo_button_title}
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            onClick={redo}
+            disabled={!canRedo}
+            title={copy.redo_button_title}
+            aria-label={copy.redo_button_title}
+          >
+            <Redo2 className="w-3.5 h-3.5" />
+          </Button>
+
           {/* Copy to Clipboard (Hero action) */}
           <Button
             onClick={onCopy}
