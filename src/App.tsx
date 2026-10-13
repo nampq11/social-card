@@ -7,6 +7,7 @@ import { CardPreview } from './components/CardPreview';
 import { Header } from './components/Header';
 import { copyCardToClipboard, downloadCardImage } from './lib/export';
 import { toFilename } from './lib/card-text';
+import { useFlash } from './lib/use-flash';
 import { logDebug } from './lib/log-debug';
 import { useUiCopy } from './lib/i18n';
 import { ZoomIn, ZoomOut, Info } from 'lucide-react';
@@ -15,24 +16,14 @@ export function App() {
   const { copy, language } = useUiCopy();
   const [cardState, setCardState] = useState<CardState>(DEFAULT_CARD_STATE);
   const [scale, setScale] = useState<number>(0.85);
-  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Transient feedback (status toast, "Copied!" flag) is owned by the
+  // useFlash module: sticky progress via set, auto-hidden results via flash.
+  const [statusMessage, status] = useFlash<string | null>(null, 3000);
+  const [isCopied, copiedFlag] = useFlash<boolean>(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
-  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Swap the visible message without a pending auto-hide from a previous
-  // message clearing this one early.
-  const showStatus = (message: string) => {
-    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
-    setStatusMessage(message);
-  };
-
-  const flashStatus = (message: string, durationMs = 3000) => {
-    showStatus(message);
-    statusTimerRef.current = setTimeout(() => setStatusMessage(null), durationMs);
-  };
 
   // Shared shell for export actions: guards re-entry, shows a progress
   // message, then runs the success path or logs the failure with a toast.
@@ -45,14 +36,14 @@ export function App() {
     const card = cardRef.current;
     if (!card || isExporting) return;
     setIsExporting(true);
-    showStatus(processingMessage);
+    status.set(processingMessage);
 
     try {
       await action(card);
       onSuccess();
     } catch (err) {
       logDebug('App.runExport', `export failed during "${processingMessage}"`, err);
-      flashStatus(errorMessage);
+      status.flash(errorMessage);
     } finally {
       setIsExporting(false);
     }
@@ -65,9 +56,8 @@ export function App() {
         await copyCardToClipboard(card);
       },
       () => {
-        setIsCopied(true);
-        flashStatus(copy.copy_success, 3500);
-        setTimeout(() => setIsCopied(false), 3500);
+        copiedFlag.flash(true, 3500);
+        status.flash(copy.copy_success, 3500);
       },
       copy.copy_error
     );
@@ -78,7 +68,7 @@ export function App() {
       async (card) => {
         await downloadCardImage(card, toFilename(cardState.headline));
       },
-      () => flashStatus(copy.download_success),
+      () => status.flash(copy.download_success),
       copy.download_error
     );
 
@@ -99,7 +89,7 @@ export function App() {
           data={cardState}
           onChange={setCardState}
           onReset={() => setCardState(DEFAULT_CARD_STATE)}
-          onError={(message) => flashStatus(message)}
+          onError={(message) => status.flash(message)}
         />
 
         {/* Center / Right: Live Canvas Studio */}
