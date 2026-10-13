@@ -39,8 +39,10 @@ tuning — verified at 1440/800/390 widths.
 1. **Vendored Dice UI Tour** (`src/components/ui/tour.tsx`) is the tour
    engine. Local adaptations stay minimal for future re-syncs: our Button,
    lucide icons instead of the registry icon placeholder, our `secondary`
-   button variant, no hardcoded English aria-labels (visible text is the
-   accessible name), and `shift` corrects both axes (see decision 4).
+   button variant, and `shift` corrects both axes (see decision 4). The one
+   vendored English label (icon-only TourClose) is overridden at the call
+   site with the i18n dictionary — visible text is the accessible name
+   everywhere else.
 2. **Opt-in flow**: a first-visit welcome Dialog offers the tour or an
    explicit skip; the tour never auto-starts. Either choice persists
    `social-card.onboarding = "done"` in localStorage — refreshing never

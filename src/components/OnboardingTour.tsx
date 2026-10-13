@@ -34,7 +34,9 @@ const STEP_BODY_CLASS = 'text-xs leading-relaxed text-neutral-500 dark:text-neut
 
 /**
  * First-run spotlight tour (4 steps, ≤25 words each — auto-tours get
- * dismissed; opt-in short ones finish). Targets are `[data-tour]` anchors:
+ * dismissed; opt-in short ones finish). Targets are the surfaces each step
+ * talks about: the rendered card (`#social-card-node`) plus `[data-tour]`
+ * anchors:
  * the same step set serves both Shells because each anchor resolves to that
  * shell's host of the same control group (GLOSSARY: Shell, Inspector).
  */
@@ -125,7 +127,10 @@ function StepContent({
   return (
     <>
       <TourArrow className="fill-white dark:fill-[#1E1E22]" />
-      <TourClose className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200" />
+      <TourClose
+        aria-label={copy.tour_close}
+        className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+      />
       <TourHeader className="flex flex-col gap-1">
         <TourTitle className={STEP_TITLE_CLASS}>{title}</TourTitle>
         <TourDescription className={STEP_BODY_CLASS}>{body}</TourDescription>

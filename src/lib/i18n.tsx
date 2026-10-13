@@ -124,6 +124,7 @@ const vi = {
   tour_prev: 'Lùi',
   tour_skip: 'Bỏ qua',
   tour_finish: 'Xong',
+  tour_close: 'Đóng hướng dẫn',
   replay_tour: 'Xem lại hướng dẫn',
 };
 
@@ -234,6 +235,7 @@ const en: typeof vi = {
   tour_prev: 'Back',
   tour_skip: 'Skip',
   tour_finish: 'Finish',
+  tour_close: 'Close tour',
   replay_tour: 'Replay the guide',
 };
 

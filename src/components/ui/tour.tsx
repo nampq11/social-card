@@ -1,9 +1,9 @@
 // Vendored from Dice UI's Base UI Tour (https://diceui.com/docs/components/base/tour,
 // registry item r/tour.json) — a composable spotlight-tour built on the same
 // @base-ui/react primitives this studio already uses (ADR 0001). Local
-// adaptations: our Button, lucide icons, our secondary button variant, no
-// hardcoded English aria-labels, and shift corrects both axes (see comment
-// at the middleware).
+// adaptations: our Button, lucide icons, our secondary button variant, and
+// shift corrects both axes (see comment at the middleware). English labels
+// in here are overridden at the call site via the i18n dictionary.
 import { useDirection } from "@base-ui/react/direction-provider";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";

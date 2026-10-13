@@ -165,7 +165,6 @@ export function App() {
           {/* Card Desk Canvas — bounded by the shell; the card fits inside it */}
           <div
             ref={canvasRef}
-            data-tour="canvas"
             // On mobile the drag hook writes a static bottom reserve here
             // (toolbar + peek height + safe area), so the card clears the
             // peeked sheet; the expanded sheet overlays the card on purpose
