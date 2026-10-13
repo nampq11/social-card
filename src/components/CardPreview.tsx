@@ -4,6 +4,7 @@ import type { CardState } from '../types';
 import { RATIO_INFO } from '../constants/ratios';
 import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets';
 import { splitSublines } from '../lib/card-text';
+import { useUiCopy } from '../lib/i18n';
 
 interface CardPreviewProps {
   data: CardState;
@@ -12,6 +13,7 @@ interface CardPreviewProps {
 
 export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
   ({ data, scale = 1 }, ref) => {
+    const { copy } = useUiCopy();
     const { width, height } = RATIO_INFO[data.ratio];
 
     // Theme styles
@@ -61,7 +63,6 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           style={{
             width: `${width}px`,
             height: `${height}px`,
-            fontFamily: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif",
           }}
           className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden shadow-2xl rounded-2xl`}
         >
@@ -80,7 +81,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 data.uppercaseHeadline ? 'uppercase' : ''
               }`}
             >
-              {data.headline || 'NHẬP TIÊU ĐỀ TẠI ĐÂY'}
+              {data.headline || copy.empty_headline_hint}
             </h1>
 
             {sublineList.length > 0 && (
