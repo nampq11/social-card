@@ -1,32 +1,28 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Inspector } from './Inspector';
 import { UiCopyProvider } from '../lib/i18n';
-import { DEFAULT_CARD_STATE } from '../constants/presets';
+import { useCardStore } from '../lib/card-store';
 
 afterEach(() => {
   cleanup();
 });
 
-const renderInspector = (props: Partial<Parameters<typeof Inspector>[0]> = {}) => {
-  const onChange = vi.fn();
-  const onReset = vi.fn();
+beforeEach(() => {
+  useCardStore.getState().resetCard();
+});
+
+const renderInspector = () => {
   const onError = vi.fn();
 
   const utils = render(
     <UiCopyProvider>
-      <Inspector
-        data={DEFAULT_CARD_STATE}
-        onChange={onChange}
-        onReset={onReset}
-        onError={onError}
-        {...props}
-      />
+      <Inspector onError={onError} />
     </UiCopyProvider>
   );
 
-  return { ...utils, onChange, onReset, onError };
+  return { ...utils, onError };
 };
 
 describe('Inspector', () => {

@@ -1,19 +1,19 @@
 import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import type { CardState } from '../types';
+import { useCardStore } from '../lib/card-store';
 import { RATIO_INFO } from '../constants/ratios';
 import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets';
 import { splitSublines } from '../lib/card-text';
 import { useUiCopy } from '../lib/i18n';
 
 interface CardPreviewProps {
-  data: CardState;
   scale?: number;
 }
 
 export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
-  ({ data, scale = 1 }, ref) => {
+  ({ scale = 1 }, ref) => {
     const { copy } = useUiCopy();
+    const data = useCardStore((s) => s.card);
     const { width, height } = RATIO_INFO[data.ratio];
 
     // Theme styles
