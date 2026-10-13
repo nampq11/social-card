@@ -11,13 +11,13 @@ import {
 
 describe('sheetExpandedPx', () => {
   it('targets 58dvh when the viewport has headroom', () => {
-    // 0.58 × 844 ≈ 490, but the canvas floor caps it at 844 − 236 − 150.
-    expect(sheetExpandedPx(844)).toBe(458);
+    // 0.58 × 844 ≈ 490; headroom 844 − 160 − 150 = 534 does not bind.
+    expect(sheetExpandedPx(844)).toBe(490);
   });
 
   it('keeps a small portrait phone inside its headroom', () => {
-    // SE-class 667px: 58% would be 387, headroom is 281.
-    expect(sheetExpandedPx(667)).toBe(281);
+    // SE-class 667px: 58% would be 387, headroom 667 − 160 − 150 = 357 binds.
+    expect(sheetExpandedPx(667)).toBe(357);
   });
 
   it('falls back to a minimum working height on landscape phones', () => {

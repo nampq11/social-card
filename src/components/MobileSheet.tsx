@@ -13,7 +13,7 @@ import { useSheetDrag } from '../lib/use-sheet-drag';
 // module) and slides between peek and expanded via transform, driven by the
 // gesture hook: 1:1 drag with rubber-banded edges, momentum projection on
 // release, and a critically damped spring carrying the release velocity.
-// The hook writes the live reserve (nav + visible sheet height) straight to
+// The hook writes the static reserve (nav + peek height + safe area) straight to
 // the canvas padding, so Fit-to-View keeps the card fully visible as the
 // sheet moves.
 interface MobileSheetProps {

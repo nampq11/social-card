@@ -158,10 +158,10 @@ export function App() {
           {/* Card Desk Canvas — bounded by the shell; the card fits inside it */}
           <div
             ref={canvasRef}
-            // On mobile the bottom reserve tracks the sheet live: the drag
-            // hook writes the padding straight to this element (toolbar +
-            // visible sheet height), so Fit-to-View keeps the card fully
-            // visible at every sheet position — peek, dragging, or expanded.
+            // On mobile the drag hook writes a static bottom reserve here
+            // (toolbar + peek height + safe area), so the card clears the
+            // peeked sheet; the expanded sheet overlays the card on purpose
+            // — the headline stays full-size while its lower third hides.
             className={`relative w-full flex-1 min-h-0 bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-inner ${
               isDesktop ? 'p-8' : 'p-4'
             }`}

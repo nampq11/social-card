@@ -11,7 +11,10 @@ export const SHEET_PEEK_PX = 144;
 export const SHEET_RESPONSE_S = 0.3;
 
 // Chrome the sheet shares the viewport with: Header ≈84px + tab nav ≈52px.
-const SHEET_CHROME_PX = 236;
+// Measured mobile shell chrome above the canvas: header 94px + ratio nav
+// 60px, plus a small margin. Undercounting here lets the expanded sheet
+// swallow the header; overcounting needlessly shrinks it.
+const SHEET_CHROME_PX = 160;
 // Canvas floor: an expanded sheet still leaves this much card visible.
 const SHEET_CANVAS_FLOOR_PX = 150;
 // Landscape phones have no headroom; the sheet still needs working room.
