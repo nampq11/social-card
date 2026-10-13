@@ -146,7 +146,7 @@ export function App() {
                 <Button size="icon" onClick={zoomOut} title={copy.zoom_out_title}>
                   <ZoomOut className="w-3.5 h-3.5" />
                 </Button>
-                <span className="px-1.5 font-mono text-[11px]">{Math.round(scale * 100)}%</span>
+                <span className="px-1.5 font-mono text-xs">{Math.round(scale * 100)}%</span>
                 <Button size="icon" onClick={zoomIn} title={copy.zoom_in_title}>
                   <ZoomIn className="w-3.5 h-3.5" />
                 </Button>
@@ -166,17 +166,21 @@ export function App() {
           <div
             ref={canvasRef}
             data-tour="canvas"
-            // pb-48 on mobile reserves room for the sheet's peek + toolbar
-            // (their combined height) so Fit-to-View never hides behind them.
+            // On mobile the drag hook writes a static bottom reserve here
+            // (toolbar + peek height + safe area), so the card clears the
+            // peeked sheet; the expanded sheet overlays the card on purpose
+            // — the headline stays full-size while its lower third hides.
             className={`relative w-full flex-1 min-h-0 bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-inner ${
-              isDesktop ? 'p-8' : 'p-4 pb-48'
+              isDesktop ? 'p-8' : 'p-4'
             }`}
           >
-            <CardPreview ref={cardRef} scale={scale} />
+            {/* Fit refits per frame while the sheet drags — only manual
+                zoom steps may animate the scale. */}
+            <CardPreview ref={cardRef} scale={scale} animated={mode === 'manual'} />
 
             {/* Mobile overlay chips (ratio + tips) — no toolbar row below lg */}
             {!isDesktop && (
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 <span className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06]">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                   {ratioLabel(cardState.ratio, language)}
@@ -188,7 +192,7 @@ export function App() {
         </div>
       </main>
 
-      {!isDesktop && <MobileSheet />}
+      {!isDesktop && <MobileSheet canvasRef={canvasRef} />}
 
       {/* First-run onboarding: welcome gate + opt-in spotlight tour. */}
       <WelcomeCard open={isWelcomeOpen} onStartTour={startTour} onSkip={dismissWelcome} />

@@ -40,7 +40,14 @@ export function useFitScale(
   const refit = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    const next = computeFitScale(el.clientWidth, el.clientHeight, cardWidth, cardHeight);
+    // Fit the content box, not the border box: the mobile canvas reserves
+    // bottom padding for the Mobile Sheet, and that reserve must shrink the
+    // fit area or the centered card spills behind the sheet (landscape
+    // phones fit by height, so the spill was worst there).
+    const { paddingLeft, paddingRight, paddingTop, paddingBottom } = getComputedStyle(el);
+    const availableWidth = el.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight);
+    const availableHeight = el.clientHeight - parseFloat(paddingTop) - parseFloat(paddingBottom);
+    const next = computeFitScale(availableWidth, availableHeight, cardWidth, cardHeight);
     if (next > 0) setScale(next);
   }, [containerRef, cardWidth, cardHeight]);
 

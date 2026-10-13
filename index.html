@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Social Card — Minimalist Card Studio</title>
+    <style>
+      /* Paint the shell's background for the system color scheme before the
+         app mounts, so dark-mode users get no light-theme flash. */
+      body { background: #F5F5F7; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0B0B0C; }
+      }
+    </style>
     <!-- Fonts: Be Vietnam Pro (the only family referenced in the app) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +26,7 @@
       }
     </script>
   </head>
-  <body class="bg-[#F5F5F7] text-[#1D1D1F] antialiased selection:bg-blue-500/20">
+  <body class="text-[#1D1D1F] antialiased selection:bg-blue-500/20">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

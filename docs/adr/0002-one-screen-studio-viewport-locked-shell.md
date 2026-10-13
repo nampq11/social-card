@@ -25,3 +25,19 @@ Users rejected the scrolling page: the studio must fit the viewport everywhere â
   short windows. Style Presets exist to keep cross-group work cheap: resting
   a style is one click from any tab, so tab separation doesn't tax the
   workflow (NN/g's cross-tab-comparison caveat).
+
+## Addendum: fluid bottom sheet (Oct 2026)
+
+The Mobile Sheet moved from a tap-toggled, CSS-height transition to a
+drag-driven sheet following Apple's _Designing Fluid Interfaces_: 1:1
+pointer tracking with rubber-banded edges, momentum projection picks the
+resting point on release, and a critically damped spring carries the
+release velocity (`lib/sheet-drag.ts`, `lib/use-sheet-drag.ts`). The
+transform-only animation writes the canvas's bottom padding directly every
+frame (not through an inherited CSS variable, which would recalculate the
+whole document's styles per frame) â€” combined with content-box
+Fit-to-View, the card refits continuously and stays fully visible at
+every sheet position instead of hiding behind the expanded sheet.
+Expanded height stays 58dvh but is clamped to leave the canvas a visible
+floor (portrait phones); landscape falls back to a minimum working
+height, matching iOS sheets that cover content there.

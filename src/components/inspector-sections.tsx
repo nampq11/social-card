@@ -62,7 +62,7 @@ export const PresetsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
         {copy.presets_label}
       </label>
       <div className="flex flex-wrap gap-1.5">
@@ -147,7 +147,7 @@ export const StyleSection: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.style_presets_label}
         </label>
         <div className="grid grid-cols-2 gap-1.5">
@@ -179,7 +179,7 @@ export const StyleSection: React.FC = () => {
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
-        <label id="ratio-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <label id="ratio-label" className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.ratio_label}
         </label>
         <SegmentedControl<AspectRatio>
@@ -196,7 +196,7 @@ export const StyleSection: React.FC = () => {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label id="theme-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <label id="theme-label" className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.theme_label}
         </label>
         <SegmentedControl<CardTheme>
@@ -218,7 +218,7 @@ export const StyleSection: React.FC = () => {
         <div className="flex justify-between items-center text-xs">
           <label
             id="inspector-headline-size-label"
-            className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
+            className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
           >
             {copy.headline_size_label}
           </label>
@@ -233,10 +233,10 @@ export const StyleSection: React.FC = () => {
           onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
           className="flex w-full cursor-pointer select-none"
         >
-          <Slider.Control className="flex w-full touch-none items-center py-1">
+          <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
             <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
               <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-              <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+              <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>
@@ -272,7 +272,7 @@ export const HeadlineSection: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <Field.Root className="flex flex-col gap-1.5">
-        <Field.Label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <Field.Label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.headline_label}
         </Field.Label>
         <Field.Control
@@ -290,7 +290,7 @@ export const HeadlineSection: React.FC = () => {
       </Field.Root>
 
       <Field.Root className="flex flex-col gap-1.5">
-        <Field.Label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <Field.Label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.sublines_label}
         </Field.Label>
         <Field.Control
@@ -357,7 +357,7 @@ export const IdentitySection: React.FC = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-1.5">
         <User className="w-3.5 h-3.5 text-neutral-500" />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.author_label}
         </span>
       </div>
@@ -396,7 +396,7 @@ export const IdentitySection: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-2">
         <Field.Root className="flex flex-col gap-1.5">
-          <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
+          <Field.Label className="text-xs text-neutral-400 uppercase font-semibold">
             {copy.author_name_label}
           </Field.Label>
           <Field.Control
@@ -407,7 +407,7 @@ export const IdentitySection: React.FC = () => {
           />
         </Field.Root>
         <Field.Root className="flex flex-col gap-1.5">
-          <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
+          <Field.Label className="text-xs text-neutral-400 uppercase font-semibold">
             {copy.author_bio_label}
           </Field.Label>
           <Field.Control
@@ -423,7 +423,7 @@ export const IdentitySection: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <QrCode className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+            <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
               {copy.qr_label}
             </span>
           </div>
@@ -441,7 +441,7 @@ export const IdentitySection: React.FC = () => {
         {data.qrEnabled && (
           <div className="flex flex-col gap-2">
             <Field.Root className="flex flex-col gap-1.5">
-              <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              <Field.Label className="text-xs text-neutral-400 uppercase font-semibold">
                 {copy.qr_url_label}
               </Field.Label>
               <Field.Control
@@ -453,7 +453,7 @@ export const IdentitySection: React.FC = () => {
               />
             </Field.Root>
             <Field.Root className="flex flex-col gap-1.5">
-              <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              <Field.Label className="text-xs text-neutral-400 uppercase font-semibold">
                 {copy.qr_cta_label}
               </Field.Label>
               <Field.Control

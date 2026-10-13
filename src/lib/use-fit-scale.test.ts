@@ -34,3 +34,26 @@ describe('computeFitScale', () => {
     expect(computeFitScale(500, 500, 0, 720)).toBe(0);
   });
 });
+
+// @vitest-environment jsdom
+
+import { renderHook } from '@testing-library/react';
+import { useFitScale } from './use-fit-scale';
+
+describe('useFitScale', () => {
+  it('fits the content box, excluding the container padding', () => {
+    // The mobile canvas reserves bottom padding for the Mobile Sheet; a
+    // square card must fit the 408px the padding leaves, not the full 600px
+    // border box, or it spills behind the sheet.
+    const host = document.createElement('div');
+    Object.defineProperty(host, 'clientWidth', { value: 800 });
+    Object.defineProperty(host, 'clientHeight', { value: 600 });
+    host.style.padding = '0px 0px 192px 0px';
+    document.body.appendChild(host);
+
+    const { result } = renderHook(() => useFitScale({ current: host }, 600, 600));
+
+    expect(result.current.scale).toBeCloseTo(408 / 600, 5);
+    host.remove();
+  });
+});

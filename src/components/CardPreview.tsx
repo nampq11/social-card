@@ -8,10 +8,12 @@ import { useUiCopy } from '../lib/i18n';
 
 interface CardPreviewProps {
   scale?: number;
+  /** Fit-driven refits change scale per frame; only manual zoom steps animate. */
+  animated?: boolean;
 }
 
 export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
-  ({ scale = 1 }, ref) => {
+  ({ scale = 1, animated = true }, ref) => {
     const { copy } = useUiCopy();
     const data = useCardStore((s) => s.card);
     const { width, height } = RATIO_INFO[data.ratio];
@@ -55,7 +57,9 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
         }}
-        className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-2xl rounded-2xl"
+        className={`${
+          animated ? 'transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]' : ''
+        } shadow-2xl rounded-2xl`}
       >
         <div
           ref={ref}
