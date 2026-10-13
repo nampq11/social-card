@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Inspector } from './Inspector';
 import { UiCopyProvider } from '../lib/i18n';
@@ -85,3 +85,73 @@ describe('Inspector', () => {
     expect(fileInput.value).toBe('');
   });
 });
+
+describe('Inspector segmented controls a11y', () => {
+  it('announces ratio and theme as named radio groups with the checked option identified', () => {
+    renderInspector();
+
+    const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
+    const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
+    const portrait = within(ratioGroup).getByRole('radio', { name: /4:5 Dọc/i });
+    const landscape = within(ratioGroup).getByRole('radio', { name: /16:9 Ngang/i });
+    expect(square.getAttribute('aria-checked')).toBe('true');
+    expect(portrait.getAttribute('aria-checked')).toBe('false');
+    expect(landscape.getAttribute('aria-checked')).toBe('false');
+
+    const themeGroup = screen.getByRole('radiogroup', { name: /Màu nền/i });
+    const paper = within(themeGroup).getByRole('radio', { name: /Giấy ngà/i });
+    const dark = within(themeGroup).getByRole('radio', { name: /Tối OLED/i });
+    expect(paper.getAttribute('aria-checked')).toBe('true');
+    expect(dark.getAttribute('aria-checked')).toBe('false');
+  });
+});
+
+  it('keeps one tab stop per control group, on the checked option', () => {
+    renderInspector();
+
+    const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
+    const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
+    const landscape = within(ratioGroup).getByRole('radio', { name: /16:9 Ngang/i });
+    expect(square.getAttribute('tabindex')).toBe('0');
+    expect(landscape.getAttribute('tabindex')).toBe('-1');
+
+    fireEvent.click(landscape);
+
+    expect(landscape.getAttribute('tabindex')).toBe('0');
+    expect(square.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('moves the selection with the arrow keys, roving focus with it', async () => {
+    renderInspector();
+
+    const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
+    const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
+    const portrait = within(ratioGroup).getByRole('radio', { name: /4:5 Dọc/i });
+    square.focus();
+
+    fireEvent.keyDown(square, { key: 'ArrowRight' });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(portrait);
+      expect(portrait.getAttribute('aria-checked')).toBe('true');
+    });
+    expect(square.getAttribute('aria-checked')).toBe('false');
+    expect(useCardStore.getState().card.ratio).toBe('4:5');
+  });
+
+  it('wraps arrow navigation around the ends of the group', async () => {
+    renderInspector();
+
+    const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
+    const square = within(ratioGroup).getByRole('radio', { name: /1:1 Vuông/i });
+    const landscape = within(ratioGroup).getByRole('radio', { name: /16:9 Ngang/i });
+    square.focus();
+
+    fireEvent.keyDown(square, { key: 'ArrowLeft' });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(landscape);
+      expect(landscape.getAttribute('aria-checked')).toBe('true');
+    });
+    expect(useCardStore.getState().card.ratio).toBe('16:9');
+  });

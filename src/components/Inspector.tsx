@@ -114,10 +114,11 @@ export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
       {/* Aspect Ratio & Theme Controls */}
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          <label id="ratio-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
             {copy.ratio_label}
           </label>
           <SegmentedControl<AspectRatio>
+            aria-labelledby="ratio-label"
             value={data.ratio}
             onChange={(r) => update('ratio', r)}
             className="w-full"
@@ -130,10 +131,11 @@ export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          <label id="theme-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
             {copy.theme_label}
           </label>
           <SegmentedControl<CardTheme>
+            aria-labelledby="theme-label"
             value={data.theme}
             onChange={(t) => update('theme', t)}
             className="w-full"
