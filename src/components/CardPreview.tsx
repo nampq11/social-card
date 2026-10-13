@@ -40,7 +40,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         bg: 'bg-[#121214]',
         text: 'text-[#F4F4F5]',
         subtext: 'text-[#A1A1AA]',
-        qrBg: 'bg-white p-1 rounded-md',
+        qrBg: 'bg-white',
         qrFg: '#121214',
         border: 'border-white/10',
         avatarBorder: 'ring-1 ring-white/20',
@@ -53,9 +53,9 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
       <div
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: 'top center',
+          transformOrigin: 'center center',
         }}
-        className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+        className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-2xl rounded-2xl"
       >
         <div
           ref={ref}
@@ -64,7 +64,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             width: `${width}px`,
             height: `${height}px`,
           }}
-          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden shadow-2xl rounded-2xl`}
+          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden rounded-2xl`}
         >
           {/* Top spacer / header room */}
           <div className="h-6" />
@@ -77,7 +77,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 letterSpacing: '-0.025em',
                 lineHeight: 1.25,
               }}
-              className={`font-extrabold max-w-xl ${
+              className={`font-extrabold max-w-xl break-words ${
                 data.uppercaseHeadline ? 'uppercase' : ''
               }`}
             >
@@ -90,10 +90,10 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   fontSize: `${Math.max(16, Math.round(data.headlineSize * 0.52))}px`,
                   lineHeight: 1.55,
                 }}
-                className={`space-y-1.5 ${themeStyles.subtext} font-normal max-w-lg`}
+                className={`space-y-1.5 ${themeStyles.subtext} font-normal max-w-lg break-words`}
               >
                 {sublineList.map((line, idx) => (
-                  <p key={idx} className="tracking-tight">
+                  <p key={idx} className="tracking-normal">
                     {line}
                   </p>
                 ))}
@@ -107,7 +107,8 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             {data.qrEnabled ? (
               <div className="flex items-center gap-3.5 max-w-[50%]">
                 <div
-                  className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border border-black/5 dark:border-white/10`}
+                  data-testid="qr-container"
+                  className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border ${themeStyles.border}`}
                 >
                   <QRCodeSVG
                     value={data.qrUrl || FALLBACK_QR_URL}
@@ -119,7 +120,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 </div>
                 {data.qrCta && (
                   <span
-                    className={`text-xs ${themeStyles.subtext} font-medium leading-relaxed max-w-[160px]`}
+                    className={`text-xs ${themeStyles.subtext} font-medium leading-relaxed max-w-[160px] break-words`}
                   >
                     {data.qrCta}
                   </span>
@@ -132,12 +133,12 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             {/* Right: Circular Avatar & Author Signature */}
             <div className="flex items-center gap-3.5 shrink-0 ml-auto">
               <div className="text-right">
-                <h3 className="text-sm font-bold tracking-tight leading-tight">
+                <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
                   {data.authorName || FALLBACK_AUTHOR_NAME}
                 </h3>
                 {data.authorBio && (
                   <p
-                    className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5`}
+                    className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
                   >
                     {data.authorBio}
                   </p>
@@ -150,7 +151,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 >
                   <img
                     src={data.avatarUrl}
-                    alt={data.authorName}
+                    alt={data.authorName || FALLBACK_AUTHOR_NAME}
                     className="w-full h-full object-cover object-top"
                   />
                 </div>
