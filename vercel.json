@@ -2,25 +2,36 @@
   "framework": "vite",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/social-card",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
-      "source": "/social-card/assets/:path*",
-      "destination": "/assets/:path*"
+      "source": "/social-card/assets/:match*",
+      "destination": "/assets/:match*"
     },
     {
       "source": "/social-card/avatar.png",
       "destination": "/avatar.png"
     },
     {
-      "source": "/social-card/:path*",
-      "destination": "/index.html"
+      "source": "/social-card/favicon.svg",
+      "destination": "/favicon.svg"
     },
     {
       "source": "/social-card",
       "destination": "/index.html"
     },
     {
-      "source": "/",
+      "source": "/social-card/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/social-card/:path*",
       "destination": "/index.html"
     }
   ]
