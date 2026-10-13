@@ -31,6 +31,11 @@ export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language';
 const vi = {
   header_tagline: 'Tạo ảnh chuẩn mẫu cho X, Threads & Facebook',
   language_toggle_title: 'Đổi ngôn ngữ giao diện',
+  style_presets_label: 'Mẫu phong cách',
+  style_preset_classic: 'Cổ điển',
+  style_preset_midnight: 'Đêm thẫm',
+  style_preset_minimal: 'Tối giản',
+  style_preset_billboard: 'Áp phích',
   undo_button_title: 'Hoàn tác (Ctrl+Z)',
   redo_button_title: 'Làm lại (Ctrl+Shift+Z)',
   inspector_toggle_title: 'Ẩn/hiện bảng điều khiển (Ctrl+\\)',
@@ -105,6 +110,11 @@ export type UiCopyKey = keyof typeof vi;
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
   language_toggle_title: 'Switch interface language',
+  style_presets_label: 'Style presets',
+  style_preset_classic: 'Classic',
+  style_preset_midnight: 'Midnight',
+  style_preset_minimal: 'Minimal',
+  style_preset_billboard: 'Billboard',
   undo_button_title: 'Undo (Ctrl+Z)',
   redo_button_title: 'Redo (Ctrl+Shift+Z)',
   inspector_toggle_title: 'Toggle panel (Ctrl+\\)',

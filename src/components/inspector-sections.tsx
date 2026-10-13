@@ -2,7 +2,14 @@ import React, { useRef } from 'react';
 import type { CardState, AspectRatio, CardTheme } from '../types';
 import { SegmentedControl } from './SegmentedControl';
 import { useCardStore } from '../lib/card-store';
-import { SAMPLE_PRESETS, DEFAULT_CARD_STATE, type SamplePreset } from '../constants/presets';
+import {
+  SAMPLE_PRESETS,
+  STYLE_PRESETS,
+  DEFAULT_CARD_STATE,
+  type SamplePreset,
+  type StylePreset,
+  type StylePresetState,
+} from '../constants/presets';
 import { Checkbox } from '@base-ui/react/checkbox';
 import { Switch } from '@base-ui/react/switch';
 import { Slider } from '@base-ui/react/slider';
@@ -77,9 +84,50 @@ export const StyleSection: React.FC = () => {
   const { copy } = useUiCopy();
   const data = useCardStore((s) => s.card);
   const update = useCardUpdate();
+  const patchCard = useCardStore((s) => s.patchCard);
+
+  // A Style Preset is "active" while the whole style quadruple still matches
+  // — any manual tweak of theme/ratio/size/casing deselects it.
+  const isActiveStylePreset = (preset: StylePreset) =>
+    (Object.keys(preset.state) as (keyof StylePresetState)[]).every(
+      (key) => data[key] === preset.state[key]
+    );
 
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          {copy.style_presets_label}
+        </label>
+        <div className="grid grid-cols-2 gap-1.5">
+          {STYLE_PRESETS.map((p) => {
+            const active = isActiveStylePreset(p);
+            return (
+              <Button
+                key={p.id}
+                onClick={() => patchCard(p.state)}
+                aria-pressed={active}
+                variant={active ? 'primary' : 'secondary'}
+                size="sm"
+                className="justify-start"
+              >
+                {/* Theme dot — the one visual the label can't carry. */}
+                <span
+                  aria-hidden
+                  className={`size-2.5 shrink-0 rounded-full border ${
+                    p.state.theme === 'dark'
+                      ? 'bg-neutral-900 border-neutral-600'
+                      : p.state.theme === 'white'
+                        ? 'bg-white border-neutral-300'
+                        : 'bg-[#F5EFE0] border-neutral-300'
+                  }`}
+                />
+                {copy[p.nameKey]}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
       <div className="space-y-1.5">
         <label id="ratio-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.ratio_label}

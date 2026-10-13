@@ -19,6 +19,34 @@ const renderInspector = () => renderWithUiCopy(
   </>
 );
 
+describe('Inspector style presets', () => {
+  it('applies theme, ratio, headline size and casing in one undoable step', () => {
+    renderInspector();
+
+    fireEvent.click(screen.getByRole('button', { name: /Áp phích/i }));
+
+    const card = useCardStore.getState().card;
+    expect(card.theme).toBe('dark');
+    expect(card.ratio).toBe('16:9');
+    expect(card.headlineSize).toBe(54);
+    expect(card.uppercaseHeadline).toBe(true);
+
+    // The whole preset is one history step, not four.
+    act(() => useCardStore.getState().undo());
+    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE);
+  });
+
+  it('marks the active style preset while its style still matches', () => {
+    renderInspector();
+
+    const billboard = screen.getByRole('button', { name: /Áp phích/i });
+    expect(billboard.getAttribute('aria-pressed')).toBe('false');
+
+    fireEvent.click(billboard);
+    expect(billboard.getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
 describe('Inspector', () => {
   it('associates inputs with their corresponding labels', () => {
     renderInspector();
