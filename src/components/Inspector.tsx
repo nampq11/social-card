@@ -39,7 +39,14 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Clear value so re-uploading the same file still triggers onChange
+    e.target.value = '';
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      onError(copy.avatar_file_error);
+      return;
+    }
 
     if (file.size > MAX_AVATAR_BYTES) {
       onError(copy.avatar_too_large);
@@ -152,8 +159,12 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             >
               {copy.headline_label}
             </label>
-            <label className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
+            <label
+              htmlFor="inspector-uppercase"
+              className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
+            >
               <input
+                id="inspector-uppercase"
                 type="checkbox"
                 checked={data.uppercaseHeadline}
                 onChange={(e) => update('uppercaseHeadline', e.target.checked)}
@@ -293,9 +304,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
               {copy.qr_label}
             </span>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label htmlFor="inspector-qr-toggle" className="relative inline-flex items-center cursor-pointer">
             <input
+              id="inspector-qr-toggle"
               type="checkbox"
+              aria-label={copy.qr_label}
               checked={data.qrEnabled}
               onChange={(e) => update('qrEnabled', e.target.checked)}
               className="sr-only peer"
