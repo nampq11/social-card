@@ -76,10 +76,16 @@ const vi = {
   download_error: 'Lỗi khi tải ảnh. Vui lòng thử lại!',
   zoom_out_title: 'Thu nhỏ xem trước',
   zoom_in_title: 'Phóng to xem trước',
+  zoom_fit_title: 'Vừa khung xem trước',
+
+  tab_content: 'Nội dung',
+  tab_style: 'Kiểu',
+  tab_identity: 'Định danh',
+  sheet_toggle_title: 'Mở hoặc thu gọn bảng tùy chỉnh',
+  tips_title: 'Gợi ý đăng bài',
 
   posting_tips: (
     <>
-      <strong className="text-neutral-700 dark:text-neutral-300">Gợi ý đăng bài:</strong>{' '}
       Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code>{' '}
       và <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị
       hoàn hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
@@ -141,10 +147,17 @@ const en: typeof vi = {
   download_error: 'Download failed. Please try again!',
   zoom_out_title: 'Zoom out preview',
   zoom_in_title: 'Zoom in preview',
+  zoom_fit_title: 'Fit preview to view',
+
+  tab_content: 'Content',
+  tab_style: 'Style',
+  tab_identity: 'Identity',
+  sheet_toggle_title: 'Expand or collapse the panel',
+  tips_title: 'Posting tips',
 
   posting_tips: (
     <>
-      <strong className="text-neutral-700 dark:text-neutral-300">Posting tips:</strong> The{' '}
+      The{' '}
       <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> and{' '}
       <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> ratios look
       best on the mobile timelines of Threads and X. Use <strong>Copy image</strong> to paste
