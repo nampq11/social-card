@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   const undo = useCardStore((s) => s.undo);
   const redo = useCardStore((s) => s.redo);
   return (
-    <header className="shrink-0 z-40 w-full max-w-6xl mx-auto px-4 pt-4 pb-2">
+    <header className="shrink-0 z-40 w-full max-w-6xl mx-auto px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-2">
       <div className="flex items-center justify-between px-5 py-3 rounded-2xl glass-panel shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-black/[0.05] dark:border-white/[0.08]">
         {/* Brand / Logo */}
         <div className="flex items-center gap-3">
@@ -37,18 +37,17 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="hidden sm:block text-sm font-bold tracking-tight text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
                 Social Card
               </h1>
-              <span className="hidden sm:inline px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                Vercel Ready
-              </span>
             </div>
-            <p className="hidden sm:block text-[11px] text-neutral-500 dark:text-neutral-400 leading-none mt-0.5">
+            <p className="hidden sm:block text-xs text-neutral-500 dark:text-neutral-400 leading-none mt-0.5">
               {copy.header_tagline}
             </p>
           </div>
         </div>
 
         {/* Action Buttons — below sm the row must fit a phone: brand text
-            hides and export actions go icon-only (labels stay for readers). */}
+            hides, export actions go icon-only (labels stay for readers), and
+            edit history moves into the Mobile Sheet — pointer users keep the
+            visible keyboard-shortcut affordance here from lg up. */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Undo / Redo — icon-only everywhere (history is a keyboard-first
               action; the buttons are its visible affordance). */}
@@ -57,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={!canUndo}
             title={copy.undo_button_title}
             aria-label={copy.undo_button_title}
+            className="hidden lg:inline-flex"
           >
             <Undo2 />
           </Button>
@@ -65,6 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={!canRedo}
             title={copy.redo_button_title}
             aria-label={copy.redo_button_title}
+            className="hidden lg:inline-flex"
           >
             <Redo2 />
           </Button>

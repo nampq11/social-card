@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Undo2, Redo2 } from 'lucide-react';
 import { SegmentedControl } from './SegmentedControl';
 import { useCardStore } from '../lib/card-store';
 import { useUiCopy } from '../lib/i18n';
@@ -16,6 +16,12 @@ const EXPANDED_HEIGHT_CLASS = 'h-[58dvh]';
 export function MobileSheet() {
   const { copy } = useUiCopy();
   const resetCard = useCardStore((s) => s.resetCard);
+  // Edit history joins Reset here on mobile — the Header keeps its copy only
+  // from lg up, so touch users get their undo affordance in the sheet header.
+  const canUndo = useCardStore((s) => s.canUndo);
+  const canRedo = useCardStore((s) => s.canRedo);
+  const undo = useCardStore((s) => s.undo);
+  const redo = useCardStore((s) => s.redo);
   const [tab, setTab] = useState<InspectorTabId>('content');
   const [expanded, setExpanded] = useState(false);
 
@@ -56,6 +62,26 @@ export function MobileSheet() {
           <span className="text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
             {tabTitle}
           </span>
+          <Button
+            onClick={undo}
+            disabled={!canUndo}
+            variant="ghost"
+            size="sm"
+            title={copy.undo_button_title}
+            aria-label={copy.undo_button_title}
+          >
+            <Undo2 />
+          </Button>
+          <Button
+            onClick={redo}
+            disabled={!canRedo}
+            variant="ghost"
+            size="sm"
+            title={copy.redo_button_title}
+            aria-label={copy.redo_button_title}
+          >
+            <Redo2 />
+          </Button>
           <Button onClick={resetCard} variant="ghost" size="sm" title={copy.reset_title}>
             <RotateCcw />
             <span>{copy.reset_button}</span>
@@ -63,7 +89,10 @@ export function MobileSheet() {
         </div>
 
         {/* inert while peeked: clipped controls must not stay keyboard-reachable */}
-        <div className="flex-1 overflow-y-auto px-5 pb-6" inert={!expanded}>
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+          inert={!expanded}
+        >
           <div className="flex flex-col gap-5">
             {active.sections.map((Section) => (
               <Section key={Section.name} />
