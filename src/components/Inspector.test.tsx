@@ -103,7 +103,7 @@ describe('Inspector segmented controls a11y', () => {
   });
 });
 
-  it('keeps one tab stop per control group, on the checked option', () => {
+  it('keeps one tab stop per control group, on the checked option', async () => {
     renderInspector();
 
     const ratioGroup = screen.getByRole('radiogroup', { name: /Tỉ lệ khung hình/i });
@@ -112,9 +112,15 @@ describe('Inspector segmented controls a11y', () => {
     expect(square.getAttribute('tabindex')).toBe('0');
     expect(landscape.getAttribute('tabindex')).toBe('-1');
 
+    // A browser press is mousedown → focus → click; jsdom's fireEvent.click
+    // skips the implicit focus, and base-ui's roving tab stop follows focus,
+    // so emulate the focus step to drive the composite like a real pointer.
+    landscape.focus();
     fireEvent.click(landscape);
 
-    expect(landscape.getAttribute('tabindex')).toBe('0');
+    await waitFor(() => {
+      expect(landscape.getAttribute('tabindex')).toBe('0');
+    });
     expect(square.getAttribute('tabindex')).toBe('-1');
   });
 

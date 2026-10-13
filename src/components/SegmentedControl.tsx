@@ -1,6 +1,6 @@
 import React from 'react';
-import { ToggleGroup } from '@base-ui/react/toggle-group';
-import { Toggle } from '@base-ui/react/toggle';
+import { RadioGroup } from '@base-ui/react/radio-group';
+import { Radio } from '@base-ui/react/radio';
 
 interface Option<T extends string> {
   value: T;
@@ -16,11 +16,10 @@ interface SegmentedControlProps<T extends string> {
   'aria-labelledby'?: string;
 }
 
-// Radio-group segmented control built on base-ui's toggle-group primitives:
-// roving focus and arrow-key navigation come from the library; the radio
-// semantics (radiogroup / radio / aria-checked, checked item as tab stop,
-// selection that follows focus) are layered here because base-ui's toggle
-// group alone exposes plain toggle-button ARIA (`aria-pressed`).
+// Segmented control built on base-ui's radio-group primitives (ADR 0001):
+// radio ARIA, roving focus, arrow-key navigation with wrap-around and
+// selection-follows-focus are the library's job — this component only keeps
+// the call-site API (options/value/onChange) and the segmented visual design.
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -29,34 +28,21 @@ export function SegmentedControl<T extends string>({
   'aria-labelledby': labelledBy,
 }: SegmentedControlProps<T>) {
   return (
-    <ToggleGroup<T>
-      value={[value]}
-      onValueChange={(groupValue) => {
-        // Radio invariant: activating the checked option must not clear it.
-        const next = groupValue[0];
-        if (next !== undefined && next !== value) onChange(next);
+    <RadioGroup<T>
+      value={value}
+      onValueChange={(next) => {
+        // Skip redundant Card State writes when the checked option is activated.
+        if (next !== value) onChange(next);
       }}
-      role="radiogroup"
       aria-labelledby={labelledBy}
       className={`inline-flex p-1 bg-black/[0.05] dark:bg-white/[0.08] rounded-xl border border-black/[0.04] dark:border-white/[0.06] backdrop-blur-md ${className}`}
     >
       {options.map((opt) => {
         const checked = opt.value === value;
         return (
-          <Toggle
+          <Radio.Root
             key={opt.value}
             value={opt.value}
-            role="radio"
-            aria-checked={checked}
-            // One tab stop per group, glued to the checked option: Tab enters
-            // the group on the active choice (and stays on it after external
-            // Card State changes), so Tab jumps between control groups.
-            tabIndex={checked ? 0 : -1}
-            onFocus={() => {
-              // Radio pattern: selection follows focus, so arrow-key roving
-              // focus moves the selection too.
-              if (!checked) onChange(opt.value);
-            }}
             className={`relative flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-[background-color,color,box-shadow] duration-150 ease-out apple-button select-none cursor-pointer ${
               checked
                 ? 'bg-white dark:bg-[#2C2C2E] text-black dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
@@ -65,9 +51,9 @@ export function SegmentedControl<T extends string>({
           >
             {opt.icon && <span className="w-3.5 h-3.5">{opt.icon}</span>}
             <span>{opt.label}</span>
-          </Toggle>
+          </Radio.Root>
         );
       })}
-    </ToggleGroup>
+    </RadioGroup>
   );
 }
