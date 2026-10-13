@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    /* Bottom sheet footprint (tab nav + peek) until the sheet hook
+       measures and starts driving it — see use-sheet-drag.ts. */
+    --sheet-reserve: 196px;
+  }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Be Vietnam Pro", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
