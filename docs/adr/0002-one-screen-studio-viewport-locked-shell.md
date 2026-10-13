@@ -1,0 +1,16 @@
+# One-Screen Studio: viewport-locked shell on all devices
+
+Users rejected the scrolling page: the studio must fit the viewport everywhere — page never scrolls, only nested panels do. Desktop (≥1024px) uses a sidebar arrangement (Header on top, Inspector left with internal scroll, Canvas filling the rest); below 1024px the same control groups re-host in a standard non-modal Bottom Sheet driven by a bottom toolbar, with the Canvas fit-to-view between Header and sheet. This mirrors the proven pattern of Canva / Figma mobile / GoDaddy Studio / IG Stories.
+
+## Considered Options
+
+- Scrollable page (the old layout) — rejected: content grew past the viewport on any laptop; the card desk had a hard `min-h` and the tips box sat below the fold.
+- A third tablet-hybrid layout (Inspector as slide-over drawer) — rejected: one seam (`lg`) keeps exactly two arrangements to test and maintain.
+- Modal sheets for mobile controls — rejected: NN/g guidance says don't hide the editing artifact; the canvas must keep live-updating behind controls.
+
+## Consequences
+
+- Fit-to-View is the default Canvas scale everywhere; desktop keeps a manual zoom override that sticks until Fit is re-selected, and any viewport/container resize re-fits while in Fit mode.
+- Mobile is fit-only: no zoom UI, no pinch-zoom (YAGNI for now).
+- The shell uses dynamic viewport height so browser chrome and the virtual keyboard shrink the canvas (which refits) rather than producing page scroll.
+- The posting-tips box moves into an info popover on the canvas toolbar so it stops consuming viewport height.
