@@ -11,7 +11,7 @@ export const DEFAULT_CARD_STATE: CardState = {
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: FALLBACK_AUTHOR_NAME,
   authorBio: 'AI Engineer • Building AI Agents',
-  avatarUrl: '/avatar.png',
+  avatarUrl: `${import.meta.env.BASE_URL}avatar.png`,
   qrEnabled: true,
   qrUrl: FALLBACK_QR_URL,
   qrCta: 'Build Trợ lý AI cho riêng bạn!',

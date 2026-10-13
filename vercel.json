@@ -4,7 +4,23 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/social-card/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/social-card/avatar.png",
+      "destination": "/avatar.png"
+    },
+    {
+      "source": "/social-card/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/social-card",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
     }
   ]
