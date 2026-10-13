@@ -99,7 +99,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
               key={p.id}
               type="button"
               onClick={() => onChange({ ...data, ...p.state })}
-              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-neutral-700 dark:text-neutral-300 border border-black/[0.04] dark:border-white/[0.06] apple-button transition-all cursor-pointer"
+              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-neutral-700 dark:text-neutral-300 border border-black/[0.04] dark:border-white/[0.06] apple-button transition-colors duration-150 ease-out cursor-pointer"
             >
               {copy[p.nameKey]}
             </button>
@@ -168,7 +168,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             value={data.headline}
             onChange={(e) => update('headline', e.target.value)}
             placeholder={copy.empty_headline_hint}
-            className="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-neutral-400"
+            className="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
           />
         </div>
 
@@ -208,7 +208,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             value={data.sublines}
             onChange={(e) => update('sublines', e.target.value)}
             placeholder={'lanphinh.com\nlanphinh.io'}
-            className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-neutral-400"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
           />
         </div>
       </div>
@@ -234,7 +234,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.1] text-neutral-700 dark:text-neutral-200 apple-button transition-all cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.1] text-neutral-700 dark:text-neutral-200 apple-button transition-colors duration-150 ease-out cursor-pointer"
             >
               <Upload className="w-3 h-3" />
               <span>{copy.change_photo}</span>
@@ -300,7 +300,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
               onChange={(e) => update('qrEnabled', e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-8 h-4.5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-8 h-4.5 bg-neutral-300 peer-focus:outline-none rounded-full peer transition-colors duration-150 ease-out peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-transform after:duration-150 after:ease-out"></div>
           </label>
         </div>
 
