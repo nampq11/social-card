@@ -139,7 +139,7 @@ export function App() {
                 <Button size="icon" onClick={zoomOut} title={copy.zoom_out_title}>
                   <ZoomOut className="w-3.5 h-3.5" />
                 </Button>
-                <span className="px-1.5 font-mono text-[11px]">{Math.round(scale * 100)}%</span>
+                <span className="px-1.5 font-mono text-xs">{Math.round(scale * 100)}%</span>
                 <Button size="icon" onClick={zoomIn} title={copy.zoom_in_title}>
                   <ZoomIn className="w-3.5 h-3.5" />
                 </Button>
@@ -170,7 +170,7 @@ export function App() {
 
             {/* Mobile overlay chips (ratio + tips) — no toolbar row below lg */}
             {!isDesktop && (
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 <span className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06]">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                   {ratioLabel(cardState.ratio, language)}

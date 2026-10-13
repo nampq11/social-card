@@ -17,14 +17,15 @@
     overscroll-behavior: none;
   }
 
-  /* Touch ergonomics (Apple HIG 44pt minimum): every control row grows to
-     44px on coarse pointers, and text entry renders at 16px so iOS Safari
-     doesn't auto-zoom the locked viewport on focus. !important is required
-     against per-field utility font sizes; base-ui's visually-hidden native
-     inputs stay excluded so their sr-only boxes are untouched. */
+  /* Touch ergonomics (Apple HIG 44pt minimum): every control grows to a
+     44×44 target on coarse pointers, and text entry renders at 16px so iOS
+     Safari doesn't auto-zoom the locked viewport on focus. !important is
+     required against per-field utility font sizes; base-ui's visually-hidden
+     native inputs stay excluded so their sr-only boxes are untouched. */
   @media (pointer: coarse) {
     .apple-button {
       min-height: 2.75rem;
+      min-width: 2.75rem;
     }
     input:where(:not([type='radio'], [type='checkbox'], [type='range'], [type='file'])),
     textarea,
