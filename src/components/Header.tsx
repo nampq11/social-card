@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onCopy}
             disabled={isExporting}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all duration-150 apple-button cursor-pointer ${
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-[background-color,color,box-shadow] duration-150 ease-out apple-button cursor-pointer ${
               isCopied
                 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
                 : 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 shadow-sm'
@@ -70,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onDownload}
             disabled={isExporting}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-colors duration-150 ease-out cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{copy.download_button}</span>
@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
             title={copy.language_toggle_title}
             aria-label={copy.language_toggle_title}
-            className="flex items-center gap-1 px-2.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-all cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-2 text-xs font-medium rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 apple-button transition-colors duration-150 ease-out cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5" />
             <span>{language === 'vi' ? 'VI' : 'EN'}</span>

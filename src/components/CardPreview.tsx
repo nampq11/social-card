@@ -55,7 +55,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           transform: `scale(${scale})`,
           transformOrigin: 'top center',
         }}
-        className="transition-transform duration-200 ease-out"
+        className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
       >
         <div
           ref={ref}
@@ -77,7 +77,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 letterSpacing: '-0.025em',
                 lineHeight: 1.25,
               }}
-              className={`font-extrabold max-w-xl transition-all duration-100 ${
+              className={`font-extrabold max-w-xl ${
                 data.uppercaseHeadline ? 'uppercase' : ''
               }`}
             >
