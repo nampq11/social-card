@@ -16,6 +16,11 @@ export function App() {
 
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const flashStatus = (message: string, durationMs = 3000) => {
+    setStatusMessage(message);
+    setTimeout(() => setStatusMessage(null), durationMs);
+  };
+
   const handleCopy = async () => {
     if (!cardRef.current || isExporting) return;
     setIsExporting(true);
@@ -78,6 +83,7 @@ export function App() {
           data={cardState}
           onChange={setCardState}
           onReset={() => setCardState(DEFAULT_CARD_STATE)}
+          onError={(message) => flashStatus(message)}
         />
 
         {/* Center / Right: Live Canvas Studio */}

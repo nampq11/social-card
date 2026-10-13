@@ -15,14 +15,16 @@ import {
   RotateCcw,
   Upload,
 } from 'lucide-react';
+import { logDebug } from '../lib/log-debug';
 
 interface InspectorProps {
   data: CardState;
   onChange: (updated: CardState) => void;
   onReset: () => void;
+  onError: (message: string) => void;
 }
 
-export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset }) => {
+export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, onError }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = <K extends keyof CardState>(key: K, value: CardState[K]) => {
@@ -31,15 +33,27 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset })
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        if (uploadEvent.target?.result) {
-          update('avatarUrl', uploadEvent.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const result = uploadEvent.target?.result;
+      if (result) {
+        update('avatarUrl', result as string);
+      } else {
+        logDebug('Inspector.handleAvatarUpload', `read "${file.name}" returned no data`);
+        onError('Không đọc được nội dung ảnh. Vui lòng thử file khác!');
+      }
+    };
+    reader.onerror = () => {
+      logDebug(
+        'Inspector.handleAvatarUpload',
+        `failed to read avatar file "${file.name}" (${file.size} bytes)`,
+        reader.error
+      );
+      onError('Không thể đọc file ảnh. Vui lòng thử lại!');
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
