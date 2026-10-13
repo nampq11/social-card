@@ -13,6 +13,7 @@ import {
 import { Checkbox } from '@base-ui/react/checkbox';
 import { Switch } from '@base-ui/react/switch';
 import { Slider } from '@base-ui/react/slider';
+import { Field } from '@base-ui/react/field';
 import {
   Square,
   RectangleVertical,
@@ -29,6 +30,7 @@ import { logDebug } from '../lib/log-debug';
 import { useUiCopy } from '../lib/i18n';
 import { Button } from './ui/Button';
 import { toast } from 'sonner';
+import { clsx } from 'clsx';
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
@@ -59,7 +61,7 @@ export const PresetsSection: React.FC = () => {
     );
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
         {copy.presets_label}
       </label>
@@ -143,7 +145,7 @@ export const StyleSection: React.FC = () => {
     );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.style_presets_label}
@@ -163,13 +165,12 @@ export const StyleSection: React.FC = () => {
                 {/* Theme dot — the one visual the label can't carry. */}
                 <span
                   aria-hidden
-                  className={`size-2.5 shrink-0 rounded-full border ${
-                    p.state.theme === 'dark'
-                      ? 'bg-neutral-900 border-neutral-600'
-                      : p.state.theme === 'white'
-                        ? 'bg-white border-neutral-300'
-                        : 'bg-[#F5EFE0] border-neutral-300'
-                  }`}
+                  className={clsx(
+                    'size-2.5 shrink-0 rounded-full border',
+                    p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
+                    p.state.theme === 'white' && 'bg-white border-neutral-300',
+                    p.state.theme === 'paper' && 'bg-[#F5EFE0] border-neutral-300'
+                  )}
                 />
                 {copy[p.nameKey]}
               </Button>
@@ -177,7 +178,7 @@ export const StyleSection: React.FC = () => {
           })}
         </div>
       </div>
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <label id="ratio-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.ratio_label}
         </label>
@@ -194,7 +195,7 @@ export const StyleSection: React.FC = () => {
         />
       </div>
 
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <label id="theme-label" className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.theme_label}
         </label>
@@ -211,8 +212,9 @@ export const StyleSection: React.FC = () => {
         />
       </div>
 
-      {/* Font Size Slider */}
-      <div className="space-y-1.5">
+      {/* One label naming TWO controls (slider + typed entry): base-ui Field
+          is 1:1 label-to-control, so this row keeps aria-labelledby instead. */}
+      <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-center text-xs">
           <label
             id="inspector-headline-size-label"
@@ -268,40 +270,42 @@ export const HeadlineSection: React.FC = () => {
   const update = useCardUpdate();
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-1.5">
-        <label
-          htmlFor="inspector-headline"
-          className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
-        >
+    <div className="flex flex-col gap-4">
+      <Field.Root className="flex flex-col gap-1.5">
+        <Field.Label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.headline_label}
-        </label>
-        <textarea
+        </Field.Label>
+        <Field.Control
           id="inspector-headline"
-          rows={2}
-          value={data.headline}
-          onChange={(e) => update('headline', e.target.value)}
-          placeholder={copy.empty_headline_hint}
-          className="w-full resize-none px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+          render={
+            <textarea
+              rows={2}
+              value={data.headline}
+              onChange={(e) => update('headline', e.target.value)}
+              placeholder={copy.empty_headline_hint}
+              className="w-full resize-none px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+            />
+          }
         />
-      </div>
+      </Field.Root>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="inspector-sublines"
-          className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
-        >
+      <Field.Root className="flex flex-col gap-1.5">
+        <Field.Label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           {copy.sublines_label}
-        </label>
-        <textarea
+        </Field.Label>
+        <Field.Control
           id="inspector-sublines"
-          rows={3}
-          value={data.sublines}
-          onChange={(e) => update('sublines', e.target.value)}
-          placeholder={copy.sublines_hint}
-          className="w-full resize-none px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+          render={
+            <textarea
+              rows={3}
+              value={data.sublines}
+              onChange={(e) => update('sublines', e.target.value)}
+              placeholder={copy.sublines_hint}
+              className="w-full resize-none px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+            />
+          }
         />
-      </div>
+      </Field.Root>
     </div>
   );
 };
@@ -350,7 +354,7 @@ export const IdentitySection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-1.5">
         <User className="w-3.5 h-3.5 text-neutral-500" />
         <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
@@ -391,33 +395,31 @@ export const IdentitySection: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label htmlFor="inspector-author-name" className="text-[10px] text-neutral-400 uppercase font-semibold">
+        <Field.Root className="flex flex-col gap-1.5">
+          <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
             {copy.author_name_label}
-          </label>
-          <input
+          </Field.Label>
+          <Field.Control
             id="inspector-author-name"
-            type="text"
             value={data.authorName}
             onChange={(e) => update('authorName', e.target.value)}
             className="w-full px-2.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
-        </div>
-        <div>
-          <label htmlFor="inspector-author-bio" className="text-[10px] text-neutral-400 uppercase font-semibold">
+        </Field.Root>
+        <Field.Root className="flex flex-col gap-1.5">
+          <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
             {copy.author_bio_label}
-          </label>
-          <input
+          </Field.Label>
+          <Field.Control
             id="inspector-author-bio"
-            type="text"
             value={data.authorBio}
             onChange={(e) => update('authorBio', e.target.value)}
             className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
-        </div>
+        </Field.Root>
       </div>
 
-      <div className="space-y-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
+      <div className="flex flex-col gap-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <QrCode className="w-3.5 h-3.5 text-neutral-500" />
@@ -437,33 +439,31 @@ export const IdentitySection: React.FC = () => {
         </div>
 
         {data.qrEnabled && (
-          <div className="space-y-2">
-            <div>
-              <label htmlFor="inspector-qr-url" className="text-[10px] text-neutral-400 uppercase font-semibold">
+          <div className="flex flex-col gap-2">
+            <Field.Root className="flex flex-col gap-1.5">
+              <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
                 {copy.qr_url_label}
-              </label>
-              <input
+              </Field.Label>
+              <Field.Control
                 id="inspector-qr-url"
-                type="text"
                 value={data.qrUrl}
                 onChange={(e) => update('qrUrl', e.target.value)}
                 placeholder="https://github.com/nampq11"
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
-            </div>
-            <div>
-              <label htmlFor="inspector-qr-cta" className="text-[10px] text-neutral-400 uppercase font-semibold">
+            </Field.Root>
+            <Field.Root className="flex flex-col gap-1.5">
+              <Field.Label className="text-[10px] text-neutral-400 uppercase font-semibold">
                 {copy.qr_cta_label}
-              </label>
-              <input
+              </Field.Label>
+              <Field.Control
                 id="inspector-qr-cta"
-                type="text"
                 value={data.qrCta}
                 onChange={(e) => update('qrCta', e.target.value)}
                 placeholder="Build Trợ lý AI cho riêng bạn!"
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
-            </div>
+            </Field.Root>
           </div>
         )}
       </div>

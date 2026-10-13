@@ -5,7 +5,7 @@ import { clsx } from 'clsx';
 // studio (Header actions, Inspector controls, app-root toolbar).
 // `apple-button` carries the tactile press feedback defined in index.css.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center text-xs apple-button cursor-pointer',
+  'inline-flex items-center justify-center text-xs apple-button cursor-pointer [&_svg]:size-3.5 [&_svg]:shrink-0',
   {
     variants: {
       variant: {

@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
             title={copy.undo_button_title}
             aria-label={copy.undo_button_title}
           >
-            <Undo2 className="w-3.5 h-3.5" />
+            <Undo2 />
           </Button>
           <Button
             onClick={redo}
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
             title={copy.redo_button_title}
             aria-label={copy.redo_button_title}
           >
-            <Redo2 className="w-3.5 h-3.5" />
+            <Redo2 />
           </Button>
 
           {/* Copy to Clipboard (Hero action) */}
@@ -80,12 +80,12 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {isCopied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                <Check className="text-white stroke-[2.5]" />
                 <span className="hidden sm:inline">{copy.copy_button_done}</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 stroke-[2]" />
+                <Copy className="stroke-[2]" />
                 <span className="hidden sm:inline">{copy.copy_button}</span>
               </>
             )}
@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="whitespace-nowrap"
             aria-label={copy.download_button}
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download />
             <span className="hidden sm:inline">{copy.download_button}</span>
           </Button>
 
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
             title={copy.language_toggle_title}
             aria-label={copy.language_toggle_title}
           >
-            <Globe className="w-3.5 h-3.5" />
+            <Globe />
             <span>{language === 'vi' ? 'VI' : 'EN'}</span>
           </Button>
         </div>

@@ -57,7 +57,7 @@ export function MobileSheet() {
             {tabTitle}
           </span>
           <Button onClick={resetCard} variant="ghost" size="sm" title={copy.reset_title}>
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw />
             <span>{copy.reset_button}</span>
           </Button>
         </div>
