@@ -38,8 +38,6 @@ interface DragState {
   maxOffset: number;
   expandedPx: number;
   navHeight: number;
-  /** Safe-area inset the sheet carries as bottom padding; part of the static reserve. */
-  insetPx: number;
   velocity: number;
   animating: boolean;
   pointerId: number;
@@ -57,11 +55,13 @@ interface DragState {
  * the pointer velocity to pick a resting point, springing there with that
  * velocity carried over (Apple, "Designing Fluid Interfaces").
  *
- * The per-frame output is the sheet transform, written straight to the DOM;
- * React state is only the settled `expanded` flag the UI Copy needs. The
- * canvas reserve is static (nav + peek + safe-area inset): the expanded
- * sheet overlays the card instead of shrinking it, so the headline the user
- * is editing stays at full size — only the card's lower third is covered.
+ * The per-frame output is one transform written straight to the DOM — the
+ * sheet and the tab pill carry it together, so the pill stays docked to the
+ * sheet's live top edge instead of floating at the expanded position over
+ * the card. React state is only the settled `expanded` flag the UI Copy
+ * needs. The canvas reserve is static (nav + peek): the expanded sheet
+ * overlays the card instead of shrinking it, so the headline the user is
+ * editing stays at full size — only the card's lower third is covered.
  */
 export function useSheetDrag(
   sheetRef: RefObject<HTMLElement | null>,
@@ -74,7 +74,6 @@ export function useSheetDrag(
     maxOffset: 0,
     expandedPx: 0,
     navHeight: 0,
-    insetPx: 0,
     velocity: 0,
     animating: false,
     pointerId: -1,
@@ -88,8 +87,11 @@ export function useSheetDrag(
 
   const writePosition = useCallback(() => {
     const sheet = sheetRef.current;
-    if (sheet) sheet.style.transform = `translateY(${drag.offset}px)`;
-  }, [drag, sheetRef]);
+    const transform = `translateY(${drag.offset}px)`;
+    if (sheet) sheet.style.transform = transform;
+    const nav = navRef.current;
+    if (nav) nav.style.transform = transform;
+  }, [drag, navRef, sheetRef]);
 
   const cancelSpring = useCallback(() => {
     if (rafId.current !== null) {
@@ -105,19 +107,18 @@ export function useSheetDrag(
     if (!sheet) return;
     drag.expandedPx = sheetExpandedPx(window.innerHeight);
     drag.navHeight = navRef.current?.offsetHeight ?? 0;
-    // Safe-area padding lives on the sheet itself; reading it here keeps the
-    // reserve in one place (jsdom yields NaN for env() → 0).
-    drag.insetPx = parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
     drag.maxOffset = Math.max(0, drag.expandedPx - SHEET_PEEK_PX);
     sheet.style.height = `${drag.expandedPx}px`;
     drag.offset = Math.min(drag.offset, drag.maxOffset);
     if (drag.offset < 0) drag.offset = 0;
-    // Static reserve straight to the canvas element: an inherited CSS variable
-    // would have to live on an ancestor and recalculates the whole document.
+    // Static reserve (nav + peek — the safe-area padding lives inside the
+    // section height) straight to the canvas element: an inherited CSS
+    // variable would have to live on an ancestor and recalculates the whole
+    // document.
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.style.paddingBottom = `${Math.round(
-        drag.navHeight + SHEET_PEEK_PX + drag.insetPx
+        drag.navHeight + SHEET_PEEK_PX
       )}px`;
     }
     writePosition();

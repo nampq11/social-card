@@ -13,7 +13,7 @@ import { useSheetDrag } from '../lib/use-sheet-drag';
 // module) and slides between peek and expanded via transform, driven by the
 // gesture hook: 1:1 drag with rubber-banded edges, momentum projection on
 // release, and a critically damped spring carrying the release velocity.
-// The hook writes the static reserve (nav + peek height + safe area) straight to
+// The hook writes the static reserve (nav + peek height) straight to
 // the canvas padding, so Fit-to-View keeps the card fully visible as the
 // sheet moves.
 interface MobileSheetProps {
@@ -40,7 +40,14 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
-      <nav ref={navRef} aria-label={copy.inspector_title} className="flex justify-center px-3 pb-1.5">
+      {/* The drag hook transforms this nav with the sheet: the pill docks to
+          the sheet's live top edge — at peek it hugs the peeked sheet below
+          the canvas instead of floating over the card. */}
+      <nav
+        ref={navRef}
+        aria-label={copy.inspector_title}
+        className="flex justify-center px-3 pb-1.5 will-change-transform"
+      >
         <SegmentedControl<InspectorTabId>
           value={tab}
           onChange={setTab}

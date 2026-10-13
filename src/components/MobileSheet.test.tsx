@@ -3,6 +3,7 @@ import { createRef } from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MobileSheet } from './MobileSheet';
+import { SHEET_PEEK_PX, sheetExpandedPx } from '../lib/sheet-drag';
 import { useCardStore } from '../lib/card-store';
 import { DEFAULT_CARD_STATE } from '../constants/presets';
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio';
@@ -80,5 +81,21 @@ describe('MobileSheet', () => {
 
     fireEvent.pointerMove(row, { pointerId: 1, clientY: 460 });
     expect(capture).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('MobileSheet tab pill docking', () => {
+  it('the nav rides the same transform as the sheet, docking to its live top edge', () => {
+    renderSheet();
+
+    const nav = screen.getByRole('navigation', { name: /Tùy chỉnh Card/ });
+    const section = document.querySelector('section') as HTMLElement;
+
+    // Peeked: both carry the full pull-down offset, so the pill hugs the
+    // peeked sheet below the canvas instead of floating at the expanded
+    // position over the Card.
+    const peekOffset = sheetExpandedPx(window.innerHeight) - SHEET_PEEK_PX;
+    expect(section.style.transform).toBe(`translateY(${peekOffset}px)`);
+    expect(nav.style.transform).toBe(section.style.transform);
   });
 });
