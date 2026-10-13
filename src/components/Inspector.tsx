@@ -18,6 +18,10 @@ import {
 import { logDebug } from '../lib/log-debug';
 import { useUiCopy } from '../lib/i18n';
 
+// Data-URL avatars live in state and get re-encoded on every export; cap the
+// source file so a stray photo-library original can't stall the studio.
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
 interface InspectorProps {
   data: CardState;
   onChange: (updated: CardState) => void;
@@ -36,6 +40,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      onError(copy.avatar_too_large);
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (uploadEvent) => {
@@ -87,12 +96,12 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         <div className="flex flex-wrap gap-1.5">
           {SAMPLE_PRESETS.map((p) => (
             <button
-              key={p.name}
+              key={p.id}
               type="button"
               onClick={() => onChange({ ...data, ...p.state })}
               className="px-2.5 py-1 text-xs font-medium rounded-lg bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-neutral-700 dark:text-neutral-300 border border-black/[0.04] dark:border-white/[0.06] apple-button transition-all cursor-pointer"
             >
-              {p.name}
+              {copy[p.nameKey]}
             </button>
           ))}
         </div>
@@ -137,7 +146,10 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
       <div className="space-y-4 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+            <label
+              htmlFor="inspector-headline"
+              className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
+            >
               {copy.headline_label}
             </label>
             <label className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
@@ -151,6 +163,7 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             </label>
           </div>
           <textarea
+            id="inspector-headline"
             rows={2}
             value={data.headline}
             onChange={(e) => update('headline', e.target.value)}
@@ -162,12 +175,16 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         {/* Font Size Slider */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+            <label
+              htmlFor="inspector-headline-size"
+              className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
+            >
               {copy.headline_size_label}
-            </span>
+            </label>
             <span className="font-mono text-neutral-500">{data.headlineSize}px</span>
           </div>
           <input
+            id="inspector-headline-size"
             type="range"
             min={24}
             max={60}
@@ -179,10 +196,14 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          <label
+            htmlFor="inspector-sublines"
+            className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
+          >
             {copy.sublines_label}
           </label>
           <textarea
+            id="inspector-sublines"
             rows={3}
             value={data.sublines}
             onChange={(e) => update('sublines', e.target.value)}
@@ -237,10 +258,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+            <label htmlFor="inspector-author-name" className="text-[10px] text-neutral-400 uppercase font-semibold">
               {copy.author_name_label}
             </label>
             <input
+              id="inspector-author-name"
               type="text"
               value={data.authorName}
               onChange={(e) => update('authorName', e.target.value)}
@@ -248,10 +270,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
             />
           </div>
           <div>
-            <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+            <label htmlFor="inspector-author-bio" className="text-[10px] text-neutral-400 uppercase font-semibold">
               {copy.author_bio_label}
             </label>
             <input
+              id="inspector-author-bio"
               type="text"
               value={data.authorBio}
               onChange={(e) => update('authorBio', e.target.value)}
@@ -284,10 +307,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
         {data.qrEnabled && (
           <div className="space-y-2">
             <div>
-              <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              <label htmlFor="inspector-qr-url" className="text-[10px] text-neutral-400 uppercase font-semibold">
                 {copy.qr_url_label}
               </label>
               <input
+                id="inspector-qr-url"
                 type="text"
                 value={data.qrUrl}
                 onChange={(e) => update('qrUrl', e.target.value)}
@@ -296,10 +320,11 @@ export const Inspector: React.FC<InspectorProps> = ({ data, onChange, onReset, o
               />
             </div>
             <div>
-              <label className="text-[10px] text-neutral-400 uppercase font-semibold">
+              <label htmlFor="inspector-qr-cta" className="text-[10px] text-neutral-400 uppercase font-semibold">
                 {copy.qr_cta_label}
               </label>
               <input
+                id="inspector-qr-cta"
                 type="text"
                 value={data.qrCta}
                 onChange={(e) => update('qrCta', e.target.value)}

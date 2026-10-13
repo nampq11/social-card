@@ -20,10 +20,18 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Swap the visible message without a pending auto-hide from a previous
+  // message clearing this one early.
+  const showStatus = (message: string) => {
+    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    setStatusMessage(message);
+  };
 
   const flashStatus = (message: string, durationMs = 3000) => {
-    setStatusMessage(message);
-    setTimeout(() => setStatusMessage(null), durationMs);
+    showStatus(message);
+    statusTimerRef.current = setTimeout(() => setStatusMessage(null), durationMs);
   };
 
   // Shared shell for export actions: guards re-entry, shows a progress
@@ -37,7 +45,7 @@ export function App() {
     const card = cardRef.current;
     if (!card || isExporting) return;
     setIsExporting(true);
-    setStatusMessage(processingMessage);
+    showStatus(processingMessage);
 
     try {
       await action(card);
@@ -58,11 +66,8 @@ export function App() {
       },
       () => {
         setIsCopied(true);
-        setStatusMessage(copy.copy_success);
-        setTimeout(() => {
-          setIsCopied(false);
-          setStatusMessage(null);
-        }, 3500);
+        flashStatus(copy.copy_success, 3500);
+        setTimeout(() => setIsCopied(false), 3500);
       },
       copy.copy_error
     );
