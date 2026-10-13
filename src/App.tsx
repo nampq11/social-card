@@ -23,7 +23,7 @@ export function App() {
 
   // Transient feedback (status toast, "Copied!" flag) is owned by the
   // useFlash module: sticky progress via set, auto-hidden results via flash.
-  const [statusMessage, status] = useFlash<string | null>(null, 3000);
+  const [statusMessage] = useFlash<string | null>(null, 3000);
   const [isCopied, copiedFlag] = useFlash<boolean>(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -89,7 +89,7 @@ export function App() {
       {/* Main Studio Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 pb-12 flex flex-col lg:flex-row gap-8 items-start justify-center">
         {/* Left: Apple Inspector Sidebar */}
-        <Inspector onError={(message) => status.flash(message)} />
+        <Inspector />
 
         {/* Center / Right: Live Canvas Studio */}
         <div className="flex-1 w-full flex flex-col items-center">

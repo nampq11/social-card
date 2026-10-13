@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'sonner';
 import { App } from './App';
@@ -8,6 +8,7 @@ import { UiCopyProvider } from './lib/i18n';
 import { useCardStore } from './lib/card-store';
 import { DEFAULT_CARD_STATE } from './constants/presets';
 import './test/match-media';
+import { toastRegion } from './test/toast-region';
 
 // html-to-image cannot run in a jsdom DOM — the export module is the single
 // mock boundary for the app-root seam.
@@ -38,17 +39,6 @@ const renderApp = () =>
 const cardHeadline = () =>
   within(document.getElementById('social-card-node')!).getByRole('heading', { level: 1 })
     .textContent;
-
-// Sonner renders toasts into this region; asserting within it verifies the
-// message is a toast in the live region, not stray page text.
-const toastRegionNode = () => document.querySelector<HTMLElement>('[data-sonner-toaster]');
-
-const toastRegion = async () => {
-  // Sonner defers every toast store update through a timer, so the region
-  // never appears synchronously after the click that started an export.
-  await waitFor(() => expect(toastRegionNode()).not.toBeNull());
-  return toastRegionNode()!;
-};
 
 // Holds one export in its processing state until the test settles it — the
 // promise toast's processing phase is only observable while unresolved.

@@ -19,16 +19,13 @@ import {
 import { logDebug } from '../lib/log-debug';
 import { useUiCopy } from '../lib/i18n';
 import { Button } from './ui/Button';
+import { toast } from 'sonner';
 
 // Data-URL avatars live in state and get re-encoded on every export; cap the
 // source file so a stray photo-library original can't stall the studio.
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
-interface InspectorProps {
-  onError: (message: string) => void;
-}
-
-export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
+export const Inspector: React.FC = () => {
   const { copy } = useUiCopy();
   const data = useCardStore((s) => s.card);
   const patchCard = useCardStore((s) => s.patchCard);
@@ -46,12 +43,12 @@ export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      onError(copy.avatar_file_error);
+      toast.error(copy.avatar_file_error);
       return;
     }
 
     if (file.size > MAX_AVATAR_BYTES) {
-      onError(copy.avatar_too_large);
+      toast.error(copy.avatar_too_large);
       return;
     }
 
@@ -62,7 +59,7 @@ export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
         update('avatarUrl', result as string);
       } else {
         logDebug('Inspector.handleAvatarUpload', `read "${file.name}" returned no data`);
-        onError(copy.avatar_read_error);
+        toast.error(copy.avatar_read_error);
       }
     };
     reader.onerror = () => {
@@ -71,7 +68,7 @@ export const Inspector: React.FC<InspectorProps> = ({ onError }) => {
         `failed to read avatar file "${file.name}" (${file.size} bytes)`,
         reader.error
       );
-      onError(copy.avatar_file_error);
+      toast.error(copy.avatar_file_error);
     };
     reader.readAsDataURL(file);
   };

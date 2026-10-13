@@ -1,29 +1,30 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Toaster, toast } from 'sonner';
 import { Inspector } from './Inspector';
 import { UiCopyProvider } from '../lib/i18n';
 import { useCardStore } from '../lib/card-store';
+import { toastRegion } from '../test/toast-region';
+import '../test/match-media';
 
 afterEach(() => {
   cleanup();
+  // Sonner's toast queue is module-global; drop toasts so tests stay isolated.
+  toast.dismiss();
 });
 
 beforeEach(() => {
   useCardStore.getState().resetCard();
 });
 
-const renderInspector = () => {
-  const onError = vi.fn();
-
-  const utils = render(
+const renderInspector = () =>
+  render(
     <UiCopyProvider>
-      <Inspector onError={onError} />
+      <Inspector />
+      <Toaster />
     </UiCopyProvider>
   );
-
-  return { ...utils, onError };
-};
 
 describe('Inspector', () => {
   it('associates inputs with their corresponding labels', () => {
@@ -45,8 +46,8 @@ describe('Inspector', () => {
     expect(qrToggle).not.toBeNull();
   });
 
-  it('rejects files exceeding MAX_AVATAR_BYTES', () => {
-    const { onError, container } = renderInspector();
+  it('rejects files exceeding MAX_AVATAR_BYTES with an error toast', async () => {
+    const { container } = renderInspector();
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     const largeFile = new File(['x'.repeat(6 * 1024 * 1024)], 'huge.png', {
@@ -54,13 +55,11 @@ describe('Inspector', () => {
     });
 
     fireEvent.change(fileInput, { target: { files: [largeFile] } });
-    expect(onError).toHaveBeenCalledWith(
-      expect.stringContaining('Ảnh quá lớn')
-    );
+    expect(await within(await toastRegion()).findByText(/Ảnh quá lớn/)).toBeTruthy();
   });
 
-  it('rejects non-image files with an error toast', () => {
-    const { onError, container } = renderInspector();
+  it('rejects non-image files with an error toast', async () => {
+    const { container } = renderInspector();
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
 
     const pdfFile = new File(['%PDF-1.4 dummy'], 'doc.pdf', {
@@ -68,9 +67,7 @@ describe('Inspector', () => {
     });
 
     fireEvent.change(fileInput, { target: { files: [pdfFile] } });
-    expect(onError).toHaveBeenCalledWith(
-      expect.stringContaining('Không thể đọc file ảnh')
-    );
+    expect(await within(await toastRegion()).findByText(/Không thể đọc file ảnh/)).toBeTruthy();
   });
 
   it('resets file input value so re-selecting the same file fires change event', () => {
