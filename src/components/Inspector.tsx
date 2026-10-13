@@ -2,7 +2,10 @@ import React, { useRef } from 'react';
 import type { CardState, AspectRatio, CardTheme } from '../types';
 import { SegmentedControl } from './SegmentedControl';
 import { useCardStore } from '../lib/card-store';
-import { SAMPLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets';
+import { SAMPLE_PRESETS, DEFAULT_CARD_STATE, type SamplePreset } from '../constants/presets';
+import { Checkbox } from '@base-ui/react/checkbox';
+import { Switch } from '@base-ui/react/switch';
+import { Slider } from '@base-ui/react/slider';
 import {
   Square,
   RectangleVertical,
@@ -15,6 +18,7 @@ import {
   Sparkles,
   RotateCcw,
   Upload,
+  Check,
 } from 'lucide-react';
 import { logDebug } from '../lib/log-debug';
 import { useUiCopy } from '../lib/i18n';
@@ -35,6 +39,13 @@ export const Inspector: React.FC = () => {
   const update = <K extends keyof CardState>(key: K, value: CardState[K]) => {
     patchCard({ [key]: value });
   };
+
+  // A Preset Quick Pick is "active" while every Card Content field it sets
+  // still matches — any manual edit naturally deselects it.
+  const isActivePreset = (preset: SamplePreset) =>
+    (Object.keys(preset.state) as (keyof CardState)[]).every(
+      (key) => data[key] === preset.state[key]
+    );
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +110,8 @@ export const Inspector: React.FC = () => {
             <Button
               key={p.id}
               onClick={() => patchCard(p.state)}
-              variant="secondary"
+              aria-pressed={isActivePreset(p)}
+              variant={isActivePreset(p) ? 'primary' : 'secondary'}
               size="sm"
             >
               {copy[p.nameKey]}
@@ -159,13 +171,16 @@ export const Inspector: React.FC = () => {
               htmlFor="inspector-uppercase"
               className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
             >
-              <input
+              <Checkbox.Root
                 id="inspector-uppercase"
-                type="checkbox"
                 checked={data.uppercaseHeadline}
-                onChange={(e) => update('uppercaseHeadline', e.target.checked)}
-                className="rounded border-neutral-300 text-blue-600 focus:ring-0 cursor-pointer"
-              />
+                onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
+                className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+              >
+                <Checkbox.Indicator>
+                  <Check className="size-3" strokeWidth={3} />
+                </Checkbox.Indicator>
+              </Checkbox.Root>
               <span>{copy.uppercase_label}</span>
             </label>
           </div>
@@ -175,7 +190,7 @@ export const Inspector: React.FC = () => {
             value={data.headline}
             onChange={(e) => update('headline', e.target.value)}
             placeholder={copy.empty_headline_hint}
-            className="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+            className="w-full resize-none px-3.5 py-2.5 text-sm font-semibold rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
           />
         </div>
 
@@ -183,23 +198,29 @@ export const Inspector: React.FC = () => {
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs">
             <label
-              htmlFor="inspector-headline-size"
+              id="inspector-headline-size-label"
               className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500"
             >
               {copy.headline_size_label}
             </label>
             <span className="font-mono text-neutral-500">{data.headlineSize}px</span>
           </div>
-          <input
-            id="inspector-headline-size"
-            type="range"
+          <Slider.Root
+            value={data.headlineSize}
             min={24}
             max={60}
             step={1}
-            value={data.headlineSize}
-            onChange={(e) => update('headlineSize', Number(e.target.value))}
-            className="w-full accent-blue-600 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-lg cursor-pointer"
-          />
+            aria-labelledby="inspector-headline-size-label"
+            onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
+            className="flex w-full cursor-pointer select-none"
+          >
+            <Slider.Control className="flex w-full touch-none items-center py-1">
+              <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
+                <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
+                <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
         </div>
 
         <div className="space-y-1.5">
@@ -214,8 +235,8 @@ export const Inspector: React.FC = () => {
             rows={3}
             value={data.sublines}
             onChange={(e) => update('sublines', e.target.value)}
-            placeholder={'lanphinh.com\nlanphinh.io'}
-            className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+            placeholder={copy.sublines_hint}
+            className="w-full resize-none px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
           />
         </div>
       </div>
@@ -242,13 +263,15 @@ export const Inspector: React.FC = () => {
               <Upload className="w-3 h-3" />
               <span>{copy.change_photo}</span>
             </Button>
-            <Button
-              onClick={() => update('avatarUrl', DEFAULT_CARD_STATE.avatarUrl)}
-              variant="ghost"
-              size="sm"
-            >
-              {copy.original_avatar}
-            </Button>
+            {data.avatarUrl !== DEFAULT_CARD_STATE.avatarUrl && (
+              <Button
+                onClick={() => update('avatarUrl', DEFAULT_CARD_STATE.avatarUrl)}
+                variant="ghost"
+                size="sm"
+              >
+                {copy.original_avatar}
+              </Button>
+            )}
             <input
               type="file"
               ref={fileInputRef}
@@ -269,7 +292,7 @@ export const Inspector: React.FC = () => {
               type="text"
               value={data.authorName}
               onChange={(e) => update('authorName', e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
           <div>
@@ -281,7 +304,7 @@ export const Inspector: React.FC = () => {
               type="text"
               value={data.authorBio}
               onChange={(e) => update('authorBio', e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
         </div>
@@ -296,17 +319,15 @@ export const Inspector: React.FC = () => {
               {copy.qr_label}
             </span>
           </div>
-          <label htmlFor="inspector-qr-toggle" className="relative inline-flex items-center cursor-pointer">
-            <input
-              id="inspector-qr-toggle"
-              type="checkbox"
-              aria-label={copy.qr_label}
-              checked={data.qrEnabled}
-              onChange={(e) => update('qrEnabled', e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-8 h-4.5 bg-neutral-300 peer-focus:outline-none rounded-full peer transition-colors duration-150 ease-out peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-transform after:duration-150 after:ease-out"></div>
-          </label>
+          <Switch.Root
+            id="inspector-qr-toggle"
+            aria-label={copy.qr_label}
+            checked={data.qrEnabled}
+            onCheckedChange={(checked) => update('qrEnabled', checked)}
+            className="relative inline-flex h-4.5 w-8 shrink-0 items-center rounded-full bg-neutral-300 dark:bg-neutral-600 transition-colors duration-150 ease-out data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+          >
+            <Switch.Thumb className="absolute left-[2px] top-[2px] size-3.5 rounded-full bg-white shadow transition-transform duration-150 ease-out data-[checked]:translate-x-3.5" />
+          </Switch.Root>
         </div>
 
         {data.qrEnabled && (
@@ -321,7 +342,7 @@ export const Inspector: React.FC = () => {
                 value={data.qrUrl}
                 onChange={(e) => update('qrUrl', e.target.value)}
                 placeholder="https://github.com/nampq11"
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
             <div>
@@ -334,7 +355,7 @@ export const Inspector: React.FC = () => {
                 value={data.qrCta}
                 onChange={(e) => update('qrCta', e.target.value)}
                 placeholder="Build Trợ lý AI cho riêng bạn!"
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
           </div>
