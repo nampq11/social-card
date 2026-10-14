@@ -59,18 +59,21 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
     }[data.theme]
 
     const sublineList = splitSublines(data.sublines)
+    const bioLines = splitSublines(data.authorBio)
 
     const signatureText = (alignRight: boolean) => (
       <div className={alignRight ? 'text-right' : ''}>
         <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
           {data.authorName || FALLBACK_AUTHOR_NAME}
         </h3>
-        {data.authorBio && (
-          <p
+        {bioLines.length > 0 && (
+          <div
             className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
           >
-            {data.authorBio}
-          </p>
+            {bioLines.map((line, idx) => (
+              <p key={idx}>{line}</p>
+            ))}
+          </div>
         )}
       </div>
     )

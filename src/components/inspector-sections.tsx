@@ -449,9 +449,14 @@ export const IdentitySection: React.FC = () => {
           </Field.Label>
           <Field.Control
             id="inspector-author-bio"
-            value={data.authorBio}
-            onChange={(e) => update('authorBio', e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            render={
+              <textarea
+                rows={2}
+                value={data.authorBio}
+                onChange={(e) => update('authorBio', e.target.value)}
+                className="w-full resize-none px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              />
+            }
           />
         </Field.Root>
       </div>
