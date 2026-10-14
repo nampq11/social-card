@@ -446,3 +446,20 @@ describe('Showcase Annotation curve', () => {
     expect(secondDetail.querySelector('[data-testid="annotation-curve"]')).not.toBeNull()
   })
 })
+
+describe('Showcase Annotation styling', () => {
+  it('inks the mark with the theme text token and the handwriting font', () => {
+    renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [{ id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan', side: 'left' }],
+      },
+    })
+
+    const mark = screen.getByText('Tổng quan').closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(CARD_THEME_STYLES.dark.text)
+    expect(mark?.className).toContain('font-hand')
+  })
+})

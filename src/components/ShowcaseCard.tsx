@@ -68,9 +68,12 @@ const Slot = ({
     {shot && annotation && (
       <div
         data-testid="annotation"
-        className={`absolute ${ANNOTATION_PLACEMENT[annotation.side].mark}`}
+        className={`pointer-events-none absolute font-hand text-[17px] leading-tight ${themeStyles.text} ${ANNOTATION_PLACEMENT[annotation.side].mark}`}
       >
-        <p>{annotation.text}</p>
+        {/* One fixed size, ink from the active theme's text token; the curve
+            inherits it through currentColor. Pointer events stay off: the
+            preview is a pure render surface. */}
+        <p className="break-words">{annotation.text}</p>
         <AnnotationCurve className={ANNOTATION_PLACEMENT[annotation.side].curve} />
       </div>
     )}
