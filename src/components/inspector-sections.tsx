@@ -1,7 +1,8 @@
 import React, { useRef } from 'react'
-import type { CardState, AspectRatio, CardTheme } from '../types'
+import type { CardState, AspectRatio, CardTheme, CardType } from '../types'
 import { SegmentedControl } from './SegmentedControl'
-import { useCardStore } from '../lib/card-store'
+import { MAX_SHOTS, useCardStore } from '../lib/card-store'
+import { ingestScreenshot } from '../lib/shot-ingest'
 import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
@@ -19,6 +20,8 @@ import {
   User,
   Upload,
   Check,
+  Plus,
+  X,
 } from 'lucide-react'
 import { logDebug } from '../lib/log-debug'
 import { useUiCopy } from '../lib/i18n'
@@ -79,6 +82,134 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
 const PRESET_ACTIVE_CLASS = 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
 const PRESET_INACTIVE_CLASS =
   'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
+
+// The Card Type switcher (spec #33): the one control visible in BOTH modes —
+// Quote mode's only new control. Pressing a segment calls the store's
+// dedicated atomic switch action; the checked segment mirrors the Card Type.
+export const CardTypeSwitcherSection: React.FC = () => {
+  const { copy } = useUiCopy()
+  const cardType = useCardStore((s) => s.card.cardType)
+  const switchCardType = useCardStore((s) => s.switchCardType)
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        id="card-type-label"
+        className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
+      >
+        {copy.card_type_label}
+      </label>
+      <SegmentedControl<CardType>
+        aria-labelledby="card-type-label"
+        value={cardType}
+        onChange={switchCardType}
+        className="w-full"
+        options={[
+          { value: 'quote', label: copy.card_type_quote },
+          { value: 'showcase', label: copy.card_type_showcase },
+        ]}
+      />
+    </div>
+  )
+}
+
+// One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
+// through the shared ingest (normalize + re-encode) into the store; the
+// thumbnail grid shows upload order — the first Shot renders in the Hero
+// Slot — with a delete per Shot. Adding disables at MAX_SHOTS with the cap
+// spelled out, mirroring the store's own refusal.
+export const ScreenshotsSection: React.FC = () => {
+  const { copy } = useUiCopy()
+  // Select the array reference itself (stable while untouched); defaulting
+  // inside the selector would mint a fresh [] per check and loop React's
+  // store sync.
+  const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
+  const addShot = useCardStore((s) => s.addShot)
+  const removeShot = useCardStore((s) => s.removeShot)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleShotPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    // Clear value so re-picking the same file still triggers onChange
+    event.target.value = ''
+    if (!file) return
+    try {
+      addShot(await ingestScreenshot(file))
+    } catch (error) {
+      logDebug(
+        'ScreenshotsSection.handleShotPick',
+        `failed to ingest "${file.name}" (${file.size} bytes)`,
+        error,
+      )
+      toast.error(copy.shot_file_error)
+    }
+  }
+
+  const atCap = shots.length >= MAX_SHOTS
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+          {copy.shots_label}
+        </label>
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {shots.length}/{MAX_SHOTS}
+        </span>
+      </div>
+
+      {shots.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5">
+          {shots.map((shot) => (
+            <div
+              key={shot.id}
+              className="relative aspect-square overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1]"
+            >
+              {/* Named alt so identical thumbnails stay distinguishable to
+                  screen readers; position = upload order = Hero Slot first. */}
+              <img
+                src={shot.dataUrl}
+                alt={`${copy.shots_label} ${shots.indexOf(shot) + 1}`}
+                className="h-full w-full object-cover object-top"
+              />
+              <button
+                type="button"
+                aria-label={copy.shots_remove_title}
+                onClick={() => removeShot(shot.id)}
+                className="absolute right-1 top-1 flex size-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={atCap}
+        variant="secondary"
+        size="sm"
+        className="w-full"
+      >
+        <Plus className="w-3 h-3" />
+        <span>{copy.shots_add}</span>
+      </Button>
+      {atCap && (
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {copy.shots_cap_hint}
+        </span>
+      )}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleShotPick}
+        accept="image/*"
+        className="hidden"
+      />
+    </div>
+  )
+}
 
 export const PresetsSection: React.FC = () => {
   const { copy } = useUiCopy()
@@ -167,44 +298,49 @@ export const StyleSection: React.FC = () => {
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
   const patchCard = useCardStore((s) => s.patchCard)
+  const isShowcase = useCardStore((s) => s.card.cardType === 'showcase')
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.style_presets_label}
-        </label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {STYLE_PRESETS.map((p) => {
-            const active = isPresetActive(data, p.state)
-            return (
-              <Button
-                key={p.id}
-                onClick={() => patchCard(p.state)}
-                aria-pressed={active}
-                variant={active ? 'primary' : 'secondary'}
-                size="sm"
-                className={clsx(
-                  'justify-start font-medium text-xs',
-                  active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
-                )}
-              >
-                {/* Theme dot — the one visual the label can't carry. */}
-                <span
-                  aria-hidden
+      {/* Style Presets write Quote-only fields, so they are hidden entirely
+          in Showcase mode; the theme below stays (spec #33 story 26). */}
+      {!isShowcase && (
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+            {copy.style_presets_label}
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STYLE_PRESETS.map((p) => {
+              const active = isPresetActive(data, p.state)
+              return (
+                <Button
+                  key={p.id}
+                  onClick={() => patchCard(p.state)}
+                  aria-pressed={active}
+                  variant={active ? 'primary' : 'secondary'}
+                  size="sm"
                   className={clsx(
-                    'size-2.5 shrink-0 rounded-full border',
-                    p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
-                    p.state.theme === 'white' && 'bg-white border-neutral-300',
-                    p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
+                    'justify-start font-medium text-xs',
+                    active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
                   )}
-                />
-                {copy[p.nameKey]}
-              </Button>
-            )
-          })}
+                >
+                  {/* Theme dot — the one visual the label can't carry. */}
+                  <span
+                    aria-hidden
+                    className={clsx(
+                      'size-2.5 shrink-0 rounded-full border',
+                      p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
+                      p.state.theme === 'white' && 'bg-white border-neutral-300',
+                      p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
+                    )}
+                  />
+                  {copy[p.nameKey]}
+                </Button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <label id="ratio-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
           {copy.ratio_label}

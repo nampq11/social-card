@@ -1,14 +1,21 @@
 // @vitest-environment jsdom
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Toaster } from 'sonner'
 import { Inspector } from './Inspector'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { toastRegion } from '../test/toast-region'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
+import { UI_LANGUAGE_STORAGE_KEY } from '../lib/i18n'
 
 setupCardStudioTest()
+
+// jsdom has no canvas, so the real ingest cannot run here; the seam under
+// test is that a picked file goes through ingestScreenshot into the store.
+vi.mock('../lib/shot-ingest', () => ({
+  ingestScreenshot: vi.fn(async () => 'data:image/jpeg;base64,ingested'),
+}))
 
 // The Inspector itself renders no toast region; its error-toast assertions
 // need one beside it (App mounts its own inside <App />).
@@ -378,5 +385,130 @@ describe('Inspector segmented controls a11y', () => {
       expect(landscape.getAttribute('aria-checked')).toBe('true')
     })
     expect(useCardStore.getState().card.ratio).toBe('16:9')
+  })
+})
+
+describe('Inspector Card Type switcher', () => {
+  const typeGroup = () => screen.getByRole('radiogroup', { name: 'Loại Card' })
+
+  it('leads the Content tab in Quote mode with Quote checked', () => {
+    renderInspector()
+
+    const group = typeGroup()
+    expect(
+      within(group).getByRole('radio', { name: 'Trích dẫn' }).getAttribute('aria-checked'),
+    ).toBe('true')
+    expect(
+      within(group).getByRole('radio', { name: 'Giới thiệu' }).getAttribute('aria-checked'),
+    ).toBe('false')
+  })
+
+  it('switches to Showcase through the store action when its segment is pressed', () => {
+    renderInspector()
+
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Giới thiệu' }))
+
+    expect(useCardStore.getState().card.cardType).toBe('showcase')
+  })
+
+  it('stays visible in Showcase mode and switches back to Quote', () => {
+    renderInspector()
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Giới thiệu' }))
+
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Trích dẫn' }))
+
+    expect(useCardStore.getState().card.cardType).toBe('quote')
+  })
+})
+
+describe('Inspector Showcase Screenshots section', () => {
+  const switchToShowcase = () => {
+    const result = renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+    return result
+  }
+  const shots = () => useCardStore.getState().card.showcase?.shots ?? []
+
+  it('replaces Presets and Headline with the Screenshots section in Showcase mode', () => {
+    switchToShowcase()
+
+    expect(screen.getByText('Ảnh chụp màn hình')).not.toBeNull()
+    expect(screen.queryByText('Mẫu nhanh')).toBeNull()
+    expect(screen.queryByLabelText('Tiêu đề chính')).toBeNull()
+    expect((screen.getByRole('button', { name: 'Thêm ảnh' }) as HTMLButtonElement).disabled).toBe(
+      false,
+    )
+  })
+
+  it('adds a Shot through the screenshot ingest when a file is picked', async () => {
+    const { container } = switchToShowcase()
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['png-bytes'], 'shot.png', { type: 'image/png' })] },
+    })
+
+    await waitFor(() => {
+      expect(shots()).toHaveLength(1)
+    })
+    expect(shots()[0].dataUrl).toBe('data:image/jpeg;base64,ingested')
+    expect(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' })).not.toBeNull()
+  })
+
+  it('removes a Shot when its thumbnail delete button is pressed', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa ảnh' }))
+
+    expect(shots()).toHaveLength(0)
+  })
+
+  it('disables adding and explains the cap once three Shots exist', () => {
+    switchToShowcase()
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+      useCardStore.getState().addShot('data:image/jpeg;base64,two')
+      useCardStore.getState().addShot('data:image/jpeg;base64,three')
+    })
+
+    expect((screen.getByRole('button', { name: 'Thêm ảnh' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    )
+    expect(screen.getByText(/Tối đa 3 ảnh/)).not.toBeNull()
+  })
+})
+
+describe('Inspector presets in Showcase mode', () => {
+  const switchToShowcase = () => {
+    renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+  }
+
+  it('keeps the Quote Content tab as Presets + Headline beside the switcher', () => {
+    renderInspector()
+
+    expect(screen.getByText('Mẫu nhanh')).not.toBeNull()
+    expect(screen.getByLabelText('Tiêu đề chính')).not.toBeNull()
+    expect(screen.queryByText('Ảnh chụp màn hình')).toBeNull()
+  })
+
+  it('hides the Style Presets grid in Showcase while the theme control stays', () => {
+    switchToShowcase()
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }))
+
+    expect(screen.queryByText('Mẫu phong cách')).toBeNull()
+    expect(screen.getByRole('radiogroup', { name: 'Màu nền' })).not.toBeNull()
+  })
+})
+
+describe('Inspector Card Type labels', () => {
+  it('labels the switcher in English when the Interface Language is English', () => {
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en')
+    renderInspector()
+
+    const group = screen.getByRole('radiogroup', { name: 'Card type' })
+    expect(within(group).getByRole('radio', { name: 'Quote' })).not.toBeNull()
+    expect(within(group).getByRole('radio', { name: 'Showcase' })).not.toBeNull()
   })
 })

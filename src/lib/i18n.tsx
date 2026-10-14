@@ -51,6 +51,16 @@ const vi = {
   state_off: 'TẮT',
   qr_cta_placeholder: 'Build Trợ lý AI cho riêng bạn!',
 
+  card_type_label: 'Loại Card',
+  card_type_quote: 'Trích dẫn',
+  card_type_showcase: 'Giới thiệu',
+
+  shots_label: 'Ảnh chụp màn hình',
+  shots_add: 'Thêm ảnh',
+  shots_cap_hint: 'Tối đa 3 ảnh cho một card. Xóa bớt để thêm ảnh khác.',
+  shots_remove_title: 'Xóa ảnh',
+  shot_file_error: 'Không thể đọc ảnh chụp màn hình. Vui lòng thử file khác!',
+
   inspector_title: 'Tùy chỉnh Card',
   reset_title: 'Đặt lại mặc định',
   reset_button: 'Mặc định',
@@ -173,6 +183,16 @@ const en: typeof vi = {
   state_on: 'ON',
   state_off: 'OFF',
   qr_cta_placeholder: 'Build your own AI assistant!',
+
+  card_type_label: 'Card type',
+  card_type_quote: 'Quote',
+  card_type_showcase: 'Showcase',
+
+  shots_label: 'Screenshots',
+  shots_add: 'Add screenshot',
+  shots_cap_hint: 'Up to 3 shots per card. Remove one to add another.',
+  shots_remove_title: 'Remove screenshot',
+  shot_file_error: "Couldn't read that screenshot. Try a different file!",
 
   inspector_title: 'Customize card',
   reset_title: 'Reset to defaults',
