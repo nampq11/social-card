@@ -74,6 +74,15 @@ const ShotImage = ({
   // render stays byte-identical to the ADR 0005 one.
   const anchor = shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, fit)
   const zoom = fit === 'cover' ? clampScale(shot.scale ?? 1) : 1
+  // Translate (rubber-band excess, slot px) sits BEFORE the zoom scale so
+  // both stay in their own coordinate space.
+  const transform =
+    [
+      zoom > 1 && `scale(${zoom})`,
+      pan.overdrag && `translate(${pan.overdrag.x}px, ${pan.overdrag.y}px)`,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined
   return (
     <img
       src={shot.dataUrl}
@@ -84,7 +93,7 @@ const ShotImage = ({
       onPointerCancel={pan.handlers.onPointerCancel}
       style={{
         objectPosition: anchor,
-        ...(zoom > 1 ? { transform: `scale(${zoom})`, transformOrigin: anchor } : {}),
+        ...(transform ? { transform, ...(zoom > 1 ? { transformOrigin: anchor } : {}) } : {}),
       }}
       className={`relative h-full w-full ${
         windowCard
