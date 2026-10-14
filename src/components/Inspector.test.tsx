@@ -7,6 +7,7 @@ import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { toastRegion } from '../test/toast-region'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
+import { UI_LANGUAGE_STORAGE_KEY } from '../lib/i18n'
 
 setupCardStudioTest()
 
@@ -475,5 +476,39 @@ describe('Inspector Showcase Screenshots section', () => {
       true,
     )
     expect(screen.getByText(/Tối đa 3 ảnh/)).not.toBeNull()
+  })
+})
+
+describe('Inspector presets in Showcase mode', () => {
+  const switchToShowcase = () => {
+    renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+  }
+
+  it('keeps the Quote Content tab as Presets + Headline beside the switcher', () => {
+    renderInspector()
+
+    expect(screen.getByText('Mẫu nhanh')).not.toBeNull()
+    expect(screen.getByLabelText('Tiêu đề chính')).not.toBeNull()
+    expect(screen.queryByText('Ảnh chụp màn hình')).toBeNull()
+  })
+
+  it('hides the Style Presets grid in Showcase while the theme control stays', () => {
+    switchToShowcase()
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }))
+
+    expect(screen.queryByText('Mẫu phong cách')).toBeNull()
+    expect(screen.getByRole('radiogroup', { name: 'Màu nền' })).not.toBeNull()
+  })
+})
+
+describe('Inspector Card Type labels', () => {
+  it('labels the switcher in English when the Interface Language is English', () => {
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en')
+    renderInspector()
+
+    const group = screen.getByRole('radiogroup', { name: 'Card type' })
+    expect(within(group).getByRole('radio', { name: 'Quote' })).not.toBeNull()
+    expect(within(group).getByRole('radio', { name: 'Showcase' })).not.toBeNull()
   })
 })

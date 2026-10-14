@@ -128,3 +128,15 @@ describe('MobileSheet tab pill docking', () => {
     expect(header.textContent).not.toContain('Nội dung')
   })
 })
+
+describe('MobileSheet Showcase mode', () => {
+  it('inherits the registry swap: Screenshots replace Presets and Headline', () => {
+    renderSheet()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+
+    expect(screen.getByText('Ảnh chụp màn hình')).not.toBeNull()
+    expect(screen.queryByText('Mẫu nhanh')).toBeNull()
+    expect(screen.queryByLabelText('Tiêu đề chính')).toBeNull()
+  })
+})

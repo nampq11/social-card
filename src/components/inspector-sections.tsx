@@ -298,44 +298,49 @@ export const StyleSection: React.FC = () => {
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
   const patchCard = useCardStore((s) => s.patchCard)
+  const isShowcase = useCardStore((s) => s.card.cardType === 'showcase')
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.style_presets_label}
-        </label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {STYLE_PRESETS.map((p) => {
-            const active = isPresetActive(data, p.state)
-            return (
-              <Button
-                key={p.id}
-                onClick={() => patchCard(p.state)}
-                aria-pressed={active}
-                variant={active ? 'primary' : 'secondary'}
-                size="sm"
-                className={clsx(
-                  'justify-start font-medium text-xs',
-                  active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
-                )}
-              >
-                {/* Theme dot — the one visual the label can't carry. */}
-                <span
-                  aria-hidden
+      {/* Style Presets write Quote-only fields, so they are hidden entirely
+          in Showcase mode; the theme below stays (spec #33 story 26). */}
+      {!isShowcase && (
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+            {copy.style_presets_label}
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STYLE_PRESETS.map((p) => {
+              const active = isPresetActive(data, p.state)
+              return (
+                <Button
+                  key={p.id}
+                  onClick={() => patchCard(p.state)}
+                  aria-pressed={active}
+                  variant={active ? 'primary' : 'secondary'}
+                  size="sm"
                   className={clsx(
-                    'size-2.5 shrink-0 rounded-full border',
-                    p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
-                    p.state.theme === 'white' && 'bg-white border-neutral-300',
-                    p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
+                    'justify-start font-medium text-xs',
+                    active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
                   )}
-                />
-                {copy[p.nameKey]}
-              </Button>
-            )
-          })}
+                >
+                  {/* Theme dot — the one visual the label can't carry. */}
+                  <span
+                    aria-hidden
+                    className={clsx(
+                      'size-2.5 shrink-0 rounded-full border',
+                      p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
+                      p.state.theme === 'white' && 'bg-white border-neutral-300',
+                      p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
+                    )}
+                  />
+                  {copy[p.nameKey]}
+                </Button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <label id="ratio-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
           {copy.ratio_label}
