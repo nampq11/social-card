@@ -117,6 +117,9 @@ export const useCardStore = create<CardStore>((set) => ({
     set((state) => {
       lastEdit = null
       const cardType: CardType = state.card.cardType === 'showcase' ? 'quote' : 'showcase'
-      return undoStep(state, { ...state.card, cardType })
+      // Showcase is always 1:1; leaving does not restore the pre-excursion
+      // ratio — ratio is shared style, not per-type content (issue #33).
+      const ratio = cardType === 'showcase' ? '1:1' : state.card.ratio
+      return undoStep(state, { ...state.card, cardType, ratio })
     }),
 }))

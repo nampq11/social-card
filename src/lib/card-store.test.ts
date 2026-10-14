@@ -124,4 +124,36 @@ describe('card-store card type switch', () => {
     s().undo()
     expect(s().card).toEqual(before)
   })
+
+  it('switchCardType never coalesces with an adjacent same-key edit', () => {
+    // A slider-style patch right before the switch must not absorb it.
+    s().patchCard({ ratio: '16:9' })
+    s().patchCard({ ratio: '4:5' })
+    s().switchCardType()
+
+    s().undo()
+    expect(s().card.ratio).toBe('4:5')
+    expect(s().card.cardType).toBe('quote')
+  })
+
+  it('entering showcase forces ratio 1:1; leaving does not restore it', () => {
+    // Ratio is shared style, not per-type content: the pre-excursion ratio
+    // is deliberately lost (spec decision, issue #33).
+    s().patchCard({ ratio: '16:9' })
+
+    s().switchCardType()
+    expect(s().card.ratio).toBe('1:1')
+
+    s().switchCardType()
+    expect(s().card.ratio).toBe('1:1')
+  })
+
+  it('two consecutive switches are two undo steps', () => {
+    s().switchCardType()
+    s().switchCardType()
+    expect(s().card.cardType).toBe('quote')
+
+    s().undo()
+    expect(s().card.cardType).toBe('showcase')
+  })
 })
