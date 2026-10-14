@@ -111,3 +111,170 @@ describe('card-store history', () => {
     expect(s().card.ratio).toBe('16:9')
   })
 })
+
+describe('card-store card type switch', () => {
+  it('switchCardType toggles cardType as exactly one undo step', () => {
+    s().patchCard({ headline: 'changed' })
+    const before = s().card
+
+    s().switchCardType()
+    expect(s().card.cardType).toBe('showcase')
+    expect(s().past.length).toBe(2)
+
+    s().undo()
+    expect(s().card).toEqual(before)
+  })
+
+  it('switchCardType never coalesces with an adjacent same-key edit', () => {
+    // A slider-style patch right before the switch must not absorb it.
+    s().patchCard({ ratio: '16:9' })
+    s().patchCard({ ratio: '4:5' })
+    s().switchCardType()
+
+    s().undo()
+    expect(s().card.ratio).toBe('4:5')
+    expect(s().card.cardType).toBe('quote')
+  })
+
+  it('entering showcase forces ratio 1:1; leaving does not restore it', () => {
+    // Ratio is shared style, not per-type content: the pre-excursion ratio
+    // is deliberately lost (spec decision, issue #33).
+    s().patchCard({ ratio: '16:9' })
+
+    s().switchCardType()
+    expect(s().card.ratio).toBe('1:1')
+
+    s().switchCardType()
+    expect(s().card.ratio).toBe('1:1')
+  })
+
+  it('two consecutive switches are two undo steps', () => {
+    s().switchCardType()
+    s().switchCardType()
+    expect(s().card.cardType).toBe('quote')
+
+    s().undo()
+    expect(s().card.cardType).toBe('showcase')
+  })
+})
+
+describe('card-store showcase content', () => {
+  it('addShot caps at three shots and a refused shot costs no undo step', () => {
+    for (const n of [1, 2, 3]) s().addShot(`data:${n}`)
+    const stepsBefore = s().past.length
+
+    s().addShot('data:4')
+
+    expect(s().card.showcase?.shots.map((shot) => shot.dataUrl)).toEqual([
+      'data:1',
+      'data:2',
+      'data:3',
+    ])
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('addAnnotation anchors to a shot; at most one annotation per shot', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+
+    s().addAnnotation({ shotId: shot.id, text: 'Màn hình chính', side: 'top' })
+    expect(s().card.showcase?.annotations).toEqual([
+      { id: expect.any(String), shotId: shot.id, text: 'Màn hình chính', side: 'top' },
+    ])
+
+    // A second annotation for the same shot is refused and costs no step.
+    const stepsBefore = s().past.length
+    s().addAnnotation({ shotId: shot.id, text: 'b', side: 'left' })
+    expect(s().card.showcase?.annotations).toHaveLength(1)
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('addAnnotation for an unknown shot is a no-op', () => {
+    s().addAnnotation({ shotId: 'missing', text: 'b', side: 'left' })
+    expect(s().card.showcase?.annotations ?? []).toEqual([])
+    expect(s().past.length).toBe(0)
+  })
+
+  it('removeShot deletes its annotation in the same undo step', () => {
+    s().addShot('data:1')
+    s().addShot('data:2')
+    const [shotA, shotB] = s().card.showcase!.shots
+    s().addAnnotation({ shotId: shotA.id, text: 'a', side: 'left' })
+    s().addAnnotation({ shotId: shotB.id, text: 'b', side: 'right' })
+
+    s().removeShot(shotA.id)
+    expect(s().card.showcase?.shots.map((shot) => shot.id)).toEqual([shotB.id])
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['b'])
+
+    // One Cmd+Z restores both the shot and its annotation.
+    s().undo()
+    expect(s().card.showcase?.shots.map((shot) => shot.id)).toEqual([shotA.id, shotB.id])
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['a', 'b'])
+  })
+
+  it('updateAnnotation edits text and side, and retargets only to a free shot', () => {
+    s().addShot('data:1')
+    s().addShot('data:2')
+    const [shotA, shotB] = s().card.showcase!.shots
+    s().addAnnotation({ shotId: shotA.id, text: 'a', side: 'left' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    s().updateAnnotation(annotation.id, { text: 'Tổng quan', side: 'top' })
+    expect(s().card.showcase?.annotations).toEqual([
+      { id: annotation.id, shotId: shotA.id, text: 'Tổng quan', side: 'top' },
+    ])
+
+    // Retargeting to a free shot follows the shot, not the slot.
+    s().updateAnnotation(annotation.id, { shotId: shotB.id })
+    expect(s().card.showcase?.annotations[0].shotId).toBe(shotB.id)
+
+    // Retargeting to an already-annotated shot is refused.
+    s().addShot('data:3')
+    const shotC = s().card.showcase!.shots[2]
+    s().addAnnotation({ shotId: shotC.id, text: 'c', side: 'left' })
+    const stepsBefore = s().past.length
+    s().updateAnnotation(annotation.id, { shotId: shotC.id })
+    expect(s().card.showcase?.annotations[0].shotId).toBe(shotB.id)
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('removeAnnotation deletes exactly its own annotation, undoable in one step', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    s().addAnnotation({ shotId: shot.id, text: 'a', side: 'top' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    s().removeAnnotation(annotation.id)
+    expect(s().card.showcase?.annotations).toEqual([])
+
+    s().undo()
+    expect(s().card.showcase?.annotations).toHaveLength(1)
+  })
+
+  it('switching is non-destructive both ways: quote and showcase content both survive', () => {
+    s().patchCard({ headline: 'Em vừa được tậu đất:', sublines: 'a\nb' })
+    s().switchCardType()
+    s().addShot('data:1')
+    s().addAnnotation({ shotId: s().card.showcase!.shots[0].id, text: 'x', side: 'top' })
+
+    s().switchCardType()
+    expect(s().card.cardType).toBe('quote')
+    expect(s().card.headline).toBe('Em vừa được tậu đất:')
+    expect(s().card.sublines).toBe('a\nb')
+    expect(s().card.showcase?.shots).toHaveLength(1)
+
+    s().switchCardType()
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['x'])
+  })
+
+  it('addShot appends shots in upload order with unique stable ids', () => {
+    // Array order is upload order: the first Shot renders in the Hero Slot.
+    s().addShot('data:hero')
+    s().addShot('data:detail-a')
+
+    const shots = s().card.showcase?.shots ?? []
+    expect(shots.map((shot) => shot.dataUrl)).toEqual(['data:hero', 'data:detail-a'])
+    expect(new Set(shots.map((shot) => shot.id)).size).toBe(2)
+    expect(s().card.showcase?.annotations).toEqual([])
+  })
+})
