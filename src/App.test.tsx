@@ -185,6 +185,12 @@ describe('App', () => {
       // Mobile sheet is rendered
       expect(screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })).toBeTruthy()
 
+      // Exactly one Interface Language toggle on mobile: the sheet carries
+      // it on touch, so the Header's Desktop Shell copy must not render.
+      expect(
+        screen.getAllByRole('button', { name: dictionaries.vi.language_toggle_title }),
+      ).toHaveLength(1)
+
       // Mobile ratio chip is rendered and cycles ratio on tap
       const mobileRatioBtn = screen.getByRole('button', {
         name: /Bấm để chuyển đổi tỷ lệ khung hình/,

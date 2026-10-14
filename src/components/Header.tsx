@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
               title={copy.inspector_toggle_title}
               aria-label={copy.inspector_toggle_title}
               aria-pressed={!isInspectorCollapsed}
-              className={`w-8 h-8 rounded-xl hidden lg:inline-flex transition-colors ${
+              className={`w-8 h-8 rounded-xl transition-colors ${
                 isInspectorCollapsed
                   ? 'text-[#86868B] dark:text-[#A1A1A6] hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
                   : 'bg-black/[0.08] dark:bg-white/[0.12] text-[#0071E3] dark:text-[#2997FF] shadow-xs'
@@ -185,16 +185,22 @@ export const Header: React.FC<HeaderProps> = ({
           </Button>
         </div>
 
-        <Button
-          onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-          title={copy.language_toggle_title}
-          aria-label={copy.language_toggle_title}
-          variant="secondary"
-          className="hidden lg:inline-flex h-8 px-2.5 rounded-xl text-[11px] font-semibold"
-        >
-          <Globe className="w-3.5 h-3.5" />
-          <span>{language === 'vi' ? 'VI' : 'EN'}</span>
-        </Button>
+        {/* isDesktop is the real gate — `hidden lg:inline-flex` cannot win
+            the cascade against the Button base's bare `inline-flex`: Tailwind
+            v4 orders display utilities alphabetically, so `hidden` precedes
+            (loses to) `inline-flex`. */}
+        {isDesktop && (
+          <Button
+            onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+            title={copy.language_toggle_title}
+            aria-label={copy.language_toggle_title}
+            variant="secondary"
+            className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>{language === 'vi' ? 'VI' : 'EN'}</span>
+          </Button>
+        )}
       </div>
     </header>
   )
