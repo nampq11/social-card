@@ -224,9 +224,8 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
   const annotated = useCardStore(
     (s) => s.card.showcase?.annotations.some((a) => a.shotId === shot.id) ?? false,
   )
-  const name = `${copy.shots_label} ${position}`
+  const name = shotName(copy, position)
   const addAnnotation = useCardStore((s) => s.addAnnotation)
-  const displayName = shotName(copy, position)
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -234,7 +233,7 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
       <Button
         onClick={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
         disabled={annotated}
-        aria-label={`${copy.annotations_add} · ${displayName}`}
+        aria-label={`${copy.annotations_add} · ${name}`}
         variant="secondary"
         size="sm"
       >
@@ -245,7 +244,6 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
   )
 }
 
-// The Showcase Card's handwritten Annotations (GLOSSARY.md), edited list-only
 // The Showcase Card's handwritten Annotations (GLOSSARY.md), edited list-only
 // per spec #33 — no canvas selection: each row is the annotation's text, its
 // target Shot, its side, and a delete. Adding is capped at one per Shot; the

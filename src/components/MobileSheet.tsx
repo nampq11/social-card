@@ -122,7 +122,7 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
           inert={!expanded}
         >
           <div className="flex flex-col gap-5">
-            {active.sections.map((Section) => (
+            {active.sectionList.map((Section) => (
               <Section key={Section.name} />
             ))}
           </div>

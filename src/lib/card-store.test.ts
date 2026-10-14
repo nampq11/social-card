@@ -113,11 +113,11 @@ describe('card-store history', () => {
 })
 
 describe('card-store card type switch', () => {
-  it('switchCardType toggles cardType as exactly one undo step', () => {
+  it('switchCardType switches to the requested type as exactly one undo step', () => {
     s().patchCard({ headline: 'changed' })
     const before = s().card
 
-    s().switchCardType()
+    s().switchCardType('showcase')
     expect(s().card.cardType).toBe('showcase')
     expect(s().past.length).toBe(2)
 
@@ -129,7 +129,7 @@ describe('card-store card type switch', () => {
     // A slider-style patch right before the switch must not absorb it.
     s().patchCard({ ratio: '16:9' })
     s().patchCard({ ratio: '4:5' })
-    s().switchCardType()
+    s().switchCardType('showcase')
 
     s().undo()
     expect(s().card.ratio).toBe('4:5')
@@ -141,20 +141,31 @@ describe('card-store card type switch', () => {
     // is deliberately lost (spec decision, issue #33).
     s().patchCard({ ratio: '16:9' })
 
-    s().switchCardType()
+    s().switchCardType('showcase')
     expect(s().card.ratio).toBe('1:1')
 
-    s().switchCardType()
+    s().switchCardType('quote')
     expect(s().card.ratio).toBe('1:1')
   })
 
   it('two consecutive switches are two undo steps', () => {
-    s().switchCardType()
-    s().switchCardType()
+    s().switchCardType('showcase')
+    s().switchCardType('quote')
     expect(s().card.cardType).toBe('quote')
 
     s().undo()
     expect(s().card.cardType).toBe('showcase')
+  })
+
+  it('requesting the current card type is a no-op costing no undo step', () => {
+    s().patchCard({ headline: 'changed' })
+    const before = s().card
+    const stepsBefore = s().past.length
+
+    s().switchCardType('quote')
+
+    expect(s().card).toEqual(before)
+    expect(s().past.length).toBe(stepsBefore)
   })
 })
 
@@ -253,17 +264,17 @@ describe('card-store showcase content', () => {
 
   it('switching is non-destructive both ways: quote and showcase content both survive', () => {
     s().patchCard({ headline: 'Em vừa được tậu đất:', sublines: 'a\nb' })
-    s().switchCardType()
+    s().switchCardType('showcase')
     s().addShot('data:1')
     s().addAnnotation({ shotId: s().card.showcase!.shots[0].id, text: 'x', side: 'top' })
 
-    s().switchCardType()
+    s().switchCardType('quote')
     expect(s().card.cardType).toBe('quote')
     expect(s().card.headline).toBe('Em vừa được tậu đất:')
     expect(s().card.sublines).toBe('a\nb')
     expect(s().card.showcase?.shots).toHaveLength(1)
 
-    s().switchCardType()
+    s().switchCardType('showcase')
     expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['x'])
   })
 
