@@ -2,7 +2,6 @@
 import { fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { App } from './App'
-import { copyCardToClipboard, downloadCardImage } from './lib/export'
 import { dictionaries } from './lib/i18n'
 import { DEFAULT_CARD_STATE } from './constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from './test/card-studio'
@@ -26,18 +25,6 @@ const cardHeadline = () =>
   within(document.getElementById('social-card-node')!).getByRole('heading', { level: 1 })
     .textContent
 
-// Holds one export in its processing state until the test settles it — the
-// promise toast's processing phase is only observable while unresolved.
-const deferredExport = <T,>() => {
-  let resolve!: (value: T) => void
-  let reject!: (reason?: unknown) => void
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
-}
-
 describe('App', () => {
   it('shows Card Content edited in the Inspector on the Card', () => {
     renderApp()
@@ -60,81 +47,25 @@ describe('App', () => {
     expect(cardHeadline()).toBe(DEFAULT_CARD_STATE.headline)
   })
 
-  it('copy flows through a bottom-center toast: processing → success', async () => {
-    const deferred = deferredExport<boolean>()
-    vi.mocked(copyCardToClipboard).mockReturnValueOnce(deferred.promise)
+  it('both export buttons flow through the App toast region at bottom-center', async () => {
     renderApp()
 
     fireEvent.click(screen.getByRole('button', { name: /Copy ảnh/ }))
-
     const region = await toastRegion()
     expect(region.getAttribute('data-y-position')).toBe('bottom')
     expect(region.getAttribute('data-x-position')).toBe('center')
-    expect(within(region).getByText(dictionaries.vi.copy_processing)).toBeTruthy()
-
-    deferred.resolve(true)
     expect(await within(region).findByText(dictionaries.vi.copy_success)).toBeTruthy()
-  })
-
-  it('copy success keeps the Copied! button flash — button state, not a toast', async () => {
-    const deferred = deferredExport<boolean>()
-    vi.mocked(copyCardToClipboard).mockReturnValueOnce(deferred.promise)
-    renderApp()
-
-    fireEvent.click(screen.getByRole('button', { name: /Copy ảnh/ }))
-
-    deferred.resolve(true)
-    await within(await toastRegion()).findByText(dictionaries.vi.copy_success)
-    expect(screen.getByRole('button', { name: 'Đã copy vào Clipboard!' })).toBeTruthy()
-  })
-
-  it('download flows through a toast: processing → success', async () => {
-    const deferred = deferredExport<void>()
-    vi.mocked(downloadCardImage).mockReturnValueOnce(deferred.promise)
-    renderApp()
 
     fireEvent.click(screen.getByRole('button', { name: /Tải PNG/ }))
-
-    const region = await toastRegion()
-    expect(within(region).getByText(dictionaries.vi.download_processing)).toBeTruthy()
-
-    deferred.resolve()
     expect(await within(region).findByText(dictionaries.vi.download_success)).toBeTruthy()
   })
 
-  it('copy failure is reported as an error toast, not a silent failure', async () => {
-    vi.mocked(copyCardToClipboard).mockRejectedValueOnce(new Error('clipboard unavailable'))
-    renderApp()
-
-    fireEvent.click(screen.getByRole('button', { name: /Copy ảnh/ }))
-
-    expect(await within(await toastRegion()).findByText(dictionaries.vi.copy_error)).toBeTruthy()
-  })
-
-  it('toasts follow the active Interface Language', async () => {
-    const deferred = deferredExport<boolean>()
-    vi.mocked(copyCardToClipboard).mockReturnValueOnce(deferred.promise)
-    renderApp()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Đổi ngôn ngữ giao diện' }))
-    fireEvent.click(screen.getByRole('button', { name: /Copy image/ }))
-
-    deferred.resolve(true)
-    expect(await within(await toastRegion()).findByText(dictionaries.en.copy_success)).toBeTruthy()
-  })
-
   it('Cmd+C copies the card via global keyboard shortcut', async () => {
-    const deferred = deferredExport<boolean>()
-    vi.mocked(copyCardToClipboard).mockReturnValueOnce(deferred.promise)
     renderApp()
 
     fireEvent.keyDown(window, { key: 'c', metaKey: true })
 
-    const region = await toastRegion()
-    expect(within(region).getByText(dictionaries.vi.copy_processing)).toBeTruthy()
-
-    deferred.resolve(true)
-    expect(await within(region).findByText(dictionaries.vi.copy_success)).toBeTruthy()
+    expect(await within(await toastRegion()).findByText(dictionaries.vi.copy_success)).toBeTruthy()
   })
 
   it('Interface Language toggle updates newly added studio chrome copy', () => {

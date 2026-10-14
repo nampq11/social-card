@@ -19,10 +19,12 @@ const buttonVariants = cva(
         ghost: 'font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300',
       },
       size: {
-        sm: 'gap-1 rounded-lg px-2.5 py-1',
-        md: 'gap-1.5 rounded-xl px-3.5 py-2',
-        lg: 'gap-1.5 rounded-xl px-4 py-2',
-        icon: 'rounded-lg p-1 [@media(pointer:coarse)]:min-w-11',
+        // Touch pointers enforce the 44pt HIG hit-target minimum via
+        // min-height (explicit h-* utilities still apply to mice).
+        sm: 'gap-1 rounded-lg px-2.5 py-1 [@media(pointer:coarse)]:min-h-11',
+        md: 'gap-1.5 rounded-xl px-3.5 py-2 [@media(pointer:coarse)]:min-h-11',
+        lg: 'gap-1.5 rounded-xl px-4 py-2 [@media(pointer:coarse)]:min-h-11',
+        icon: 'rounded-lg p-1 [@media(pointer:coarse)]:min-w-11 [@media(pointer:coarse)]:min-h-11',
       },
     },
     defaultVariants: {

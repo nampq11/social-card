@@ -124,7 +124,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 </div>
                 {data.qrCta && (
                   <span
-                    className={`text-xs ${themeStyles.subtext} font-medium leading-relaxed max-w-[160px] break-words`}
+                    className={`text-xs ${themeStyles.subtext} font-medium leading-relaxed max-w-[160px] break-words text-balance`}
                   >
                     {data.qrCta}
                   </span>

@@ -23,6 +23,13 @@ _Avoid_: template, sample
 **Card State**:
 The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase).
 _Avoid_: form data, settings
+**Card State**:
+The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase).
+_Avoid_: form data, settings
+
+**Card Export**:
+Rendering the current Card State to a shareable image — to the clipboard (paste-ready) or as a PNG file. One module owns the whole flow: the exported card node, the re-entry guard, the feedback toasts, and the success flash.
+_Avoid_: download (names only one of the two flows), save
 
 **One-Screen Studio**:
 The desktop layout contract: Header, Inspector, and Canvas all fit inside the viewport; the page itself never scrolls. Only nested panels (e.g. the Inspector) may scroll internally.
