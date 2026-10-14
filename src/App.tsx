@@ -24,6 +24,14 @@ import { Toaster, toast } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
+/** Canvas padding follows the shell: mobile keeps a slim margin; desktop
+ * reserves the floating Inspector's rail unless focus mode collapsed it. */
+function canvasPaddingClass(isDesktop: boolean, inspectorCollapsed: boolean): string {
+  if (!isDesktop) return 'p-4'
+  if (inspectorCollapsed) return 'p-8'
+  return 'p-8 pl-[380px]'
+}
+
 /** Mobile chip shows the short localized ratio name — no px specs (the
  * desktop header owns the full specs; HIG keeps touch labels compact). */
 const RATIO_LABEL_KEY: Record<AspectRatio, UiStringKey> = {
@@ -149,9 +157,7 @@ export function App() {
         {/* Center Stage: Card Preview Canvas */}
         <main
           ref={canvasRef}
-          className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-[padding] duration-300 ${
-            isDesktop ? (isInspectorCollapsed ? 'p-8' : 'p-8 pl-[380px]') : 'p-4'
-          }`}
+          className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-[padding] duration-300 ${canvasPaddingClass(isDesktop, isInspectorCollapsed)}`}
         >
           {/* Fit refits per frame while the sheet drags — only manual
               zoom steps may animate the scale. */}

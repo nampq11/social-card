@@ -1,10 +1,9 @@
-import { useRef, useState, type RefObject } from 'react'
+import { useRef, type RefObject } from 'react'
 import { RotateCcw, Undo2, Redo2 } from 'lucide-react'
-import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
-import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs'
+import { InspectorTabsNav, useInspectorTab } from './inspector-tabs'
 import { useSheetDrag } from '../lib/use-sheet-drag'
 
 // Mobile Shell host (GLOSSARY.md / ADR 0002): a standard, NON-MODAL bottom
@@ -30,13 +29,12 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
   const canRedo = useCardStore((s) => s.canRedo)
   const undo = useCardStore((s) => s.undo)
   const redo = useCardStore((s) => s.redo)
-  const [tab, setTab] = useState<InspectorTabId>('content')
+  const { tab, setTab, active } = useInspectorTab()
 
   const sheetRef = useRef<HTMLElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const { expanded, handleProps, dragProps } = useSheetDrag(sheetRef, canvasRef, contentRef)
 
-  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
   const tabTitle = copy[active.nameKey]
 
   // The tour anchor lives on the section, not this root: the root's rect is
@@ -103,21 +101,7 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
         {/* Tab bar inside the sheet plane (iOS HIG): grabber → header →
             tabs → content. The sheet header names the sheet, not the tab —
             the tab bar sits right below and would repeat it. */}
-        <nav
-          data-tour="inspector-tabs"
-          aria-label={copy.inspector_title}
-          className="px-3 pb-2 shrink-0"
-        >
-          <SegmentedControl<InspectorTabId>
-            value={tab}
-            onChange={setTab}
-            options={INSPECTOR_TABS.map(({ id, nameKey, icon }) => ({
-              value: id,
-              label: copy[nameKey],
-              icon,
-            }))}
-          />
-        </nav>
+        <InspectorTabsNav tab={tab} onChange={setTab} className="px-3 pb-2 shrink-0" />
 
         {/* inert while peeked: clipped controls must not stay keyboard-reachable */}
         <div

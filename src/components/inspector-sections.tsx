@@ -2,14 +2,7 @@ import React, { useRef } from 'react'
 import type { CardState, AspectRatio, CardTheme } from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
-import {
-  SAMPLE_PRESETS,
-  STYLE_PRESETS,
-  DEFAULT_CARD_STATE,
-  type SamplePreset,
-  type StylePreset,
-  type StylePresetState,
-} from '../constants/presets'
+import { SAMPLE_PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
 import { Slider } from '@base-ui/react/slider'
@@ -47,17 +40,22 @@ function useCardUpdate() {
   return <K extends keyof CardState>(key: K, value: CardState[K]) => patchCard({ [key]: value })
 }
 
+/** A preset stays "active" while every field it writes still matches the
+ * card — any manual edit naturally deselects it. */
+function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S): boolean {
+  return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
+}
+
+// Shared preset-button skin (the two preset families render it verbatim;
+// only the base class differs per family).
+const PRESET_ACTIVE_CLASS = 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
+const PRESET_INACTIVE_CLASS =
+  'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
+
 export const PresetsSection: React.FC = () => {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const patchCard = useCardStore((s) => s.patchCard)
-
-  // A Preset Quick Pick is "active" while every Card Content field it sets
-  // still matches — any manual edit naturally deselects it.
-  const isActivePreset = (preset: SamplePreset) =>
-    (Object.keys(preset.state) as (keyof CardState)[]).every(
-      (key) => data[key] === preset.state[key],
-    )
 
   return (
     <div className="flex flex-col gap-2">
@@ -71,7 +69,7 @@ export const PresetsSection: React.FC = () => {
       </div>
       <div className="flex flex-wrap gap-1.5">
         {SAMPLE_PRESETS.map((p) => {
-          const active = isActivePreset(p)
+          const active = isPresetActive(data, p.state)
           return (
             <Button
               key={p.id}
@@ -81,9 +79,7 @@ export const PresetsSection: React.FC = () => {
               size="sm"
               className={clsx(
                 'text-[12px] font-medium transition',
-                active
-                  ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
+                active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
               )}
             >
               {copy[p.nameKey]}
@@ -144,13 +140,6 @@ export const StyleSection: React.FC = () => {
   const update = useCardUpdate()
   const patchCard = useCardStore((s) => s.patchCard)
 
-  // A Style Preset is "active" while the whole style quadruple still matches
-  // — any manual tweak of theme/ratio/size/casing deselects it.
-  const isActiveStylePreset = (preset: StylePreset) =>
-    (Object.keys(preset.state) as (keyof StylePresetState)[]).every(
-      (key) => data[key] === preset.state[key],
-    )
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -159,7 +148,7 @@ export const StyleSection: React.FC = () => {
         </label>
         <div className="grid grid-cols-2 gap-1.5">
           {STYLE_PRESETS.map((p) => {
-            const active = isActiveStylePreset(p)
+            const active = isPresetActive(data, p.state)
             return (
               <Button
                 key={p.id}
@@ -169,9 +158,7 @@ export const StyleSection: React.FC = () => {
                 size="sm"
                 className={clsx(
                   'justify-start font-medium text-xs',
-                  active
-                    ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                    : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
+                  active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
                 )}
               >
                 {/* Theme dot — the one visual the label can't carry. */}

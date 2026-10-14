@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { RotateCcw } from 'lucide-react'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
-import { SegmentedControl } from './SegmentedControl'
-import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs'
+import { InspectorTabsNav, useInspectorTab } from './inspector-tabs'
 
 // Desktop Shell host (GLOSSARY.md / ADR 0002): the Inspector groups its
 // sections behind tabs from the shared INSPECTOR_TABS registry — the same
@@ -15,8 +14,7 @@ import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs'
 export const Inspector: React.FC = () => {
   const { copy } = useUiCopy()
   const resetCard = useCardStore((s) => s.resetCard)
-  const [tab, setTab] = useState<InspectorTabId>('content')
-  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
+  const { tab, setTab, active } = useInspectorTab()
 
   return (
     <aside
@@ -26,11 +24,9 @@ export const Inspector: React.FC = () => {
       <div className="overflow-y-auto pr-0.5 space-y-4">
         {/* Header & Quick Reset */}
         <div className="flex items-center justify-between pb-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[14px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-              {copy.inspector_title}
-            </h2>
-          </div>
+          <h2 className="text-[14px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+            {copy.inspector_title}
+          </h2>
           <Button
             onClick={resetCard}
             variant="ghost"
@@ -44,18 +40,7 @@ export const Inspector: React.FC = () => {
         </div>
 
         {/* Segmented Control 100% full-width */}
-        <nav data-tour="inspector-tabs" aria-label={copy.inspector_title} className="w-full">
-          <SegmentedControl<InspectorTabId>
-            value={tab}
-            onChange={setTab}
-            className="w-full"
-            options={INSPECTOR_TABS.map(({ id, nameKey, icon }) => ({
-              value: id,
-              label: copy[nameKey],
-              icon,
-            }))}
-          />
-        </nav>
+        <InspectorTabsNav tab={tab} onChange={setTab} className="w-full" />
 
         <div className="flex flex-col gap-4">
           {active.sections.map((Section) => (
