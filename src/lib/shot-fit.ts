@@ -111,6 +111,45 @@ export const projectedFocus = (value: number, velocityPxPerS: number, overflowPx
   return Math.min(1, Math.max(0, value - coastPx / overflowPx))
 }
 
+// One velocity sample of the pointer (ADR 0006 §3): instantaneous px/s,
+// exponentially smoothed so a flick reads while jitter doesn't. The first
+// sample (or a non-advancing clock) carries no velocity yet.
+export interface VelocityState {
+  velocityX: number
+  velocityY: number
+  x: number
+  y: number
+  at: number
+}
+
+export const trackVelocity = (
+  prev: VelocityState | null,
+  x: number,
+  y: number,
+  at: number,
+): VelocityState => {
+  if (!prev || at <= prev.at) return { velocityX: 0, velocityY: 0, x, y, at }
+  const dtSeconds = (at - prev.at) / 1000
+  const blend = 0.6
+  return {
+    velocityX: prev.velocityX * (1 - blend) + ((x - prev.x) / dtSeconds) * blend,
+    velocityY: prev.velocityY * (1 - blend) + ((y - prev.y) / dtSeconds) * blend,
+    x,
+    y,
+    at,
+  }
+}
+
+// One frame of a critically damped approach (damping ratio 1.0 — no
+// overshoot; ADR 0006 §3 settles on Apple's "response" scale, seconds).
+// Frame-rate independent: two half-length steps land exactly where one full
+// step does, which is what makes the rAF loop safe under jank.
+export const dampedStep = (current: number, target: number, dtMs: number, response: number) => {
+  if (dtMs <= 0) return current
+  const tau = (response * 1000) / 4
+  return target + (current - target) * Math.exp(-dtMs / tau)
+}
+
 // Pinch anchoring (ADR 0006 §4): zooming keeps the content point under the
 // pinch midpoint stationary. object-position percentages align the content's
 // anchor fraction with the box's, so the content fraction under box fraction
