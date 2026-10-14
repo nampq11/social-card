@@ -295,13 +295,16 @@ describe('Showcase Card', () => {
     const slot = screen.getByTestId('hero-slot')
     const imgs = slot.querySelectorAll('img')
     expect(imgs).toHaveLength(2)
-    // Backdrop first in DOM (it must paint underneath): a blurred cover copy.
-    expect(imgs[0].className).toContain('blur')
+    // Backdrop first in DOM (it must paint underneath): a copy of the same
+    // Shot, hidden from assistive tech.
+    expect(imgs[0].getAttribute('src')).toBe(imgs[1].getAttribute('src'))
+    expect(imgs[0].getAttribute('aria-hidden')).toBe('true')
+    // jsdom computes no CSS, so Fit is only observable as the object-fit
+    // tokens: cover copy behind, contained Shot in front. The backdrop's
+    // blur and the window card's rounding/shadow are styling — the export
+    // smoke asserts those on real exported pixels in a real browser.
     expect(imgs[0].className).toContain('object-cover')
-    // The visible Shot shows whole, framed as a floating window card.
     expect(imgs[1].className).toContain('object-contain')
-    expect(imgs[1].className).toContain('rounded')
-    expect(imgs[1].className).toContain('shadow')
   })
 
   it('renders a default cover shot without a backdrop layer', () => {
@@ -351,6 +354,8 @@ describe('Showcase Card', () => {
     act(() => useCardStore.getState().addShot('data:image/png;base64,ONE'))
     const img = screen.getByTestId('hero-slot').querySelector('img')!
     // Unselected: no pan chrome, page scroll stays native (no touch-action).
+    // The touch-none token is jsdom's only observable for the arming state;
+    // the pan smoke asserts the real computed touch-action in Chrome.
     expect(img.className).not.toContain('touch-none')
     expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
 
