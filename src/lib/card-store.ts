@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Annotation, AnnotationSide, CardState, CardType } from '../types'
+import type { Annotation, AnnotationSide, CardState, CardType, Shot } from '../types'
 import type { ShotFit, ShotFocus } from '../types'
 import { clampFocus, clampScale, shotFit } from './shot-fit'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
@@ -68,6 +68,39 @@ const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState
 // Edit rhythm is UI-transient — module-scoped, not part of the model.
 let lastEdit: { key: string | null; at: number } | null = null
 
+// The shared coalescing rhythm (one drag, one undo): records this edit and
+// reports whether it folds into the previous step's undo window. A null key
+// is a discrete choice — never coalesced, and it breaks the chain.
+const continuesEdit = (key: string | null) => {
+  const now = Date.now()
+  const coalesce = key !== null && lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
+  lastEdit = { key, at: now }
+  return coalesce
+}
+
+// Applies one Shot update, atomically replacing the showcase's shot list.
+// The update may return null for a no-op (nothing to change); the whole call
+// returns null when the Shot does not exist — callers fold that into a
+// no-op that costs no undo step.
+const withShot = (
+  card: CardState,
+  shotId: string,
+  update: (shot: Shot) => Shot | null,
+): CardState | null => {
+  const showcase = card.showcase
+  const found = showcase?.shots.find((shot) => shot.id === shotId)
+  if (!showcase || !found) return null
+  const updated = update(found)
+  if (!updated) return null
+  return {
+    ...card,
+    showcase: {
+      ...showcase,
+      shots: showcase.shots.map((shot) => (shot.id === shotId ? updated : shot)),
+    },
+  }
+}
+
 export const useCardStore = create<CardStore>((set) => ({
   card: DEFAULT_CARD_STATE,
   past: [],
@@ -78,11 +111,7 @@ export const useCardStore = create<CardStore>((set) => ({
   patchCard: (patch) =>
     set((state) => {
       const keys = Object.keys(patch)
-      const key = keys.length === 1 ? keys[0] : null
-      const now = Date.now()
-      const coalesce =
-        key !== null && lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
-      lastEdit = { key, at: now }
+      const coalesce = continuesEdit(keys.length === 1 ? keys[0] : null)
 
       return coalesce
         ? { card: { ...state.card, ...patch } }
@@ -169,17 +198,16 @@ export const useCardStore = create<CardStore>((set) => ({
   // atomic undo step, never coalesced with adjacent edits.
   setShotFit: (shotId, fit) =>
     set((state) => {
-      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      // Unknown shots and no-op writes (the same override already stored)
-      // change nothing and cost no step. The comparison is against the stored
-      // override, not the effective fit: with auto-fit deriving contain
-      // (ADR 0006 §1), an explicit cover request IS a real change.
-      if (!shot || shot.fit === fit) return state
-      lastEdit = null
-      const shots = state.card.showcase!.shots.map((shot) =>
-        shot.id === shotId ? { ...shot, fit } : shot,
+      // No-op writes (the same override already stored) change nothing and
+      // cost no step. The comparison is against the stored override, not the
+      // effective fit: with auto-fit deriving contain (ADR 0006 §1), an
+      // explicit cover request IS a real change.
+      const next = withShot(state.card, shotId, (shot) =>
+        shot.fit === fit ? null : { ...shot, fit },
       )
-      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
+      if (!next) return state
+      lastEdit = null
+      return undoStep(state, next)
     }),
 
   // Focus comes from drag gestures — dozens per second — so edits to the
@@ -188,33 +216,26 @@ export const useCardStore = create<CardStore>((set) => ({
   // carries an out-of-range or Fit-irrelevant anchor.
   setShotFocus: (shotId, focus) =>
     set((state) => {
-      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      if (!shot) return state
-      const clamped = clampFocus(focus, shotFit(shot))
-      const key = `shotFocus:${shotId}`
-      const now = Date.now()
-      const coalesce = lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
-      lastEdit = { key, at: now }
-      const shots = state.card.showcase!.shots.map((shot) =>
-        shot.id === shotId ? { ...shot, focus: clamped } : shot,
-      )
-      const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
-      return coalesce ? { card: next } : undoStep(state, next)
+      const next = withShot(state.card, shotId, (shot) => ({
+        ...shot,
+        focus: clampFocus(focus, shotFit(shot)),
+      }))
+      if (!next) return state
+      return continuesEdit(`shotFocus:${shotId}`) ? { card: next } : undoStep(state, next)
     }),
   // The Inspector's "Tự động": drop the explicit Fit override and return to
   // the derived default (ADR 0006 §1). One atomic undo step; no step when
   // there is no override to drop.
   clearShotFit: (shotId) =>
     set((state) => {
-      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      if (!shot?.fit) return state
-      lastEdit = null
-      const shots = state.card.showcase!.shots.map((shot) => {
-        if (shot.id !== shotId) return shot
+      const next = withShot(state.card, shotId, (shot) => {
+        if (!shot.fit) return null
         const { fit: _dropped, ...rest } = shot
         return rest
       })
-      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
+      if (!next) return state
+      lastEdit = null
+      return undoStep(state, next)
     }),
 
   // Scale comes from pinch/wheel gestures — dozens of events per second — so
@@ -222,34 +243,27 @@ export const useCardStore = create<CardStore>((set) => ({
   // one undo. Clamped on write: state never carries an out-of-domain zoom.
   setShotScale: (shotId, scale) =>
     set((state) => {
-      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      if (!shot) return state
-      const clamped = clampScale(scale)
-      const key = `shotScale:${shotId}`
-      const now = Date.now()
-      const coalesce = lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
-      lastEdit = { key, at: now }
-      const shots = state.card.showcase!.shots.map((shot) =>
-        shot.id === shotId ? { ...shot, scale: clamped } : shot,
-      )
-      const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
-      return coalesce ? { card: next } : undoStep(state, next)
+      const next = withShot(state.card, shotId, (shot) => ({
+        ...shot,
+        scale: clampScale(scale),
+      }))
+      if (!next) return state
+      return continuesEdit(`shotScale:${shotId}`) ? { card: next } : undoStep(state, next)
     }),
   // [Đặt lại] on the on-shot controls: back to the absent-field defaults —
   // auto Fit, no Focus, no Scale (ADR 0006 §2). One Shot's whole adjustment
   // set resets in ONE atomic undo step; an unadjusted Shot costs no step.
   clearShotAdjustments: (shotId) =>
     set((state) => {
-      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      if (!shot || (shot.fit === undefined && shot.focus === undefined && shot.scale === undefined))
-        return state
-      lastEdit = null
-      const shots = state.card.showcase!.shots.map((shot) => {
-        if (shot.id !== shotId) return shot
+      const next = withShot(state.card, shotId, (shot) => {
+        if (shot.fit === undefined && shot.focus === undefined && shot.scale === undefined)
+          return null
         const { fit: _fit, focus: _focus, scale: _scale, ...rest } = shot
         return rest
       })
-      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
+      if (!next) return state
+      lastEdit = null
+      return undoStep(state, next)
     }),
   // Annotations bind to Shots, never to Screenshot Slots (issue #33) — a
   // shot carries at most one, so the edit is refused while it has one.
@@ -286,10 +300,7 @@ export const useCardStore = create<CardStore>((set) => ({
         showcase.annotations.every((a) => a.id === annotationId || a.shotId !== targetId)
       if (!targetFree) return state
       const key = 'shotId' in patch || 'side' in patch ? null : `annotationText:${annotationId}`
-      const now = Date.now()
-      const coalesce =
-        key !== null && lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
-      lastEdit = { key, at: now }
+      const coalesce = continuesEdit(key)
       const next = {
         ...state.card,
         showcase: {
