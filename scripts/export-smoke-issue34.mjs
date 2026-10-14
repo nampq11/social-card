@@ -1,132 +1,28 @@
 // Export smoke for issue #34 (ADR 0005): drive the real app in headless
 // Chrome — switch to Showcase, ingest two screenshots through the real file
 // input, Fit the hero, screenshot the preview, export through the real
-// Copy button, and pull the exported PNG back out of the clipboard.
-// Verifies html-to-image survives the CSS blur backdrop (T2 acceptance).
-import { spawn } from 'node:child_process'
-import { setTimeout as sleep } from 'node:timers/promises'
+// Copy button path, and pull the exported PNG back out.
+// Verifies decision 3 on real pixels: the CSS blur backdrop survives
+// html-to-image. The sharp cover copy behind a dead blur would leave the
+// margin strip at ~3 distinct stripe colors; a live blur mixes them into
+// dozens of intermediate hues.
 import { writeFileSync } from 'node:fs'
+import { startSmokeApp, sleep } from './lib/smoke-app.mjs'
 
-const PORT = 9222
-const URL_APP = 'http://localhost:5173/'
-
-const chrome = spawn(
-  'google-chrome',
-  [
-    '--headless=new',
-    '--no-sandbox',
-    '--disable-gpu',
-    `--remote-debugging-port=${PORT}`,
-    '--window-size=1440,900',
-    'about:blank',
-  ],
-  { stdio: 'ignore' },
-)
-
-const die = async (err) => {
-  console.error('SMOKE FAIL:', err.message ?? err)
-  chrome.kill()
-  vite?.kill()
-  process.exit(1)
-}
-process.on('unhandledRejection', die)
-
-let vite
-let lastRadioDump = ''
+let app
 try {
-  // --- wait for the debugger endpoint, then find the page target ----------
-  let targets
-  for (let i = 0; i < 50; i++) {
-    try {
-      targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()
-      if (targets.length) break
-    } catch {
-      await sleep(200)
-    }
-  }
-  const page = targets.find((t) => t.type === 'page')
-  const wsPage = new WebSocket(page.webSocketDebuggerUrl)
-  await new Promise((res, rej) => {
-    wsPage.onopen = res
-    wsPage.onerror = rej
-  })
-
-  let seq = 0
-  const pending = new Map()
-  const events = []
-  wsPage.onmessage = (e) => {
-    const msg = JSON.parse(e.data)
-    if (msg.id && pending.has(msg.id)) {
-      pending.get(msg.id)(msg)
-      pending.delete(msg.id)
-    } else if (msg.method) events.push(msg)
-  }
-  const send = (method, params = {}) =>
-    new Promise((res, rej) => {
-      const id = ++seq
-      pending.set(id, (msg) =>
-        msg.error ? rej(new Error(`${method}: ${msg.error.message}`)) : res(msg.result),
-      )
-      wsPage.send(JSON.stringify({ id, method, params }))
-    })
-  const evalJs = async (expression) => {
-    const r = await send('Runtime.evaluate', {
-      expression,
-      awaitPromise: true,
-      returnByValue: true,
-    })
-    if (r.exceptionDetails)
-      throw new Error(
-        'page eval: ' +
-          JSON.stringify(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text),
-      )
-    return r.result.value
-  }
-  const waitUntil = async (label, fn, tries = 60) => {
-    for (let i = 0; i < tries; i++) {
-      if (await fn()) return
-      await sleep(250)
-    }
-    throw new Error('timeout waiting for ' + label)
-  }
-
-  // --- vite dev server -----------------------------------------------------
-  vite = spawn('pnpm', ['dev', '--port', '5173', '--strictPort'], {
-    stdio: 'ignore',
-    detached: true,
-  })
-  await waitUntil('vite', async () => {
-    try {
-      return (await fetch(URL_APP)).ok
-    } catch {
-      return false
-    }
-  })
-
-  await send('Page.enable')
-  await send('Runtime.enable')
-  await send('Page.navigate', { url: URL_APP })
-  await waitUntil('app boot', () =>
-    evalJs(`document.readyState === 'complete' && !!document.querySelector('#social-card-node')`),
-  )
+  app = await startSmokeApp()
+  const { send, evalJs, waitUntil } = app
 
   // --- 1. Showcase mode ----------------------------------------------------
   await evalJs(
     `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
   )
-  await waitUntil('showcase section', async () => {
-    const ok = await evalJs(
+  await waitUntil('showcase section', () =>
+    evalJs(
       `[...document.querySelectorAll('label')].some(l => l.textContent.includes('Ảnh chụp màn hình'))`,
-    )
-    if (!ok) {
-      const radios = await evalJs(
-        `[...document.querySelectorAll('[role=radio]')].map((r) => r.textContent.trim()).join('|')`,
-      )
-      if (radios !== lastRadioDump) console.log('  radios so far:', radios)
-      lastRadioDump = radios
-    }
-    return ok
-  })
+    ),
+  )
 
   // --- 1b. fixtures: two 800×450 PNGs drawn by the browser's own canvas -----
   const fixtureDataUrl = await evalJs(`(async () => {
@@ -226,14 +122,47 @@ try {
   if (!dataUrl) throw new Error('export module produced no PNG')
   writeFileSync('/tmp/smoke-exported.png', Buffer.from(dataUrl.split(',')[1], 'base64'))
 
+  // --- 6. decision 3 on real pixels: the blur backdrop survived the export --
+  const colorBuckets = await evalJs(`(async () => {
+    const img = new Image()
+    img.src = ${JSON.stringify(dataUrl)}
+    await img.decode()
+    const c = document.createElement('canvas')
+    c.width = img.width
+    c.height = img.height
+    const g = c.getContext('2d')
+    g.drawImage(img, 0, 0)
+    // The Fit window card leaves a margin of backdrop around it; sample the
+    // left strip just inside the slot edge — x < ~3.5% is the card's flat
+    // page padding, which would undercount a perfectly healthy blur.
+    const strip = g.getImageData(
+      Math.round(c.width * 0.035),
+      Math.round(c.height * 0.15),
+      Math.max(2, Math.round(c.width * 0.025)),
+      Math.round(c.height * 0.3),
+    )
+    const buckets = new Set()
+    for (let i = 0; i < strip.data.length; i += 4) {
+      if (strip.data[i + 3] < 128) continue
+      buckets.add(
+        (strip.data[i] >> 5) + ',' + (strip.data[i + 1] >> 5) + ',' + (strip.data[i + 2] >> 5),
+      )
+    }
+    return buckets.size
+  })()`)
+  // The fixture's stripes have ~3 flat colors: a dropped blur leaves under 8
+  // quantized buckets; a live blur blends them into dozens.
+  if (colorBuckets < 12)
+    throw new Error(
+      `blur backdrop did not survive export — margin strip has only ${colorBuckets} color buckets`,
+    )
+  console.log('blur backdrop survived export ✓ (margin strip color buckets:', colorBuckets + ')')
+
   const bytes = (await import('node:fs')).statSync('/tmp/smoke-exported.png').size
   console.log('SMOKE OK: preview + exported PNG captured, exported bytes =', bytes)
 } catch (err) {
-  await die(err)
+  console.error('SMOKE FAIL:', err.message ?? err)
+  process.exitCode = 1
 } finally {
-  chrome.kill()
-  if (vite?.pid)
-    try {
-      process.kill(-vite.pid)
-    } catch {}
+  app?.close()
 }
