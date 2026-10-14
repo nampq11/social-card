@@ -23,6 +23,29 @@ _Avoid_: template, sample
 **Card State**:
 The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase, bold sublines, grayscale avatar).
 _Avoid_: form data, settings
+**Card Type**:
+The archetype of a card — Quote or Showcase — deciding which Card Content fields exist and which layout the Card Preview renders.
+_Avoid_: layout, variant
+
+**Quote Card**:
+The original Card Type: big headline, sublines, optional QR CTA, signature footer with avatar.
+_Avoid_: default card, text card
+
+**Showcase Card**:
+The product-announcement Card Type: up to three Screenshot Slots in a hero-plus-details collage, handwritten Annotations, and a centered author footer. Always 1:1.
+_Avoid_: product card, screenshot card, collage mode
+
+**Screenshot Slot**:
+One image holder of a Showcase Card: the single full-width Hero Slot on top, or one of up to two Detail Slots side-by-side below.
+_Avoid_: image placeholder, upload box
+
+**Shot**:
+One uploaded screenshot in a Showcase Card's content, carrying a stable identity. The first Shot renders in the Hero Slot.
+_Avoid_: image, upload
+
+**Annotation**:
+A handwritten-style callout on a Showcase Card: script text plus an arrow, anchored to one Shot from a fixed side. An Annotation follows its Shot, not the Slot the Shot currently occupies.
+_Avoid_: callout, note, comment
 
 **Card Export**:
 Rendering the current Card State to a shareable image — to the clipboard (paste-ready) or as a PNG file. One module owns the whole flow: the exported card node, the re-entry guard, the feedback toasts, and the success flash.
