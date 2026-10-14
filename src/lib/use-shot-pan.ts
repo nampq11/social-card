@@ -78,10 +78,13 @@ export function useShotPan(
       setDragging(false)
       return
     }
-    // No gesture was armed: a touch tap on an unarmed Shot selects it.
+    // No gesture was armed: a tap selects the Shot — any Fit, either pointer
+    // class — so the on-shot pill (ADR 0006 §2) is reachable everywhere.
+    // Drag-always on hover-capable pointers is unaffected: a drag arms on
+    // pointer-down and never reaches this branch.
     const start = tapStart.current
     tapStart.current = null
-    if (!cover || hoverCapable || selected || !start) return
+    if (selected || !start) return
     const moved = Math.abs(event.clientX - start.x) + Math.abs(event.clientY - start.y)
     if (moved < 8) onSelect(shotId)
   }

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, within } from '@testing-library/react'
 import { triggerMediaQuery } from '../test/match-media'
@@ -567,5 +567,170 @@ describe('Showcase Annotation styling', () => {
     const mark = screen.getByText('Tổng quan').closest('[data-testid="annotation"]')
     expect(mark?.className).toContain(CARD_THEME_STYLES.dark.text)
     expect(mark?.className).toContain('font-hand')
+  })
+})
+
+// ADR 0006 (issue #38): absent an override, Fit derives from shot-to-slot
+// ratio; zoom renders a transform about the anchor; selecting a Shot surfaces
+// its controls on the slot itself. jsdom has no layout or decode, so the
+// tests drive the measurement hook with a fake Image decode and a stubbed
+// slot rect.
+describe('shot fit v2: auto-fit, zoom, on-shot controls (issue #38)', () => {
+  // A distinct dataUrl per fixture: the fit hook caches decoded dimensions
+  // per URL, so shared strings would leak one test's decode into another.
+  let shotSeq = 0
+  const wideShot = () => `data:image/png;base16,WIDE-${++shotSeq}`
+
+  // 1600×900 shot decoded, hero slot measured at 529×421 (ratio mismatch).
+  const withMeasuredLayout = (slotWidth = 529, slotHeight = 421) => {
+    class FakeImage {
+      onload: (() => void) | null = null
+      naturalWidth = 0
+      naturalHeight = 0
+      set src(_value: string) {
+        this.naturalWidth = 1600
+        this.naturalHeight = 900
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', FakeImage)
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const rect = {
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        toJSON: () => ({}),
+      } as DOMRect
+      if (this.dataset.testid === 'hero-slot') {
+        rect.width = slotWidth
+        rect.height = slotHeight
+      }
+      return rect
+    })
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('a ratio-mismatched shot defaults to contain with its blur backdrop', async () => {
+    withMeasuredLayout()
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+
+    await waitFor(() => {
+      const hero = screen.getByTestId('hero-slot')
+      expect(hero.querySelector('img[aria-hidden="true"]')).not.toBeNull()
+      expect(hero.querySelector('img:not([aria-hidden])')?.className).toContain('object-contain')
+    })
+    // Derived, not stored: the state stays free of an override.
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBeUndefined()
+  })
+
+  it('a near-matched slot keeps the cover render', async () => {
+    withMeasuredLayout(529, 421)
+    renderCard({ cardType: 'showcase' })
+    // 4:3-ish shot against the ~1.25 hero slot is a match — no backdrop.
+    vi.unstubAllGlobals()
+    class MatchImage {
+      onload: (() => void) | null = null
+      naturalWidth = 0
+      naturalHeight = 0
+      set src(_value: string) {
+        this.naturalWidth = 1000
+        this.naturalHeight = 800
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', MatchImage)
+    act(() => useCardStore.getState().addShot(wideShot()))
+
+    await waitFor(() => {
+      expect(useCardStore.getState().card.showcase!.shots[0].fit).toBeUndefined()
+    })
+    const hero = screen.getByTestId('hero-slot')
+    expect(hero.querySelector('img[aria-hidden="true"]')).toBeNull()
+    expect(hero.querySelector('img:not([aria-hidden])')?.className).toContain('object-cover')
+  })
+
+  it('an explicit fit override wins over the derived default', async () => {
+    withMeasuredLayout()
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    // eslint-disable-next-line no-console
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('hero-slot').querySelector('img[aria-hidden="true"]'),
+      ).not.toBeNull()
+    })
+
+    act(() =>
+      useCardStore
+        .getState()
+        .setShotFit(useCardStore.getState().card.showcase!.shots[0].id, 'cover'),
+    )
+    expect(screen.getByTestId('hero-slot').querySelector('img[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('zoom renders a transform about the focus anchor; unzoomed renders none', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const shotId = useCardStore.getState().card.showcase!.shots[0].id
+
+    const unzoomed = screen
+      .getByTestId('hero-slot')
+      .querySelector('img:not([aria-hidden])') as HTMLImageElement
+    expect(unzoomed.style.transform).toBe('')
+
+    act(() => useCardStore.getState().setShotScale(shotId, 2))
+    const zoomed = screen
+      .getByTestId('hero-slot')
+      .querySelector('img:not([aria-hidden])') as HTMLImageElement
+    expect(zoomed.style.transform).toBe('scale(2)')
+    expect(zoomed.style.transformOrigin).toBe('50% 0%')
+  })
+
+  it('selecting a shot surfaces the fit toggle on the slot and wires it to the store', async () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'mouse', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    // Effective fit is cover (no layout in this test) → the toggle offers contain.
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Trọn ảnh' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBe('contain')
+  })
+
+  it('Đặt lại on the pill clears the whole adjustment set', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    const shotId = useCardStore.getState().card.showcase!.shots[0].id
+    act(() => {
+      useCardStore.getState().setShotFocus(shotId, { x: 0.2, y: 0.2 })
+      useCardStore.getState().setShotScale(shotId, 3)
+      useCardStore.getState().setShotFit(shotId, 'cover')
+    })
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'mouse', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Đặt lại' }))
+
+    const shot = useCardStore.getState().card.showcase!.shots[0]
+    expect(shot.fit).toBeUndefined()
+    expect(shot.focus).toBeUndefined()
+    expect(shot.scale).toBeUndefined()
   })
 })

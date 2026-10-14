@@ -339,11 +339,12 @@ describe('card-store shot fit & focus (issue #34)', () => {
     expect(s().card.showcase!.shots[0].fit).toBeUndefined()
   })
 
-  it('setting the same fit changes nothing and costs no undo step', () => {
+  it('writing a fit override the shot already stores costs no undo step', () => {
     const shot = withOneShot()
+    s().setShotFit(shot.id, 'contain') // an override, stored
     const stepsBefore = s().past.length
 
-    s().setShotFit(shot.id, 'cover')
+    s().setShotFit(shot.id, 'contain')
 
     expect(s().past.length).toBe(stepsBefore)
   })
@@ -474,5 +475,29 @@ describe('card-store shot Scale + adjustments reset (issue #38)', () => {
 
     s().clearShotAdjustments(shot.id)
     expect(s().past.length).toBe(stepsBefore)
+  })
+})
+
+describe('card-store overrides vs the derived default (issue #38)', () => {
+  it('an explicit fit request overrides the derived default even when it equals the accessor default', () => {
+    s().switchCardType('showcase')
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    // Auto-fit derives contain at render (no stored field); the user's
+    // explicit cover choice must win and be stored — this is the pill's
+    // "Đầy khung" on an auto-contained shot.
+    s().setShotFit(shot.id, 'cover')
+    expect(s().card.showcase!.shots[0].fit).toBe('cover')
+  })
+
+  it('writing the override that is already stored is still a no-op', () => {
+    s().switchCardType('showcase')
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    const stepsBefore = s().past.length
+
+    s().setShotFit(shot.id, 'cover')
+    s().setShotFit(shot.id, 'cover')
+    expect(s().past.length).toBe(stepsBefore + 1)
   })
 })

@@ -1,12 +1,13 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
-import { DEFAULT_SHOT_FOCUS, shotAnchorCss, shotFit } from '../lib/shot-fit'
+import { clampScale, DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
+import { useEffectiveFit } from '../lib/use-effective-fit'
 import { useShotPan } from '../lib/use-shot-pan'
 import { useUiCopy } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
-import type { Annotation, AnnotationSide, CardState, CardTheme, Shot } from '../types'
+import type { Annotation, AnnotationSide, CardState, CardTheme, Shot, ShotFit } from '../types'
 
 // Fixed annotation anchors (issue #33): the side picks the margin around the
 // target slot — never free-dragged. Tailwind edges do the parking (right-full
@@ -56,16 +57,23 @@ const PanOverlayButton = ({ onClick, children }: { onClick: () => void; children
 // always on hover-capable pointers — ADR 0005).
 const ShotImage = ({
   shot,
+  fit,
   selected,
   onSelect,
 }: {
   shot: Shot
+  fit: ShotFit
   selected: boolean
   onSelect: (shotId: string | null) => void
 }) => {
-  const pan = useShotPan(shot.id, shotFit(shot), selected, onSelect)
-  const fit = shotFit(shot)
+  const pan = useShotPan(shot.id, fit, selected, onSelect)
   const windowCard = fit === 'contain'
+  // Zoom (ADR 0006 §4): scale about the focus anchor — object-position
+  // percentages align content and box fractions, so the anchored content
+  // point stays put while zooming. No transform at scale 1: the unzoomed
+  // render stays byte-identical to the ADR 0005 one.
+  const anchor = shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, fit)
+  const zoom = fit === 'cover' ? clampScale(shot.scale ?? 1) : 1
   return (
     <img
       src={shot.dataUrl}
@@ -75,7 +83,8 @@ const ShotImage = ({
       onPointerUp={pan.handlers.onPointerUp}
       onPointerCancel={pan.handlers.onPointerCancel}
       style={{
-        objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, fit),
+        objectPosition: anchor,
+        ...(zoom > 1 ? { transform: `scale(${zoom})`, transformOrigin: anchor } : {}),
       }}
       className={`relative h-full w-full ${
         windowCard
@@ -110,8 +119,14 @@ const Slot = ({
 }) => {
   const { copy } = useUiCopy()
   const clearShotAdjustments = useCardStore((s) => s.clearShotAdjustments)
+  const setShotFit = useCardStore((s) => s.setShotFit)
+  const slotRef = useRef<HTMLDivElement>(null)
+  // The effective Fit (override or ratio-derived, ADR 0006 §1) drives the
+  // backdrop, the Shot's render, and the pill's toggle label from one source.
+  const fit = useEffectiveFit(shot, slotRef)
   return (
     <div
+      ref={slotRef}
       data-testid={testId}
       className={`relative rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
     >
@@ -123,7 +138,7 @@ const Slot = ({
             {/* Fit (contain) fills the leftover area with a blurred cover copy
                 of the same Shot — the genre's standard against letterbox bars
                 (ADR 0005). Slightly oversized so the blur has no soft edges. */}
-            {shotFit(shot) === 'contain' && (
+            {fit === 'contain' && (
               <img
                 src={shot.dataUrl}
                 alt=""
@@ -134,7 +149,7 @@ const Slot = ({
             {/* Focus drives object-position natively (ADR 0005, amended):
                 no ratio math, and the default 50% 0% is literally object-top.
                 A Fit Shot shows whole, framed as a floating window card. */}
-            <ShotImage shot={shot} selected={selected} onSelect={onSelect} />
+            <ShotImage shot={shot} fit={fit} selected={selected} onSelect={onSelect} />
           </>
         ) : (
           <div
@@ -150,6 +165,11 @@ const Slot = ({
           className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-blue-600 dark:ring-blue-500"
         >
           <div className="pointer-events-auto absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+            <PanOverlayButton
+              onClick={() => setShotFit(shot.id, fit === 'contain' ? 'cover' : 'contain')}
+            >
+              {fit === 'contain' ? copy.shot_fit_cover : copy.shot_fit_contain}
+            </PanOverlayButton>
             <PanOverlayButton onClick={() => clearShotAdjustments(shot.id)}>
               {copy.shot_reset_label}
             </PanOverlayButton>

@@ -11,7 +11,6 @@ import type {
 import { SegmentedControl } from './SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
-import { shotFit } from '../lib/shot-fit'
 import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
@@ -137,6 +136,7 @@ export const ScreenshotsSection: React.FC = () => {
   const removeShot = useCardStore((s) => s.removeShot)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const setShotFit = useCardStore((s) => s.setShotFit)
+  const clearShotFit = useCardStore((s) => s.clearShotFit)
   // The fit switcher acts on one selected thumbnail; which thumbnail the
   // user is looking at is UI-transient, so it stays out of the Card State.
   const [selectedShotId, setSelectedShotId] = useState<string | null>(null)
@@ -210,12 +210,18 @@ export const ScreenshotsSection: React.FC = () => {
           >
             {copy.shot_fit_label}
           </label>
-          <SegmentedControl<ShotFit>
+          {/* Tự động = no override: the derived default (ADR 0006 §1). */}
+          <SegmentedControl<'auto' | ShotFit>
             aria-labelledby={`shot-fit-label-${selectedShot.id}`}
-            value={shotFit(selectedShot)}
-            onChange={(fit) => setShotFit(selectedShot.id, fit)}
+            value={selectedShot.fit ?? 'auto'}
+            onChange={(choice) =>
+              choice === 'auto'
+                ? clearShotFit(selectedShot.id)
+                : setShotFit(selectedShot.id, choice)
+            }
             className="w-full"
             options={[
+              { value: 'auto', label: copy.shot_fit_auto },
               { value: 'cover', label: copy.shot_fit_cover },
               { value: 'contain', label: copy.shot_fit_contain },
             ]}

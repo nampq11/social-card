@@ -31,6 +31,7 @@ interface CardStore {
   setShotFit: (shotId: string, fit: ShotFit) => void
   setShotFocus: (shotId: string, focus: ShotFocus) => void
   setShotScale: (shotId: string, scale: number) => void
+  clearShotFit: (shotId: string) => void
   clearShotAdjustments: (shotId: string) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
   updateAnnotation: (
@@ -169,8 +170,11 @@ export const useCardStore = create<CardStore>((set) => ({
   setShotFit: (shotId, fit) =>
     set((state) => {
       const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      // Same-fit requests and unknown shots change nothing and cost no step.
-      if (!shot || shotFit(shot) === fit) return state
+      // Unknown shots and no-op writes (the same override already stored)
+      // change nothing and cost no step. The comparison is against the stored
+      // override, not the effective fit: with auto-fit deriving contain
+      // (ADR 0006 §1), an explicit cover request IS a real change.
+      if (!shot || shot.fit === fit) return state
       lastEdit = null
       const shots = state.card.showcase!.shots.map((shot) =>
         shot.id === shotId ? { ...shot, fit } : shot,
@@ -197,6 +201,22 @@ export const useCardStore = create<CardStore>((set) => ({
       const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
       return coalesce ? { card: next } : undoStep(state, next)
     }),
+  // The Inspector's "Tự động": drop the explicit Fit override and return to
+  // the derived default (ADR 0006 §1). One atomic undo step; no step when
+  // there is no override to drop.
+  clearShotFit: (shotId) =>
+    set((state) => {
+      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
+      if (!shot?.fit) return state
+      lastEdit = null
+      const shots = state.card.showcase!.shots.map((shot) => {
+        if (shot.id !== shotId) return shot
+        const { fit: _dropped, ...rest } = shot
+        return rest
+      })
+      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
+    }),
+
   // Scale comes from pinch/wheel gestures — dozens of events per second — so
   // it coalesces exactly like Focus: same Shot, shared window, one pinch is
   // one undo. Clamped on write: state never carries an out-of-domain zoom.

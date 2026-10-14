@@ -485,12 +485,26 @@ describe('Inspector Showcase Screenshots section', () => {
     expect(screen.queryByRole('radiogroup', { name: 'Hiển thị ảnh' })).toBeNull()
 
     fireEvent.click(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' }))
-    expect(screen.getByRole('radio', { name: 'Đầy khung' }).getAttribute('aria-checked')).toBe(
-      'true',
-    )
+    // No override yet: the switcher reads Tự động (ADR 0006 §1).
+    expect(screen.getByRole('radio', { name: 'Tự động' }).getAttribute('aria-checked')).toBe('true')
 
     fireEvent.click(screen.getByRole('radio', { name: 'Trọn ảnh' }))
     expect(useCardStore.getState().card.showcase!.shots[0].fit).toBe('contain')
+  })
+
+  it('Tự động clears a fit override back to the derived default', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+    const shot = useCardStore.getState().card.showcase!.shots[0]
+    act(() => useCardStore.getState().setShotFit(shot.id, 'contain'))
+    fireEvent.click(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' }))
+    expect(screen.getByRole('radio', { name: 'Trọn ảnh' }).getAttribute('aria-checked')).toBe(
+      'true',
+    )
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Tự động' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBeUndefined()
+    expect(screen.getByRole('radio', { name: 'Tự động' }).getAttribute('aria-checked')).toBe('true')
   })
 
   it('deselects a selected shot when its thumbnail is clicked again', () => {
