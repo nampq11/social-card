@@ -30,6 +30,7 @@ interface CardStore {
   removeShot: (shotId: string) => void
   setShotFit: (shotId: string, fit: ShotFit) => void
   setShotFocus: (shotId: string, focus: ShotFocus) => void
+  resetShotFocus: (shotId: string) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
   updateAnnotation: (
     annotationId: string,
@@ -194,6 +195,20 @@ export const useCardStore = create<CardStore>((set) => ({
       )
       const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
       return coalesce ? { card: next } : undoStep(state, next)
+    }),
+  // [Đặt lại] on the pan overlay: back to the absent-field default (the
+  // original object-top render), which is a state without a focus value.
+  resetShotFocus: (shotId) =>
+    set((state) => {
+      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
+      if (!shot?.focus) return state
+      lastEdit = null
+      const shots = state.card.showcase!.shots.map((shot) => {
+        if (shot.id !== shotId) return shot
+        const { focus: _dropped, ...rest } = shot
+        return rest
+      })
+      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
     }),
   // Annotations bind to Shots, never to Screenshot Slots (issue #33) — a
   // shot carries at most one, so the edit is refused while it has one.

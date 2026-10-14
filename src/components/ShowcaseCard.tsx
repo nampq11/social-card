@@ -1,7 +1,11 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
+import { useState } from 'react'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
 import { DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
+import { useShotPan } from '../lib/use-shot-pan'
+import { useUiCopy } from '../lib/i18n'
+import { useCardStore } from '../lib/card-store'
 import type { Annotation, AnnotationSide, CardState, CardTheme, Shot } from '../types'
 
 // Fixed annotation anchors (issue #33): the side picks the margin around the
@@ -34,79 +38,141 @@ const AnnotationCurve = ({ className }: { className: string }) => (
   </svg>
 )
 
+// The touch-selection chrome: [Đặt lại] resets Focus to the absent-field
+// default, [Xong] disarms the Shot. Lives on an export-excluded overlay so
+// Card Export never captures the ring or the buttons (ADR 0005).
+const PanOverlayButton = ({ onClick, children }: { onClick: () => void; children: string }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="cursor-pointer rounded-full bg-black/60 px-2.5 py-1 text-xs text-white transition-colors hover:bg-black/80"
+  >
+    {children}
+  </button>
+)
+
+// The front-facing Shot image: renders Focus via object-position and carries
+// the pan gesture surface when interactive (cover shots; armed on touch,
+// always on hover-capable pointers — ADR 0005).
+const ShotImage = ({
+  shot,
+  selected,
+  onSelect,
+}: {
+  shot: Shot
+  selected: boolean
+  onSelect: (shotId: string | null) => void
+}) => {
+  const pan = useShotPan(shot.id, shot.fit, selected, onSelect)
+  const windowCard = (shot.fit ?? 'cover') === 'contain'
+  return (
+    <img
+      src={shot.dataUrl}
+      alt=""
+      onPointerDown={pan.handlers.onPointerDown}
+      onPointerMove={pan.handlers.onPointerMove}
+      onPointerUp={pan.handlers.onPointerUp}
+      onPointerCancel={pan.handlers.onPointerCancel}
+      style={{
+        objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, shot.fit ?? 'cover'),
+      }}
+      className={`relative h-full w-full ${
+        windowCard
+          ? 'scale-[0.92] rounded-xl object-contain shadow-lg ring-1 ring-black/10'
+          : `object-cover ${pan.interactive ? 'touch-none cursor-grab' : ''} ${
+              pan.dragging ? 'cursor-grabbing' : ''
+            }`
+      }`}
+    />
+  )
+}
+
 // One Screenshot Slot (GLOSSARY.md): holds its Shot, or shows the dashed
-// placeholder when empty — a pure preview affordance; capturing Shots is the
-// Inspector's job (issue #33).
+// placeholder when empty. Rendering is the Card Preview's job; panning an
+// armed Shot is the one interaction the preview owns (ADR 0005).
 const Slot = ({
   shot,
   testId,
   sizeClassName,
   themeStyles,
   annotation,
+  selected,
+  onSelect,
 }: {
   shot?: Shot
   testId: string
   sizeClassName: string
   themeStyles: (typeof CARD_THEME_STYLES)[CardTheme]
   annotation?: Annotation
-}) => (
-  <div
-    data-testid={testId}
-    className={`relative rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
-  >
-    {/* The slot clips its Shot; the annotation mark must overflow into the
-        margin, so clipping stays on the inner box (issue #33). */}
-    <div className="h-full w-full overflow-hidden rounded-2xl">
-      {shot ? (
-        <>
-          {/* Fit (contain) fills the leftover area with a blurred cover copy
-              of the same Shot — the genre's standard against letterbox bars
-              (ADR 0005). Slightly oversized so the blur has no soft edges. */}
-          {(shot.fit ?? 'cover') === 'contain' && (
-            <img
-              src={shot.dataUrl}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
-            />
-          )}
-          {/* Focus drives object-position natively (ADR 0005, amended):
-              no ratio math, and the default 50% 0% is literally object-top.
-              A Fit Shot shows whole, framed as a floating window card. */}
-          <img
-            src={shot.dataUrl}
-            alt=""
-            style={{
-              objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, shot.fit ?? 'cover'),
-            }}
-            className={
-              (shot.fit ?? 'cover') === 'contain'
-                ? 'relative h-full w-full scale-[0.92] rounded-xl object-contain shadow-lg ring-1 ring-black/10'
-                : 'relative h-full w-full object-cover'
-            }
+  selected: boolean
+  onSelect: (shotId: string | null) => void
+}) => {
+  const { copy } = useUiCopy()
+  const resetShotFocus = useCardStore((s) => s.resetShotFocus)
+  return (
+    <div
+      data-testid={testId}
+      className={`relative rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
+    >
+      {/* The slot clips its Shot; the annotation mark must overflow into the
+          margin, so clipping stays on the inner box (issue #33). */}
+      <div className="h-full w-full overflow-hidden rounded-2xl">
+        {shot ? (
+          <>
+            {/* Fit (contain) fills the leftover area with a blurred cover copy
+                of the same Shot — the genre's standard against letterbox bars
+                (ADR 0005). Slightly oversized so the blur has no soft edges. */}
+            {(shot.fit ?? 'cover') === 'contain' && (
+              <img
+                src={shot.dataUrl}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+              />
+            )}
+            {/* Focus drives object-position natively (ADR 0005, amended):
+                no ratio math, and the default 50% 0% is literally object-top.
+                A Fit Shot shows whole, framed as a floating window card. */}
+            <ShotImage shot={shot} selected={selected} onSelect={onSelect} />
+          </>
+        ) : (
+          <div
+            data-testid="slot-placeholder"
+            className={`h-full w-full rounded-2xl border-2 border-dashed ${themeStyles.border}`}
           />
-        </>
-      ) : (
+        )}
+      </div>
+      {selected && shot && (
         <div
-          data-testid="slot-placeholder"
-          className={`h-full w-full rounded-2xl border-2 border-dashed ${themeStyles.border}`}
-        />
+          data-testid="shot-pan-overlay"
+          data-export-exclude="true"
+          className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-blue-600 dark:ring-blue-500"
+        >
+          <div className="pointer-events-auto absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+            <PanOverlayButton onClick={() => resetShotFocus(shot.id)}>
+              {copy.shot_reset_label}
+            </PanOverlayButton>
+            <PanOverlayButton onClick={() => onSelect(null)}>
+              {copy.shot_done_label}
+            </PanOverlayButton>
+          </div>
+        </div>
+      )}
+      {shot && annotation && (
+        <div
+          data-testid="annotation"
+          className={`pointer-events-none absolute font-hand text-[17px] leading-tight ${themeStyles.text} ${ANNOTATION_PLACEMENT[annotation.side].mark}`}
+        >
+          {/* One fixed size, ink from the active theme's text token; the curve
+              inherits it through currentColor. Pointer events stay off: the
+              annotation is not interactive. */}
+          <p className="break-words">{annotation.text}</p>
+          <AnnotationCurve className={ANNOTATION_PLACEMENT[annotation.side].curve} />
+        </div>
       )}
     </div>
-    {shot && annotation && (
-      <div
-        data-testid="annotation"
-        className={`pointer-events-none absolute font-hand text-[17px] leading-tight ${themeStyles.text} ${ANNOTATION_PLACEMENT[annotation.side].mark}`}
-      >
-        {/* One fixed size, ink from the active theme's text token; the curve
-            inherits it through currentColor. Pointer events stay off: the
-            preview is a pure render surface. */}
-        <p className="break-words">{annotation.text}</p>
-        <AnnotationCurve className={ANNOTATION_PLACEMENT[annotation.side].curve} />
-      </div>
-    )}
-  </div>
-)
+  )
+}
 
 // The Showcase Card Type's preview body (GLOSSARY.md): Screenshot Slots in a
 // hero-plus-details collage above the centered author footer. Renders no
@@ -117,6 +183,9 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
   const themeStyles = CARD_THEME_STYLES[card.theme]
   const [hero, ...details] = card.showcase?.shots ?? []
   const bioLines = splitLines(card.authorBio)
+  // Canvas pan selection is UI-transient — which Shot the user armed — so it
+  // lives here, not in the Card State.
+  const [selectedShotId, setSelectedShotId] = useState<string | null>(null)
   // Annotations bind to Shots (issue #33): the lookup is by the Shot's stable
   // id, so an annotation renders wherever its Shot currently sits.
   const annotationFor = (shotId: string) =>
@@ -131,6 +200,8 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
           sizeClassName="min-h-0 flex-[3]"
           themeStyles={themeStyles}
           annotation={hero ? annotationFor(hero.id) : undefined}
+          selected={selectedShotId === hero?.id}
+          onSelect={setSelectedShotId}
         />
         {details.length > 0 && (
           <div className="flex min-h-0 flex-[2] gap-4">
@@ -142,6 +213,8 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
                 sizeClassName="min-h-0 flex-1"
                 themeStyles={themeStyles}
                 annotation={annotationFor(shot.id)}
+                selected={selectedShotId === shot.id}
+                onSelect={setSelectedShotId}
               />
             ))}
           </div>

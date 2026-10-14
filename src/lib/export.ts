@@ -7,6 +7,12 @@ const EXPORT_IMAGE_OPTIONS = {
   pixelRatio: EXPORT_PIXEL_RATIO,
   cacheBust: true,
   quality: 1,
+  // Selection chrome (the pan overlay ring + buttons) is UI-transient — it
+  // must never appear in a Card Export (ADR 0005).
+  filter: (node: Node) => {
+    const el = node as HTMLElement
+    return !(el.dataset && el.dataset.exportExclude === 'true')
+  },
   style: {
     transform: 'none',
   },
