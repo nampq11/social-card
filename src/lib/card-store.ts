@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CardState } from '../types'
+import type { Annotation, AnnotationSide, CardState, CardType } from '../types'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -23,11 +23,37 @@ interface CardStore {
   resetCard: () => void
   undo: () => void
   redo: () => void
+  switchCardType: () => void
+  addShot: (dataUrl: string) => void
+  removeShot: (shotId: string) => void
+  addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
+  updateAnnotation: (
+    annotationId: string,
+    patch: Partial<Pick<Annotation, 'shotId' | 'text' | 'side'>>,
+  ) => void
+  removeAnnotation: (annotationId: string) => void
 }
 
 const HISTORY_CAP = 50
 const COALESCE_WINDOW_MS = 600
 
+// Stable identity for Shots and Annotations (GLOSSARY.md): unique per
+// creation, never derived from list position, so references survive any
+// rearrangement of the arrays.
+let nextId = 0
+const createId = (prefix: string) => `${prefix}-${++nextId}`
+
+// Bookkeeping shared by every dedicated action below: the previous card
+// becomes exactly one undo step and the redo stack is discarded.
+const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState) => ({
+  card,
+  past: [...state.past, state.card].slice(-HISTORY_CAP),
+  future: [],
+  canUndo: true,
+  canRedo: false,
+})
+
+// Edit rhythm is UI-transient — module-scoped, not part of the model.
 // Edit rhythm is UI-transient — module-scoped, not part of the model.
 let lastEdit: { key: string | null; at: number } | null = null
 
@@ -96,5 +122,105 @@ export const useCardStore = create<CardStore>((set) => ({
         canUndo: true,
         canRedo: rest.length > 0,
       }
+    }),
+
+  // Each Shot upload is its own atomic undo step, like any dedicated edit.
+  addShot: (dataUrl: string) =>
+    set((state) => {
+      // The collage holds at most three Shots (hero + two details); a
+      // refused upload changes nothing and costs no undo step.
+      if ((state.card.showcase?.shots.length ?? 0) >= 3) return state
+      lastEdit = null
+      const shot = { id: createId('shot'), dataUrl }
+      const showcase = state.card.showcase ?? { shots: [], annotations: [] }
+      return undoStep(state, {
+        ...state.card,
+        showcase: { ...showcase, shots: [...showcase.shots, shot] },
+      })
+    }),
+
+  // Annotations follow their Shot (issue #33): deleting a shot deletes its
+  // annotation within the very same undo step, so one Cmd+Z restores both.
+  removeShot: (shotId) =>
+    set((state) => {
+      const showcase = state.card.showcase
+      if (!showcase || !showcase.shots.some((shot) => shot.id === shotId)) return state
+      lastEdit = null
+      return undoStep(state, {
+        ...state.card,
+        showcase: {
+          shots: showcase.shots.filter((shot) => shot.id !== shotId),
+          annotations: showcase.annotations.filter((annotation) => annotation.shotId !== shotId),
+        },
+      })
+    }),
+
+  // Annotations bind to Shots, never to Screenshot Slots (issue #33) — a
+  // shot carries at most one, so the edit is refused while it has one.
+  addAnnotation: (input) =>
+    set((state) => {
+      const showcase = state.card.showcase
+      const shotExists = showcase?.shots.some((shot) => shot.id === input.shotId)
+      const alreadyAnnotated = showcase?.annotations.some(
+        (annotation) => annotation.shotId === input.shotId,
+      )
+      if (!showcase || !shotExists || alreadyAnnotated) return state
+      lastEdit = null
+      const annotation = { id: createId('annotation'), ...input }
+      return undoStep(state, {
+        ...state.card,
+        showcase: { ...showcase, annotations: [...showcase.annotations, annotation] },
+      })
+    }),
+
+  // List-only editing per the spec (text, side, target shot, delete). A
+  // retarget obeys the same one-annotation-per-shot cap as addAnnotation.
+  updateAnnotation: (annotationId, patch) =>
+    set((state) => {
+      const showcase = state.card.showcase
+      const annotation = showcase?.annotations.find((a) => a.id === annotationId)
+      if (!showcase || !annotation) return state
+      const targetId = patch.shotId ?? annotation.shotId
+      const targetFree =
+        showcase.shots.some((shot) => shot.id === targetId) &&
+        showcase.annotations.every((a) => a.id === annotationId || a.shotId !== targetId)
+      if (!targetFree) return state
+      lastEdit = null
+      return undoStep(state, {
+        ...state.card,
+        showcase: {
+          ...showcase,
+          annotations: showcase.annotations.map((a) =>
+            a.id === annotationId ? { ...a, ...patch } : a,
+          ),
+        },
+      })
+    }),
+
+  removeAnnotation: (annotationId) =>
+    set((state) => {
+      const showcase = state.card.showcase
+      if (!showcase?.annotations.some((a) => a.id === annotationId)) return state
+      lastEdit = null
+      return undoStep(state, {
+        ...state.card,
+        showcase: {
+          ...showcase,
+          annotations: showcase.annotations.filter((a) => a.id !== annotationId),
+        },
+      })
+    }),
+
+  // The type switch is a dedicated atomic action (ADR 0004): always its own
+  // undo step — never coalesced with adjacent edits — and non-destructive in
+  // both directions: Quote fields and the showcase nest are left untouched.
+  switchCardType: () =>
+    set((state) => {
+      lastEdit = null
+      const cardType: CardType = state.card.cardType === 'showcase' ? 'quote' : 'showcase'
+      // Showcase is always 1:1; leaving does not restore the pre-excursion
+      // ratio — ratio is shared style, not per-type content (issue #33).
+      const ratio = cardType === 'showcase' ? '1:1' : state.card.ratio
+      return undoStep(state, { ...state.card, cardType, ratio })
     }),
 }))

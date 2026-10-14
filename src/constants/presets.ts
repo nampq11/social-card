@@ -9,6 +9,7 @@ export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 // Headlines are stored in sentence case; the Uppercase toggle drives the
 // casing at render time, so unchecking it has to visibly change the card.
 export const DEFAULT_CARD_STATE: CardState = {
+  cardType: 'quote',
   headline: 'Em vừa được tậu đất:',
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: FALLBACK_AUTHOR_NAME,
