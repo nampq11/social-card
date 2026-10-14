@@ -88,6 +88,17 @@ describe('Inspector', () => {
     expect(screen.getByLabelText(/Nội dung kêu gọi bên cạnh QR/i)).not.toBeNull()
   })
 
+  it('offers the bio as a textarea that accepts newlines', () => {
+    renderInspector('identity')
+    const bio = screen.getByLabelText(/Bio \/ Chức danh/i)
+
+    expect(bio.tagName).toBe('TEXTAREA')
+    expect(bio.getAttribute('rows')).toBe('2')
+
+    fireEvent.change(bio, { target: { value: 'Founder\nMentor' } })
+    expect(useCardStore.getState().card.authorBio).toBe('Founder\nMentor')
+  })
+
   it('provides an accessible name and state for the QR toggle switch', () => {
     renderInspector('identity')
     const qrToggle = screen.getByRole('switch', { name: /Mã QR & Kêu gọi/i })

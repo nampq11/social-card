@@ -48,6 +48,19 @@ describe('CardPreview', () => {
     expect(sublinesBlock?.className).not.toContain('text-[#3D4046]')
   })
 
+  it('renders each bio line as its own element, dropping blank lines', () => {
+    renderCard({
+      authorName: 'Nam',
+      authorBio: 'Founder độc lập\n\n   \nMentor / Nhà đầu tư',
+    })
+
+    const first = screen.getByText('Founder độc lập')
+    const second = screen.getByText('Mentor / Nhà đầu tư')
+    expect(first.tagName).toBe('P')
+    expect(second.tagName).toBe('P')
+    expect(first).not.toBe(second)
+  })
+
   it('renders normal-weight muted sublines when boldSublines is off', () => {
     renderCard({ theme: 'mist', sublines: 'lanphinh.com' })
 
