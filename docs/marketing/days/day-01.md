@@ -9,6 +9,7 @@
 - [ ] Threads bio: same text (syncs from Instagram if linked)
 - [ ] Profile picture: the sáp-style avatar
 - [ ] Follow 20–30 build-in-public / indie-hacker accounts on each platform (stay under ~300 total follows)
+- [ ] TikTok bio: `Making plain posts look designed in 30 seconds. Free tool 👇` + link `workboost.qzz.io/social-card` in bio
 
 ## Threads — 2 posts today
 
@@ -59,16 +60,36 @@ Then immediately reply under your own post: `Free, no signup: workboost.qzz.io/s
 
 First cross-post lands day 5.
 
+## TikTok — 1 video today (~30 min to make)
+
+**Video: "30-second speedrun #1"** — screen recording only, no face, no voiceover.
+
+| Time   | What's on screen                                                                                       | Text overlay                                            |
+| ------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| 0–2s   | Split screen: plain text post vs the finished card                                                     | `Same words. One of these stops you.`                   |
+| 2–20s  | Screen recording, real speed: open app → type headline → tap 1:1 → tap Paper → QR appears → press Copy | `Type it` → `Pick a ratio` → `One tap, themed` → `Copy` |
+| 20–25s | Paste into the Threads/X composer, post appears                                                        | `Paste. Done.`                                          |
+| 25–27s | Hold on the finished card                                                                              | `Free. No signup.`                                      |
+
+- Record with macOS screen recording (⌘⇧5) or CapCut; **keep the typing sounds** — they earn rewatches.
+- Optional: subtle trending audio at ~10% volume under the typing.
+- Caption: `how i make every post look designed in 30 seconds 🎴 free tool in comments`
+- Post, then immediately comment: `workboost.qzz.io/social-card — free, no signup, works in any browser`
+- Hashtags: `#designtok #buildinpublic #indiehacker`
+
+From here: **3 videos/week (Tue/Thu/Sat)** — never daily.
+
 ## Results (fill in tonight)
 
-| Metric                   | X   | Threads |
-| ------------------------ | --- | ------- |
+| Metric                   | X   | Threads | TikTok |
+| ------------------------ | --- | ------- | ------ |
 | Posts / replies sent     |     |         |
 | Impressions              |     |         |
 | Replies received         |     |         |
 | Profile visits           |     |         |
 | Link clicks (UTM-tagged) |     |         |
-| Followers (delta)        |     |         |
+| Followers (delta)        |     |         |        |
+| TikTok retention %       | —   | —       |        |
 
 ## Learnings → tomorrow
 

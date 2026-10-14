@@ -1,6 +1,6 @@
 # Social Card — Platform Content Marketing Strategy
 
-Marketing plan for **Social Card** (https://workboost.qzz.io/social-card) on **X, Threads, and Facebook**.
+Marketing plan for **Social Card** (https://workboost.qzz.io/social-card) on **X, Threads, TikTok, and Facebook**.
 All posts in English. Based on 2024–2025 platform data, algorithm documentation, and indie
 founder case studies (Tony Dinh/Blackmagic & Xnapper, Jon Yongfook/Bannerbear, Lucia/bolta.ai,
 Senja). Sources linked inline.
@@ -249,7 +249,64 @@ Since we're launching fresh on Threads, run all three phases in order, ~2 weeks 
 
 ---
 
-## 4. Facebook — solution
+## 4. TikTok — solution
+
+### Why TikTok: the interest graph, not the follower graph
+
+TikTok's [official ranking explanation](https://newsroom.tiktok.com/how-tiktok-recommends-videos-for-you)
+states follower count and past viral hits are **not direct ranking factors** — each video
+is seeded to ~200–300 test viewers and scaled only on early retention and high-intent
+engagement (watch time, completion, rewatches, saves/shares). Best cold start of the four
+platforms: a day-one account competes on content quality alone.
+
+Honest caveats:
+
+- Small-account baselines fell hard in 2025 (1–5K-follower accounts average ~350
+  views/video, −23% YoY, [Socialinsider](https://www.socialinsider.io/social-media-benchmarks/tiktok)).
+  The game is **breakouts, not baselines**: 1 in 6 videos does 3× its creator's median,
+  92% of creators get a 3× breakout within 12 months
+  ([Viewlify](https://viewlify.app/blog/tiktok-benchmarks-2026)).
+- Video is the most expensive format here (~30–45 min/clip). If the week collapses, cut
+  TikTok first — never cut Threads replies.
+
+### What this looks like for Social Card
+
+"Type text → instant designed output" is a proven TikTok mega-format (CreatorKit's
+version: ~3M views). The closest founder case: **Dumbphone** — simple screen videos of a
+minimalist interface → 2.4M views in 45 days → 20K downloads, $9K MRR in 78 days
+([case](https://www.shortimize.com/blog/20k-downloads-and-9k-mrr-in-78-days-how-this-indie-app-turned-minimalism-into-millions-of-views)).
+Also FlowTrack: 5s hook + 15s demo + 5s QR CTA → one 28-second clip hit 1.6M views →
+4,300 site visits, 380 trials in 48h
+([case](https://www.tokportal.com/post/case-study-how-a-saas-startup-grew-250-by-posting-tiktoks-in-four-countries)).
+
+### Video formula (every video follows this)
+
+| Time   | Beat                                                                                                                                      |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 0–2s   | Pain-point hook: side-by-side raw post vs designed card + text overlay. No intros ("Hey guys…" costs 30–40% retention).                   |
+| 2–20s  | Screen speedrun: type → ratio → theme → QR → Copy → paste into a composer. Pattern interrupt (zoom / new text overlay) every 3–5 seconds. |
+| 20–25s | Payoff: finished card, text `Free. No signup. 30 seconds.` Hold the last frame ~2s so the video loops cleanly.                            |
+
+Specs from [retention data](https://www.opus.pro/blog/tiktok-length-format-retention-data):
+
+- Length **21–34 seconds** (62% avg completion vs 48% for 60s+).
+- On-screen text/captions always (+12% retention; 60–70% watch sound-off) — also how
+  TikTok search finds the video (put keywords on screen AND in the caption).
+- Sound: keep original typing/click sounds (satisfying = rewatches), optional subtle
+  trending audio at ~10% volume.
+- Hashtags: 3 niche tags max (`#designtok #buildinpublic #indiehacker`) — near-zero
+  reach effect, pure categorization.
+- CTA stays at the END (link in bio + pinned comment). CTA-in-first-3s trades reach for
+  signups (−22% views but 2.6× signups/1K views) — an option once a format already retains.
+
+### Cadence
+
+- **3 videos/week** (Tue/Thu/Sat). Never daily — 12–15 high-retention videos/month beat
+  30 rushed ones; quality is the only lever that scales.
+- Rotate 5 hook archetypes to fight creative fatigue.
+- Cross-post winners to Instagram Reels (same file, zero extra work).
+
+## 5. Facebook — solution
 
 ### Honest verdict: deprioritize the Page
 
@@ -283,23 +340,26 @@ app (UTM: `?utm_source=facebook`), not followers.
 
 ---
 
-## 5. The content engine — one card → three platforms
+## 6. The content engine — one card → four platforms
 
-Solo-founder constraint: produce once, distribute everywhere. Weekly loop (~5 hrs/week):
+Solo-founder constraint: produce once, distribute everywhere. Weekly loop (~7 hrs/week):
 
 ```
- MON        TUE–THU               FRI
- ────       ────────              ────
- 1 deep     repurpose daily:      review analytics,
- piece      X (full card) →       double down on the
- (thread /  Threads (shortened    format that won,
- tutorial)  text + same card)     plan next week
-            → FB photo post
+ MON          TUE–THU               FRI
+ ────         ────────              ────
+ 1 deep       repurpose daily:      review analytics,
+ piece +      X (full card) →       double down on the
+ film TikTok  Threads (shortened    format that won,
+ speedrun     text + same card)     plan next week
+ (thread /    → FB photo post
+ tutorial)    TikTok: Tue/Thu/Sat
 ```
 
-- **Monday:** one deep piece — a 5–8 post X thread or a Showcase-Card tutorial.
+- **Monday:** one deep piece — a 5–8 post X thread or a Showcase-Card tutorial — and
+  film the TikTok speedrun of making its card (~30–45 min).
 - **Tue–Thu:** 2–3 repurposed posts/day on X, 1–2 on Threads (rewritten shorter,
-  more conversational — never paste identical text), 1 photo post on FB.
+  more conversational — never paste identical text), 1 photo post on FB,
+  TikTok video Tue/Thu/Sat.
 - **Friday:** check what earned replies/impressions; next week's plan keeps winners.
 - Every reply gets a reply (within the hour on X, within 6h on Threads).
 
@@ -308,13 +368,14 @@ Solo-founder constraint: produce once, distribute everywhere. Weekly loop (~5 hr
 | Series               | Platform    | Format                                                         |
 | -------------------- | ----------- | -------------------------------------------------------------- |
 | _Made in 30 seconds_ | X + Threads | One card + the 3-step recipe                                   |
-| _Before / After_     | All 3       | Raw screenshot vs Social Card version                          |
+| _30-second speedrun_ | TikTok      | Screen recording: raw post → designed card, typing sounds only |
+| _Before / After_     | All 4       | Raw screenshot vs Social Card version                          |
 | _Build log_          | X + Threads | Metric-specific weekly update                                  |
 | _Fix this post_      | X           | Quote-tweet an ugly (public-figure) post, rebuild it as a card |
 
 ---
 
-## 6. 90-day plan & KPIs
+## 7. 90-day plan & KPIs
 
 ### Phase 1 — Month 1: presence (Educator mode)
 
@@ -332,16 +393,19 @@ Solo-founder constraint: produce once, distribute everywhere. Weekly loop (~5 hr
 - Double down on the top-2 formats by replies. Start the free-template angle:
   "recreate this card in 30s" (template content is screenshot-and-reuse material,
   the highest-intent demo).
+- TikTok: double down on the one hook archetype that retained best; kill the rest.
 
 ### Realistic KPIs for a solo founder (from [indie SaaS benchmarks](https://boringriches.com/guides/saas-business-revenue-benchmarks/))
 
-| Metric                         | Month 1                     | Month 3 | Month 6 |
-| ------------------------------ | --------------------------- | ------- | ------- |
-| Threads followers              | 100–300                     | 500–1K  | 2–5K    |
-| X followers                    | 50–200                      | 300–800 | 1–2K    |
-| Threads median ER              | >4% (platform median 6.25%) | ≥5%     | ≥5%     |
-| App visits/week (UTM-tagged)   | 100                         | 500     | 2K      |
-| Cards exported via QR/referral | —                           | 50/wk   | 200/wk  |
+| Metric                         | Month 1                     | Month 3               | Month 6       |
+| ------------------------------ | --------------------------- | --------------------- | ------------- |
+| Threads followers              | 100–300                     | 500–1K                | 2–5K          |
+| X followers                    | 50–200                      | 300–800               | 1–2K          |
+| TikTok followers               | 100–500                     | 500–1K                | 2–5K          |
+| TikTok median views/video      | ~300 (normal)               | 1 breakout ≥3× median | 1 video >100K |
+| Threads median ER              | >4% (platform median 6.25%) | ≥5%                   | ≥5%           |
+| App visits/week (UTM-tagged)   | 100                         | 500                   | 2K            |
+| Cards exported via QR/referral | —                           | 50/wk                 | 200/wk        |
 
 $1K–3K MRR-equivalent traction (visits, users, cards) within 12 months is a solid outcome
 for a solo founder; anything faster is top-10% territory. Do not judge weeks — judge
@@ -354,7 +418,7 @@ replies are the signal both algorithms pay for), QR scans.
 
 ---
 
-## 7. Source register
+## 8. Source register
 
 - X algorithm (official repo + code analyses): [the-algorithm](https://github.com/twitter/the-algorithm/blob/main/README.md),
   [handbook](https://partyfly.github.io/x-algorithm-handbook/en/), [explainer](https://lemelson.github.io/x-algorithm-explained/)
@@ -366,3 +430,9 @@ replies are the signal both algorithms pay for), QR scans.
 - Founder case studies: [Tony Dinh — Blackmagic](https://news.tonydinh.com/p/322-2k-mrr-in-60-days-by-building-in-public-910564),
   [Yongfook — Bannerbear](https://www.bannerbear.com/blog/one-year-of-marketing-a-saas-from-10k-to-20k-mrr/)
 - Post formats library: [68 SaaS post ideas](https://www.socialmon.ai/blog/68-high-performing-post-ideas-for-saas-startups-that-actually-convert)
+- TikTok ranking (official): [How TikTok recommends videos](https://newsroom.tiktok.com/how-tiktok-recommends-videos-for-you)
+- TikTok benchmarks & retention: [Socialinsider](https://www.socialinsider.io/social-media-benchmarks/tiktok),
+  [Viewlify](https://viewlify.app/blog/tiktok-benchmarks-2026),
+  [OpusClip retention data](https://www.opus.pro/blog/tiktok-length-format-retention-data)
+- TikTok founder cases: [Dumbphone](https://www.shortimize.com/blog/20k-downloads-and-9k-mrr-in-78-days-how-this-indie-app-turned-minimalism-into-millions-of-views),
+  [FlowTrack](https://www.tokportal.com/post/case-study-how-a-saas-startup-grew-250-by-posting-tiktoks-in-four-countries)
