@@ -97,6 +97,25 @@ describe('MobileSheet tab pill docking', () => {
     expect(section.style.transform).toBe(`translateY(${peekOffset}px)`)
   })
 
+  it('re-derives the resting peek offset on window resize even after user interactions', () => {
+    renderSheet()
+    const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })
+    const section = document.querySelector('section') as HTMLElement
+
+    // User toggles open then toggles closed back to peek
+    fireEvent.click(handle)
+    expect(handle.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.click(handle)
+    expect(handle.getAttribute('aria-expanded')).toBe('false')
+
+    // Viewport height changes (e.g. mobile orientation rotation or dynamic toolbars)
+    window.innerHeight = 900
+    fireEvent(window, new Event('resize'))
+
+    const newPeekOffset = sheetExpandedPx(900) - SHEET_MIN_CHROME_PX
+    expect(section.style.transform).toBe(`translateY(${newPeekOffset}px)`)
+  })
+
   it('the sheet header names the sheet, not the active tab (no duplicated label)', () => {
     renderSheet()
 

@@ -114,8 +114,19 @@ export function useSheetDrag(
     )
     drag.maxOffset = Math.max(0, drag.expandedPx - drag.contentTop)
     sheet.style.height = `${drag.expandedPx}px`
-    drag.offset = Math.min(drag.offset, drag.maxOffset)
-    if (drag.offset < 0) drag.offset = 0
+    // Resting state invariant:
+    // When the sheet is at rest (not actively dragged and not mid-spring),
+    // its offset rests cleanly at its committed target: 0 if expanded,
+    // maxOffset if peeked. This correctly re-derives the resting peek on
+    // late layout changes (font swaps, dynamic content) and viewport
+    // height changes (orientation change, URL bar collapse), while
+    // mid-gesture frames preserve user tracking clamped to [0, maxOffset].
+    const isGestureActive = drag.pointerId !== -1 || drag.animating
+    if (!isGestureActive) {
+      drag.offset = expanded ? 0 : drag.maxOffset
+    } else {
+      drag.offset = Math.min(Math.max(0, drag.offset), drag.maxOffset)
+    }
     // Static reserve (the chrome at rest — the safe-area padding lives inside the
     // section height) straight to the canvas element: an inherited CSS
     // variable would have to live on an ancestor and recalculates the whole
@@ -125,9 +136,23 @@ export function useSheetDrag(
       canvas.style.paddingBottom = `${Math.round(drag.contentTop)}px`
     }
     writePosition()
-  }, [canvasRef, contentRef, drag, sheetRef, writePosition])
+  }, [canvasRef, contentRef, drag, expanded, sheetRef, writePosition])
 
   useLayoutEffect(measure, [measure])
+
+  useEffect(() => {
+    const content = contentRef.current
+    if (!content) return
+    // jsdom has no ResizeObserver: tests keep the mount computation only.
+    if (typeof ResizeObserver === 'undefined') return
+    // The chrome above the content changes height after mount (web fonts
+    // swapping in, late reflow), and a window resize never fires for that —
+    // the content is flex-1, so its box moves inversely with the chrome and
+    // its resize is exactly the "chrome height changed" signal.
+    const observer = new ResizeObserver(() => measure())
+    observer.observe(content)
+    return () => observer.disconnect()
+  }, [measure, contentRef])
 
   useEffect(() => {
     const onResize = () => {
@@ -267,6 +292,7 @@ export function useSheetDrag(
     (e: ReactPointerEvent<HTMLElement>) => {
       if (e.pointerId !== drag.pointerId) return
       drag.pointerId = -1
+      drag.captured = false
       // Taps fall through to the button's click → toggle; only drags project.
       if (drag.moved < TAP_THRESHOLD_PX) return
       const velocity = releaseVelocity()
@@ -281,6 +307,7 @@ export function useSheetDrag(
     (e: ReactPointerEvent<HTMLElement>) => {
       if (e.pointerId !== drag.pointerId) return
       drag.pointerId = -1
+      drag.captured = false
       springTo(drag.offset > drag.maxOffset / 2 ? drag.maxOffset : 0, 0)
     },
     [drag, springTo],
