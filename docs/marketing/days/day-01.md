@@ -1,20 +1,20 @@
 # Day 01 — Foundation + first posts
 
-> Daily log convention: duplicate this file as `day-02.md`, `day-03.md`, … each morning.
-> Fill **Results** and **Learnings** every night — they drive the next day's adjustments.
-> Strategy context: [`../platform-strategy.md`](../platform-strategy.md) — week 1 = presence, not promotion.
+> Fill **Results** + **Learnings** tonight and send them to me — I write day-02 from what worked.
+> All content below is final copy — paste as-is. Card recipe = exact fields to enter in Social Card.
 
 ## Setup (once, ~15 min)
 
 - [ ] X bio: `Making social posts look designed in 30 seconds. Building Social Card in public — free, no signup.` + link `workboost.qzz.io/social-card`
-- [ ] Threads bio: same text (bio syncs from Instagram if linked)
-- [ ] Profile picture: the sáp-style avatar (same one the cards use)
-- [ ] Follow 20–30 build-in-public / indie-hacker accounts on each platform. Engage over the coming days — do not follow-spam past ~300.
+- [ ] Threads bio: same text (syncs from Instagram if linked)
+- [ ] Profile picture: the sáp-style avatar
+- [ ] Follow 20–30 build-in-public / indie-hacker accounts on each platform (stay under ~300 total follows)
 
-## Threads — Educator phase, day 1
+## Threads — 2 posts today
 
-**Post A — morning.** Attach a Quote Card made in Social Card (Paper theme, 1:1):
-headline `Same words. Better typography.` — subline `That's the whole game.` + QR CTA.
+**Post A — 09:00, with card image**
+
+Caption:
 
 > Your post doesn't underperform because of the algorithm.
 >
@@ -22,10 +22,9 @@ headline `Same words. Better typography.` — subline `That's the whole game.` +
 >
 > Same words. Better typography. That's the whole game.
 
-No product mention in the post. If someone asks "what tool made this?" — answer with the
-link in a reply. That question is the dogfooding loop working; don't preempt it.
+Card recipe: Quote · 1:1 · Paper · Headline `Same words. Better typography.` · Subline `That's the whole game.` · QR **OFF** (educator phase — let them ask "what tool made this", answer in a reply with the link)
 
-**Post B — evening.** Poll:
+**Post B — 19:00, poll, no image**
 
 > Be honest: when you post a screenshot of your product —
 
@@ -33,40 +32,32 @@ link in a reply. That question is the dogfooding loop working; don't preempt it.
 - Crop it first
 - Clean it up in a design tool first
 
-**Replying (15–30 min):** find 5 threads about content, design, or building. Leave
-genuinely useful replies, no links. Reply count is what feeds the Threads ranking.
+**Replying:** 15–30 min in 5 other people's threads. Pick any 3 X-reply lines below that fit — they work on Threads too.
 
-## X — day 1
+## X — replies only today (pick 3–5 that match your feed)
 
-Replies only, 5+. Formulas — adapt to real posts in the feed:
+1. On someone's launch/milestone post:
+   `Congrats on shipping! Curious what's driving the signups — the launch post itself, or somewhere else?`
+2. On someone asking which design tool to use:
+   `For quick social posts? Skip the canvas tools. Clean typography and one accent color beat 20 layers every time.`
+3. On someone complaining design tools are overkill:
+   `Same. I open a heavy tool maybe once a month now. For daily posts a minimal template does the job in 30 seconds.`
+4. On someone's build-in-public metrics post:
+   `The churn number is the real story — everyone celebrates the top line, few dig into why people stay. What changed?`
+5. On someone's rough-but-honest screenshot post:
+   `Love the honesty here. A 30-second typography pass would make this land even harder.`
 
-1. **Milestone posts** → congratulate + one specific question:
-   `Congrats! Curious what drove the biggest chunk of those — launch post, PH, or somewhere else?`
-2. **"What tool do you use for X" questions** → honest, helpful answer (mention Social Card only if it's genuinely the answer).
-3. **"Design tools are overkill for quick posts" complaints** → agree + describe a concrete 30-second workflow.
+**Optional original (skip if account has <100 followers):**
 
-**Optional original** — only if the account already has some followers; otherwise skip
-(this is week-1 replies-only territory):
+Text: `Raw screenshots are the debug logs of marketing.`
 
-> Raw screenshots are the debug logs of marketing.
-> Nobody reads debug logs.
+Card recipe: Quote · 16:9 · Dark · Headline `Raw screenshots are the debug logs of marketing.` · Subline `Nobody reads debug logs.` · QR ON → `workboost.qzz.io/social-card`, CTA `Make yours in 30s`
 
-Quote Card, Dark theme, 16:9 for the X timeline. Link goes in the first reply, never the post.
+Then immediately reply under your own post: `Free, no signup: workboost.qzz.io/social-card`
 
-## Facebook — day 1
+## Facebook — nothing today
 
-Nothing today. Deprioritized by strategy — first cross-post lands day 5+ once the weekly
-card flow exists.
-
-## Week 1 preview
-
-| Day | Threads (1–2 posts)                                                                   | X (replies)                                 |
-| --- | ------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 2   | Educator: `I looked at 30 launch posts. The clean, minimal ones got ~3× the replies.` | 5 replies                                   |
-| 3   | Question post to followers-to-be                                                      | 5 replies + optional card original          |
-| 4   | Educator: one typography tip (why system fonts read as cheap)                         | replies + reply to own comments             |
-| 5   | Light post                                                                            | First FB cross-post of the week's best card |
-| 6–7 | 1 post + reply to every comment                                                       | replies + review the week's numbers         |
+First cross-post lands day 5.
 
 ## Results (fill in tonight)
 
