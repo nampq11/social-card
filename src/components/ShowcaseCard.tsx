@@ -1,6 +1,7 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
+import { DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
 import type { Annotation, AnnotationSide, CardState, CardTheme, Shot } from '../types'
 
 // Fixed annotation anchors (issue #33): the side picks the margin around the
@@ -57,7 +58,34 @@ const Slot = ({
         margin, so clipping stays on the inner box (issue #33). */}
     <div className="h-full w-full overflow-hidden rounded-2xl">
       {shot ? (
-        <img src={shot.dataUrl} alt="" className="h-full w-full object-cover object-top" />
+        <>
+          {/* Fit (contain) fills the leftover area with a blurred cover copy
+              of the same Shot — the genre's standard against letterbox bars
+              (ADR 0005). Slightly oversized so the blur has no soft edges. */}
+          {(shot.fit ?? 'cover') === 'contain' && (
+            <img
+              src={shot.dataUrl}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            />
+          )}
+          {/* Focus drives object-position natively (ADR 0005, amended):
+              no ratio math, and the default 50% 0% is literally object-top.
+              A Fit Shot shows whole, framed as a floating window card. */}
+          <img
+            src={shot.dataUrl}
+            alt=""
+            style={{
+              objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, shot.fit ?? 'cover'),
+            }}
+            className={
+              (shot.fit ?? 'cover') === 'contain'
+                ? 'relative h-full w-full scale-[0.92] rounded-xl object-contain shadow-lg ring-1 ring-black/10'
+                : 'relative h-full w-full object-cover'
+            }
+          />
+        </>
       ) : (
         <div
           data-testid="slot-placeholder"

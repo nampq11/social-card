@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampFocus, DEFAULT_SHOT_FOCUS } from './shot-fit'
+import { clampFocus, DEFAULT_SHOT_FOCUS, shotAnchorCss } from './shot-fit'
 
 // Focus is the normalized 0..1 anchor of which part of a Shot shows when it
 // crops inside its Slot (GLOSSARY.md "Focus"). Cover pans; Fit (contain)
@@ -24,5 +24,26 @@ describe('clampFocus', () => {
 
   it('centers focus under Fit — pan is meaningless when the whole Shot shows', () => {
     expect(clampFocus({ x: 0.9, y: 0.1 }, 'contain')).toEqual({ x: 0.5, y: 0.5 })
+  })
+})
+
+// object-position is the browser-native focus renderer (ADR 0005, amended):
+// cover + focus maps straight to percentages; Fit (contain) centers.
+describe('shotAnchorCss', () => {
+  it('maps the default top-center focus to the original object-top render', () => {
+    expect(shotAnchorCss(DEFAULT_SHOT_FOCUS, 'cover')).toBe('50% 0%')
+  })
+
+  it('maps focus edges to object-position edges', () => {
+    expect(shotAnchorCss({ x: 0, y: 1 }, 'cover')).toBe('0% 100%')
+    expect(shotAnchorCss({ x: 1, y: 0.25 }, 'cover')).toBe('100% 25%')
+  })
+
+  it('centers under Fit — the anchor is irrelevant when nothing crops', () => {
+    expect(shotAnchorCss({ x: 0.9, y: 0.1 }, 'contain')).toBe('50% 50%')
+  })
+
+  it('never emits an out-of-range position, whatever it is handed', () => {
+    expect(shotAnchorCss({ x: -2, y: 7 }, 'cover')).toBe('0% 100%')
   })
 })

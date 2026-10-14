@@ -16,3 +16,14 @@ const sanitizeAxis = (value: number) =>
 // (1 - visibleFraction) * focus, so clamping to 0..1 is the whole contract.
 export const clampFocus = (focus: ShotFocus, fit: ShotFit): ShotFocus =>
   fit === 'contain' ? { x: 0.5, y: 0.5 } : { x: sanitizeAxis(focus.x), y: sanitizeAxis(focus.y) }
+
+// The renderer's focus→CSS mapping (ADR 0005, amended): object-position
+// reproduces focus natively and ratio-free — 0..1 to 0%..100% — instead of
+// an explicit transform (which bought nothing while zoom is deferred, and
+// would have required natural-size and slot-size measurement). Fit (contain)
+// centers: the whole Shot shows, the anchor is irrelevant. Clamped on read
+// so no write path can smuggle an out-of-range position into the DOM.
+export const shotAnchorCss = (focus: ShotFocus, fit: ShotFit): string => {
+  const clamped = clampFocus(focus, fit)
+  return `${clamped.x * 100}% ${clamped.y * 100}%`
+}

@@ -62,3 +62,18 @@ tap-to-select on touch so preview drags never hijack page scroll.
   isolation, or it fights Bottom Sheet scroll in the Mobile Shell.
 - Zoom (`scale` beyond cover) is deliberately absent; `focus` normalization
   leaves room to add it without another state migration.
+
+## Amendment (same day, during T2 implementation)
+
+The renderer does **not** use an explicit `transform: translate(...) scale(...)`.
+Implementing it surfaced that the rejection of `object-fit` + `object-position`
+was factually wrong: `object-position` reproduces Focus natively and
+ratio-free (`0..1` → `0%..100%`, and the default `50% 0%` is literally
+`object-top`), the Fit backdrop needs no math at all (a blurred `object-cover`
+copy behind an `object-contain` image), and the transform path would have
+required natural-size plus slot-size measurement for zero user-visible gain
+while zoom stays deferred. The original transform decision remains the
+upgrade path if the deferred zoom control ever ships; nothing else in this
+ADR changes. Clamping is unaffected: the browser cannot pan past the image
+edge under `object-position`, and `clampFocus`/`shotObjectPosition`
+(src/lib/shot-fit.ts) still guarantee a normalized anchor.

@@ -269,6 +269,48 @@ describe('Showcase Card', () => {
     expect(screen.queryByTestId('slot-placeholder')).toBeNull()
   })
 
+  it('positions a cover shot by its stored focus through object-position', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFocus(useCardStore.getState().card.showcase!.shots[0].id, { x: 0.25, y: 0.75 })
+    })
+
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    expect(img.getAttribute('class')).toContain('object-cover')
+    expect(img.style.objectPosition).toBe('25% 75%')
+  })
+
+  it('renders a Fit shot contained over a blurred self backdrop as a window card', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFit(useCardStore.getState().card.showcase!.shots[0].id, 'contain')
+    })
+
+    const slot = screen.getByTestId('hero-slot')
+    const imgs = slot.querySelectorAll('img')
+    expect(imgs).toHaveLength(2)
+    // Backdrop first in DOM (it must paint underneath): a blurred cover copy.
+    expect(imgs[0].className).toContain('blur')
+    expect(imgs[0].className).toContain('object-cover')
+    // The visible Shot shows whole, framed as a floating window card.
+    expect(imgs[1].className).toContain('object-contain')
+    expect(imgs[1].className).toContain('rounded')
+    expect(imgs[1].className).toContain('shadow')
+  })
+
+  it('renders a default cover shot without a backdrop layer', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      useCardStore.getState().addShot('data:image/png;base64,ONE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelectorAll('img')).toHaveLength(1)
+  })
+
   it('centers the avatar above name and bio in the showcase footer', () => {
     const { container } = renderCard({
       cardType: 'showcase',
