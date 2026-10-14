@@ -1,5 +1,5 @@
 import { useRef, useState, type RefObject } from 'react'
-import { RotateCcw, Undo2, Redo2, Sparkles } from 'lucide-react'
+import { RotateCcw, Undo2, Redo2 } from 'lucide-react'
 import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
@@ -39,10 +39,15 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
   const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
   const tabTitle = copy[active.nameKey]
 
+  // The tour anchor lives on the section, not this root: the root's rect is
+  // the un-transformed layout box (at peek it spans empty canvas above the
+  // translated sheet), while the section's rect tracks the sheet's live
+  // transform — the surface the spotlight must hug.
   return (
-    <div data-tour="inspector" className="fixed inset-x-0 bottom-0 z-40">
+    <div className="fixed inset-x-0 bottom-0 z-40">
       <section
         ref={sheetRef}
+        data-tour="inspector"
         aria-label={tabTitle}
         // Height/transform are written by the drag hook; will-change keeps
         // the per-frame transform on the compositor.
@@ -64,10 +69,7 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
           {...dragProps}
           className="flex items-center justify-between px-5 pb-2 shrink-0 touch-none"
         >
-          <span className="flex items-center gap-2 text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
-            <span className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-            </span>
+          <span className="text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
             {copy.inspector_title}
           </span>
           <div className="flex items-center gap-1">

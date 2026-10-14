@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sparkles, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
@@ -27,9 +27,6 @@ export const Inspector: React.FC = () => {
         {/* Header & Quick Reset */}
         <div className="flex items-center justify-between pb-1">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-            </span>
             <h2 className="text-[14px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
               {copy.inspector_title}
             </h2>
