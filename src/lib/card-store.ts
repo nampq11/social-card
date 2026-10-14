@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CardState } from '../types'
+import type { CardState, CardType } from '../types'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -23,11 +23,23 @@ interface CardStore {
   resetCard: () => void
   undo: () => void
   redo: () => void
+  switchCardType: () => void
 }
 
 const HISTORY_CAP = 50
 const COALESCE_WINDOW_MS = 600
 
+// Bookkeeping shared by every dedicated action below: the previous card
+// becomes exactly one undo step and the redo stack is discarded.
+const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState) => ({
+  card,
+  past: [...state.past, state.card].slice(-HISTORY_CAP),
+  future: [],
+  canUndo: true,
+  canRedo: false,
+})
+
+// Edit rhythm is UI-transient — module-scoped, not part of the model.
 // Edit rhythm is UI-transient — module-scoped, not part of the model.
 let lastEdit: { key: string | null; at: number } | null = null
 
@@ -96,5 +108,15 @@ export const useCardStore = create<CardStore>((set) => ({
         canUndo: true,
         canRedo: rest.length > 0,
       }
+    }),
+
+  // The type switch is a dedicated atomic action (ADR 0004): always its own
+  // undo step — never coalesced with adjacent edits — and non-destructive in
+  // both directions: Quote fields and the showcase nest are left untouched.
+  switchCardType: () =>
+    set((state) => {
+      lastEdit = null
+      const cardType: CardType = state.card.cardType === 'showcase' ? 'quote' : 'showcase'
+      return undoStep(state, { ...state.card, cardType })
     }),
 }))

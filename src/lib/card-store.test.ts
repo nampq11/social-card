@@ -111,3 +111,17 @@ describe('card-store history', () => {
     expect(s().card.ratio).toBe('16:9')
   })
 })
+
+describe('card-store card type switch', () => {
+  it('switchCardType toggles cardType as exactly one undo step', () => {
+    s().patchCard({ headline: 'changed' })
+    const before = s().card
+
+    s().switchCardType()
+    expect(s().card.cardType).toBe('showcase')
+    expect(s().past.length).toBe(2)
+
+    s().undo()
+    expect(s().card).toEqual(before)
+  })
+})
