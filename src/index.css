@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+@theme {
+  /* Annotation script (GLOSSARY.md "Annotation"): Patrick Hand is the only
+     Google handwriting family with an official vietnamese subset — Caveat
+     was rejected for missing it. Linked in index.html alongside the app's
+     other font so export embeds both from the one stylesheet. */
+  --font-hand: 'Patrick Hand', cursive;
+}
+
 @layer base {
   body {
     font-family:

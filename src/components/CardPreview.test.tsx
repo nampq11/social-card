@@ -6,7 +6,7 @@ import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { UiCopyProvider } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
-import type { CardState } from '../types'
+import type { AnnotationSide, CardState } from '../types'
 
 afterEach(() => {
   cleanup()
@@ -335,5 +335,131 @@ describe('Showcase Card', () => {
     const cardNode = container.querySelector('#social-card-node') as HTMLElement | null
     expect(cardNode?.style.width).toBe('720px')
     expect(cardNode?.style.height).toBe('720px')
+  })
+})
+
+describe('Showcase Annotations', () => {
+  it('renders the annotation text inside its shot slot, diacritics intact', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [
+          { id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan ý tưởng', side: 'left' },
+        ],
+      },
+    })
+
+    const text = screen.getByText('Tổng quan ý tưởng')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+  })
+})
+
+describe('Showcase Annotation sides', () => {
+  const sides = [
+    { shotId: 'shot-1', side: 'left' },
+    { shotId: 'shot-2', side: 'right' },
+    { shotId: 'shot-3', side: 'top' },
+  ] as const
+
+  const renderSides = () =>
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: sides.map((input, idx) => ({
+          id: `annotation-${idx}`,
+          text: `Note ${idx}`,
+          ...input,
+        })),
+      },
+    })
+
+  // Tailwind placement fragments: right-full = mark's right edge flush with
+  // the slot's left edge (left margin); the others mirror it per margin.
+  const marginFragment = { left: 'right-full', right: 'left-full', top: 'bottom-full' } as const
+
+  const sideCases: { side: AnnotationSide; text: string }[] = [
+    { side: 'left', text: 'Note 0' },
+    { side: 'right', text: 'Note 1' },
+    { side: 'top', text: 'Note 2' },
+  ]
+
+  it.each(sideCases)('places a $side annotation in the $side margin', ({ side, text }) => {
+    renderSides()
+
+    const mark = screen.getByText(text).closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(marginFragment[side])
+  })
+})
+
+describe('Showcase Annotation following', () => {
+  it('follows its shot into the hero slot when an earlier shot is removed', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [{ id: 'annotation-2', shotId: 'shot-2', text: 'Điểm nhấn', side: 'top' }],
+      },
+    })
+
+    act(() => {
+      useCardStore.getState().removeShot('shot-1')
+    })
+
+    // shot-2 was a detail slot; removing shot-1 promotes it to hero and the
+    // annotation must ride along (binds to Shots, not slots).
+    const text = screen.getByText('Điểm nhấn')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+    expect(screen.queryByTestId('detail-slot')?.contains(text) ?? false).toBe(false)
+  })
+})
+
+describe('Showcase Annotation curve', () => {
+  it('renders the preset curve only in the slot its annotation targets', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: [{ id: 'annotation-3', shotId: 'shot-3', text: 'Chi tiết này', side: 'left' }],
+      },
+    })
+
+    const [firstDetail, secondDetail] = screen.getAllByTestId('detail-slot')
+    expect(firstDetail.querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(secondDetail.querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,THREE',
+    )
+
+    expect(firstDetail.querySelector('[data-testid="annotation-curve"]')).toBeNull()
+    expect(secondDetail.querySelector('[data-testid="annotation-curve"]')).not.toBeNull()
+  })
+})
+
+describe('Showcase Annotation styling', () => {
+  it('inks the mark with the theme text token and the handwriting font', () => {
+    renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [{ id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan', side: 'left' }],
+      },
+    })
+
+    const mark = screen.getByText('Tổng quan').closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(CARD_THEME_STYLES.dark.text)
+    expect(mark?.className).toContain('font-hand')
   })
 })
