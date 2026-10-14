@@ -6,7 +6,7 @@ import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { UiCopyProvider } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
-import type { CardState } from '../types'
+import type { AnnotationSide, CardState } from '../types'
 
 afterEach(() => {
   cleanup()
@@ -352,5 +352,47 @@ describe('Showcase Annotations', () => {
 
     const text = screen.getByText('Tổng quan ý tưởng')
     expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+  })
+})
+
+describe('Showcase Annotation sides', () => {
+  const sides = [
+    { shotId: 'shot-1', side: 'left' },
+    { shotId: 'shot-2', side: 'right' },
+    { shotId: 'shot-3', side: 'top' },
+  ] as const
+
+  const renderSides = () =>
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: sides.map((input, idx) => ({
+          id: `annotation-${idx}`,
+          text: `Note ${idx}`,
+          ...input,
+        })),
+      },
+    })
+
+  // Tailwind placement fragments: right-full = mark's right edge flush with
+  // the slot's left edge (left margin); the others mirror it per margin.
+  const marginFragment = { left: 'right-full', right: 'left-full', top: 'bottom-full' } as const
+
+  const sideCases: { side: AnnotationSide; text: string }[] = [
+    { side: 'left', text: 'Note 0' },
+    { side: 'right', text: 'Note 1' },
+    { side: 'top', text: 'Note 2' },
+  ]
+
+  it.each(sideCases)('places a $side annotation in the $side margin', ({ side, text }) => {
+    renderSides()
+
+    const mark = screen.getByText(text).closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(marginFragment[side])
   })
 })

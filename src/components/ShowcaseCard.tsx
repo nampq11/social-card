@@ -1,7 +1,19 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
-import type { Annotation, CardState, CardTheme, Shot } from '../types'
+import type { Annotation, AnnotationSide, CardState, CardTheme, Shot } from '../types'
+
+// Fixed annotation anchors (issue #33): the side picks the margin around the
+// target slot — never free-dragged. Tailwind edges do the parking (right-full
+// = the mark's right edge sits on the slot's left edge), and the w-14 row
+// matches the card's page margin so the text wraps inside it. Child order
+// keeps the curve toward the slot edge once it exists: normal row on the
+// left, reversed on the right, column for top.
+const ANNOTATION_PLACEMENT: Record<AnnotationSide, string> = {
+  left: 'right-full top-0 mr-1 flex w-14 flex-row',
+  right: 'left-full top-0 ml-1 flex w-14 flex-row-reverse',
+  top: 'bottom-full left-0 mb-1 flex flex-col',
+}
 
 // One Screenshot Slot (GLOSSARY.md): holds its Shot, or shows the dashed
 // placeholder when empty — a pure preview affordance; capturing Shots is the
@@ -36,7 +48,7 @@ const Slot = ({
       )}
     </div>
     {shot && annotation && (
-      <div data-testid="annotation">
+      <div data-testid="annotation" className={`absolute ${ANNOTATION_PLACEMENT[annotation.side]}`}>
         <p>{annotation.text}</p>
       </div>
     )}
