@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useCardStore } from './card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
@@ -393,6 +393,86 @@ describe('card-store shot fit & focus (issue #34)', () => {
     s().setShotFocus('missing', { x: 0.5, y: 0.5 })
 
     expect(s().card.showcase!.shots[0].focus).toBeUndefined()
+    expect(s().past.length).toBe(stepsBefore)
+  })
+})
+
+describe('card-store shot Scale + adjustments reset (issue #38)', () => {
+  const withOneShot = () => {
+    s().switchCardType('showcase')
+    s().addShot('data:1')
+    return s().card.showcase!.shots[0]
+  }
+
+  it('setShotScale clamps into 1..4 and coalesces a pinch into one undo step', () => {
+    vi.useFakeTimers()
+    try {
+      const shot = withOneShot()
+      const stepsBefore = s().past.length
+
+      s().setShotScale(shot.id, 3)
+      s().setShotScale(shot.id, 99) // clamps to the max
+      s().setShotScale(shot.id, 0.5) // clamps to the min
+      const afterPinch = s().card.showcase!.shots[0]
+      expect(afterPinch.scale).toBe(1)
+      expect(s().past.length).toBe(stepsBefore + 1)
+
+      vi.advanceTimersByTime(700)
+      s().setShotScale(shot.id, 2)
+      expect(s().past.length).toBe(stepsBefore + 2)
+
+      // The first undo pops the post-expiry window (back to scale 1); the
+      // second returns to the unzoomed shot.
+      s().undo()
+      expect(s().card.showcase!.shots[0].scale).toBe(1)
+      s().undo()
+      expect(s().card.showcase!.shots[0].scale).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('scale edits to different shots do not coalesce', () => {
+    vi.useFakeTimers()
+    try {
+      const [a, b] = [withOneShot(), (s().addShot('data:2'), s().card.showcase!.shots[1])]
+      const stepsBefore = s().past.length
+
+      s().setShotScale(a.id, 2)
+      s().setShotScale(b.id, 2)
+      expect(s().past.length).toBe(stepsBefore + 2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('clearShotAdjustments wipes fit override, focus and scale in one atomic undo', () => {
+    const shot = withOneShot()
+    // Focus first: with cover still effective the anchor is stored as-is.
+    s().setShotFocus(shot.id, { x: 0.1, y: 0.9 })
+    s().setShotFit(shot.id, 'contain')
+    s().setShotScale(shot.id, 2.5)
+    const stepsBefore = s().past.length
+
+    s().clearShotAdjustments(shot.id)
+    const cleaned = s().card.showcase!.shots[0]
+    expect(cleaned.fit).toBeUndefined()
+    expect(cleaned.focus).toBeUndefined()
+    expect(cleaned.scale).toBeUndefined()
+    expect(s().past.length).toBe(stepsBefore + 1)
+
+    s().undo()
+    const restored = s().card.showcase!.shots[0]
+    expect(restored.fit).toBe('contain')
+    expect(restored.focus).toEqual({ x: 0.1, y: 0.9 })
+    expect(restored.scale).toBe(2.5)
+  })
+
+  it('clearShotAdjustments on an unadjusted shot is a no-op costing no step', () => {
+    const shot = withOneShot()
+    const stepsBefore = s().past.length
+
+    s().clearShotAdjustments(shot.id)
     expect(s().past.length).toBe(stepsBefore)
   })
 })

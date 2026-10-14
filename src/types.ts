@@ -12,6 +12,7 @@ export interface Shot {
   dataUrl: string
   fit?: ShotFit
   focus?: ShotFocus
+  scale?: number
 }
 // How a Shot meets its Screenshot Slot (GLOSSARY.md "Fit"): cover fills the
 // Slot and crops, contain shows the whole Shot over a blurred backdrop of

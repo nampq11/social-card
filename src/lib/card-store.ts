@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Annotation, AnnotationSide, CardState, CardType } from '../types'
 import type { ShotFit, ShotFocus } from '../types'
-import { clampFocus, shotFit } from './shot-fit'
+import { clampFocus, clampScale, shotFit } from './shot-fit'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -30,7 +30,8 @@ interface CardStore {
   removeShot: (shotId: string) => void
   setShotFit: (shotId: string, fit: ShotFit) => void
   setShotFocus: (shotId: string, focus: ShotFocus) => void
-  resetShotFocus: (shotId: string) => void
+  setShotScale: (shotId: string, scale: number) => void
+  clearShotAdjustments: (shotId: string) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
   updateAnnotation: (
     annotationId: string,
@@ -196,16 +197,36 @@ export const useCardStore = create<CardStore>((set) => ({
       const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
       return coalesce ? { card: next } : undoStep(state, next)
     }),
-  // [Đặt lại] on the pan overlay: back to the absent-field default (the
-  // original object-top render), which is a state without a focus value.
-  resetShotFocus: (shotId) =>
+  // Scale comes from pinch/wheel gestures — dozens of events per second — so
+  // it coalesces exactly like Focus: same Shot, shared window, one pinch is
+  // one undo. Clamped on write: state never carries an out-of-domain zoom.
+  setShotScale: (shotId, scale) =>
     set((state) => {
       const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
-      if (!shot?.focus) return state
+      if (!shot) return state
+      const clamped = clampScale(scale)
+      const key = `shotScale:${shotId}`
+      const now = Date.now()
+      const coalesce = lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
+      lastEdit = { key, at: now }
+      const shots = state.card.showcase!.shots.map((shot) =>
+        shot.id === shotId ? { ...shot, scale: clamped } : shot,
+      )
+      const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
+      return coalesce ? { card: next } : undoStep(state, next)
+    }),
+  // [Đặt lại] on the on-shot controls: back to the absent-field defaults —
+  // auto Fit, no Focus, no Scale (ADR 0006 §2). One Shot's whole adjustment
+  // set resets in ONE atomic undo step; an unadjusted Shot costs no step.
+  clearShotAdjustments: (shotId) =>
+    set((state) => {
+      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
+      if (!shot || (shot.fit === undefined && shot.focus === undefined && shot.scale === undefined))
+        return state
       lastEdit = null
       const shots = state.card.showcase!.shots.map((shot) => {
         if (shot.id !== shotId) return shot
-        const { focus: _dropped, ...rest } = shot
+        const { fit: _fit, focus: _focus, scale: _scale, ...rest } = shot
         return rest
       })
       return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })

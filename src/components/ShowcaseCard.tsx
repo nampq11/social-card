@@ -109,7 +109,7 @@ const Slot = ({
   onSelect: (shotId: string | null) => void
 }) => {
   const { copy } = useUiCopy()
-  const resetShotFocus = useCardStore((s) => s.resetShotFocus)
+  const clearShotAdjustments = useCardStore((s) => s.clearShotAdjustments)
   return (
     <div
       data-testid={testId}
@@ -150,7 +150,7 @@ const Slot = ({
           className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-blue-600 dark:ring-blue-500"
         >
           <div className="pointer-events-auto absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-            <PanOverlayButton onClick={() => resetShotFocus(shot.id)}>
+            <PanOverlayButton onClick={() => clearShotAdjustments(shot.id)}>
               {copy.shot_reset_label}
             </PanOverlayButton>
             <PanOverlayButton onClick={() => onSelect(null)}>
