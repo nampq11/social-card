@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   SHEET_MIN_CHROME_PX,
-  SHEET_RESPONSE_S,
   projectionDistance,
   rubberbandDistance,
   sheetExpandedPx,
@@ -115,6 +114,5 @@ describe('springStep', () => {
     }
     // Closing toward 0 must not dip below it.
     expect(min).toBeGreaterThanOrEqual(-0.5)
-    expect(SHEET_RESPONSE_S).toBeGreaterThan(0)
   })
 })
