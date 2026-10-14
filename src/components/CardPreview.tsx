@@ -103,7 +103,11 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   fontSize: `${Math.max(16, Math.round(data.headlineSize * 0.52))}px`,
                   lineHeight: 1.55,
                 }}
-                className={`space-y-1.5 ${themeStyles.subtext} font-normal max-w-lg break-words`}
+                className={`space-y-1.5 ${
+                  data.boldSublines
+                    ? `${themeStyles.text} font-semibold`
+                    : `${themeStyles.subtext} font-normal`
+                } max-w-lg break-words`}
               >
                 {sublineList.map((line, idx) => (
                   <p key={idx} className="tracking-normal">

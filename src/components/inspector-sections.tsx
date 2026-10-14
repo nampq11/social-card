@@ -324,6 +324,25 @@ export const HeadlineSection: React.FC = () => {
           }
         />
       </Field.Root>
+
+      <div className="flex items-center gap-1.5">
+        <Checkbox.Root
+          id="inspector-bold-sublines"
+          checked={data.boldSublines}
+          onCheckedChange={(checked) => update('boldSublines', checked)}
+          className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+        >
+          <Checkbox.Indicator>
+            <Check className="size-3" strokeWidth={3} />
+          </Checkbox.Indicator>
+        </Checkbox.Root>
+        <label
+          htmlFor="inspector-bold-sublines"
+          className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
+        >
+          <span>{copy.bold_sublines_label}</span>
+        </label>
+      </div>
     </div>
   )
 }

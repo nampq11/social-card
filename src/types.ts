@@ -15,4 +15,5 @@ export interface CardState {
   theme: CardTheme
   headlineSize: number // in rem / px scale
   uppercaseHeadline: boolean
+  boldSublines: boolean
 }
