@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import type { Annotation, AnnotationSide, CardState, CardType } from '../types'
+import type { ShotFit, ShotFocus } from '../types'
+import { clampFocus } from './shot-fit'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -26,6 +28,8 @@ interface CardStore {
   switchCardType: (next: CardType) => void
   addShot: (dataUrl: string) => void
   removeShot: (shotId: string) => void
+  setShotFit: (shotId: string, fit: ShotFit) => void
+  setShotFocus: (shotId: string, focus: ShotFocus) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
   updateAnnotation: (
     annotationId: string,
@@ -158,6 +162,39 @@ export const useCardStore = create<CardStore>((set) => ({
       })
     }),
 
+  // Fit is a discrete user choice (Fill vs Fit switcher): always its own
+  // atomic undo step, never coalesced with adjacent edits.
+  setShotFit: (shotId, fit) =>
+    set((state) => {
+      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
+      // Same-fit requests and unknown shots change nothing and cost no step.
+      if (!shot || (shot.fit ?? 'cover') === fit) return state
+      lastEdit = null
+      const shots = state.card.showcase!.shots.map((shot) =>
+        shot.id === shotId ? { ...shot, fit } : shot,
+      )
+      return undoStep(state, { ...state.card, showcase: { ...state.card.showcase!, shots } })
+    }),
+
+  // Focus comes from drag gestures — dozens per second — so edits to the
+  // same Shot coalesce on the shared window (one drag, one undo), mirroring
+  // patchCard's single-key rhythm. Focus is clamped on write: state never
+  // carries an out-of-range or Fit-irrelevant anchor.
+  setShotFocus: (shotId, focus) =>
+    set((state) => {
+      const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
+      if (!shot) return state
+      const clamped = clampFocus(focus, shot.fit ?? 'cover')
+      const key = `shotFocus:${shotId}`
+      const now = Date.now()
+      const coalesce = lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
+      lastEdit = { key, at: now }
+      const shots = state.card.showcase!.shots.map((shot) =>
+        shot.id === shotId ? { ...shot, focus: clamped } : shot,
+      )
+      const next = { ...state.card, showcase: { ...state.card.showcase!, shots } }
+      return coalesce ? { card: next } : undoStep(state, next)
+    }),
   // Annotations bind to Shots, never to Screenshot Slots (issue #33) — a
   // shot carries at most one, so the edit is refused while it has one.
   addAnnotation: (input) =>

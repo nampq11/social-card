@@ -289,3 +289,79 @@ describe('card-store showcase content', () => {
     expect(s().card.showcase?.annotations).toEqual([])
   })
 })
+
+describe('card-store shot fit & focus (issue #34)', () => {
+  // Every test starts from a showcase card holding exactly one Shot.
+  const withOneShot = () => {
+    s().switchCardType('showcase')
+    s().addShot('data:1')
+    return s().card.showcase!.shots[0]
+  }
+
+  it('setShotFit is a dedicated atomic undo step', () => {
+    const shot = withOneShot()
+
+    s().setShotFit(shot.id, 'contain')
+    expect(s().card.showcase!.shots[0].fit).toBe('contain')
+
+    s().undo()
+    expect(s().card.showcase!.shots[0].fit).toBeUndefined()
+  })
+
+  it('setting the same fit changes nothing and costs no undo step', () => {
+    const shot = withOneShot()
+    const stepsBefore = s().past.length
+
+    s().setShotFit(shot.id, 'cover')
+
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('focus edits to different shots do not coalesce', () => {
+    s().switchCardType('showcase')
+    s().addShot('data:1')
+    s().addShot('data:2')
+    const [shotA, shotB] = s().card.showcase!.shots
+
+    s().setShotFocus(shotA.id, { x: 0.1, y: 0.1 })
+    s().setShotFocus(shotB.id, { x: 0.2, y: 0.2 })
+
+    s().undo()
+    expect(s().card.showcase!.shots[1].focus).toBeUndefined()
+    expect(s().card.showcase!.shots[0].focus).toEqual({ x: 0.1, y: 0.1 })
+  })
+
+  it('setShotFit for an unknown shot is a no-op', () => {
+    withOneShot()
+    const stepsBefore = s().past.length
+
+    s().setShotFit('missing', 'contain')
+
+    expect(s().card.showcase!.shots[0].fit).toBeUndefined()
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('a focus drag coalesces into one undo step', () => {
+    const shot = withOneShot()
+    const stepsBefore = s().past.length
+
+    s().setShotFocus(shot.id, { x: 0.1, y: 0.2 })
+    s().setShotFocus(shot.id, { x: 0.3, y: 0.4 })
+    s().setShotFocus(shot.id, { x: 0.6, y: 0.8 })
+
+    expect(s().card.showcase!.shots[0].focus).toEqual({ x: 0.6, y: 0.8 })
+    expect(s().past.length).toBe(stepsBefore + 1)
+    s().undo()
+    expect(s().card.showcase!.shots[0].focus).toBeUndefined()
+  })
+
+  it('setShotFocus for an unknown shot is a no-op', () => {
+    withOneShot()
+    const stepsBefore = s().past.length
+
+    s().setShotFocus('missing', { x: 0.5, y: 0.5 })
+
+    expect(s().card.showcase!.shots[0].focus).toBeUndefined()
+    expect(s().past.length).toBe(stepsBefore)
+  })
+})
