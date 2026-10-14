@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import type { CardState, AspectRatio, CardTheme } from '../types';
-import { SegmentedControl } from './SegmentedControl';
-import { useCardStore } from '../lib/card-store';
+import React, { useRef } from 'react'
+import type { CardState, AspectRatio, CardTheme } from '../types'
+import { SegmentedControl } from './SegmentedControl'
+import { useCardStore } from '../lib/card-store'
 import {
   SAMPLE_PRESETS,
   STYLE_PRESETS,
@@ -9,11 +9,11 @@ import {
   type SamplePreset,
   type StylePreset,
   type StylePresetState,
-} from '../constants/presets';
-import { Checkbox } from '@base-ui/react/checkbox';
-import { Switch } from '@base-ui/react/switch';
-import { Slider } from '@base-ui/react/slider';
-import { Field } from '@base-ui/react/field';
+} from '../constants/presets'
+import { Checkbox } from '@base-ui/react/checkbox'
+import { Switch } from '@base-ui/react/switch'
+import { Slider } from '@base-ui/react/slider'
+import { Field } from '@base-ui/react/field'
 import {
   Square,
   RectangleVertical,
@@ -25,12 +25,12 @@ import {
   User,
   Upload,
   Check,
-} from 'lucide-react';
-import { logDebug } from '../lib/log-debug';
-import { useUiCopy } from '../lib/i18n';
-import { Button } from './ui/Button';
-import { toast } from 'sonner';
-import { clsx } from 'clsx';
+} from 'lucide-react'
+import { logDebug } from '../lib/log-debug'
+import { useUiCopy } from '../lib/i18n'
+import { Button } from './ui/Button'
+import { toast } from 'sonner'
+import { clsx } from 'clsx'
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
@@ -39,26 +39,25 @@ import { clsx } from 'clsx';
 
 // Data-URL avatars live in state and get re-encoded on every export; cap the
 // source file so a stray photo-library original can't stall the studio.
-const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024
 
 /** One-line Card State patch helper shared by every section. */
 function useCardUpdate() {
-  const patchCard = useCardStore((s) => s.patchCard);
-  return <K extends keyof CardState>(key: K, value: CardState[K]) =>
-    patchCard({ [key]: value });
+  const patchCard = useCardStore((s) => s.patchCard)
+  return <K extends keyof CardState>(key: K, value: CardState[K]) => patchCard({ [key]: value })
 }
 
 export const PresetsSection: React.FC = () => {
-  const { copy } = useUiCopy();
-  const data = useCardStore((s) => s.card);
-  const patchCard = useCardStore((s) => s.patchCard);
+  const { copy } = useUiCopy()
+  const data = useCardStore((s) => s.card)
+  const patchCard = useCardStore((s) => s.patchCard)
 
   // A Preset Quick Pick is "active" while every Card Content field it sets
   // still matches — any manual edit naturally deselects it.
   const isActivePreset = (preset: SamplePreset) =>
     (Object.keys(preset.state) as (keyof CardState)[]).every(
-      (key) => data[key] === preset.state[key]
-    );
+      (key) => data[key] === preset.state[key],
+    )
 
   return (
     <div className="flex flex-col gap-2">
@@ -70,7 +69,7 @@ export const PresetsSection: React.FC = () => {
       </div>
       <div className="flex flex-wrap gap-1.5">
         {SAMPLE_PRESETS.map((p) => {
-          const active = isActivePreset(p);
+          const active = isActivePreset(p)
           return (
             <Button
               key={p.id}
@@ -82,47 +81,41 @@ export const PresetsSection: React.FC = () => {
                 'text-[12px] font-medium transition',
                 active
                   ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
+                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
               )}
             >
               {copy[p.nameKey]}
             </Button>
-          );
+          )
         })}
       </div>
     </div>
-  );
-};
+  )
+}
 
-const HEADLINE_SIZE_MIN = 24;
-const HEADLINE_SIZE_MAX = 60;
+const HEADLINE_SIZE_MIN = 24
+const HEADLINE_SIZE_MAX = 60
 
 // Direct numeric entry beside the slider (slider for exploration, typed
 // value for precision). Drafts locally and commits on blur/Enter — clamping
 // on every keystroke would fight mid-typing ("5" of "50").
-function HeadlineSizeInput({
-  value,
-  onCommit,
-}: {
-  value: number;
-  onCommit: (n: number) => void;
-}) {
-  const [draft, setDraft] = React.useState(String(value));
-  const [seenValue, setSeenValue] = React.useState(value);
+function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
+  const [draft, setDraft] = React.useState(String(value))
+  const [seenValue, setSeenValue] = React.useState(value)
   if (seenValue !== value) {
     // Derived state during render: an external size change (slider drag,
     // preset, undo) resets the draft without an effect or remount.
-    setSeenValue(value);
-    setDraft(String(value));
+    setSeenValue(value)
+    setDraft(String(value))
   }
   const commit = () => {
-    const parsed = Number.parseInt(draft, 10);
+    const parsed = Number.parseInt(draft, 10)
     const clamped = Number.isNaN(parsed)
       ? value
-      : Math.min(HEADLINE_SIZE_MAX, Math.max(HEADLINE_SIZE_MIN, parsed));
-    onCommit(clamped);
-    setDraft(String(clamped));
-  };
+      : Math.min(HEADLINE_SIZE_MAX, Math.max(HEADLINE_SIZE_MIN, parsed))
+    onCommit(clamped)
+    setDraft(String(clamped))
+  }
   return (
     <span className="inline-flex items-center gap-1 font-mono text-neutral-500">
       <input
@@ -134,27 +127,27 @@ function HeadlineSizeInput({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') commit();
+          if (e.key === 'Enter') commit()
         }}
-        className="w-12 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>px</span>
     </span>
-  );
+  )
 }
 
 export const StyleSection: React.FC = () => {
-  const { copy } = useUiCopy();
-  const data = useCardStore((s) => s.card);
-  const update = useCardUpdate();
-  const patchCard = useCardStore((s) => s.patchCard);
+  const { copy } = useUiCopy()
+  const data = useCardStore((s) => s.card)
+  const update = useCardUpdate()
+  const patchCard = useCardStore((s) => s.patchCard)
 
   // A Style Preset is "active" while the whole style quadruple still matches
   // — any manual tweak of theme/ratio/size/casing deselects it.
   const isActiveStylePreset = (preset: StylePreset) =>
     (Object.keys(preset.state) as (keyof StylePresetState)[]).every(
-      (key) => data[key] === preset.state[key]
-    );
+      (key) => data[key] === preset.state[key],
+    )
 
   return (
     <div className="flex flex-col gap-4">
@@ -164,7 +157,7 @@ export const StyleSection: React.FC = () => {
         </label>
         <div className="grid grid-cols-2 gap-1.5">
           {STYLE_PRESETS.map((p) => {
-            const active = isActiveStylePreset(p);
+            const active = isActiveStylePreset(p)
             return (
               <Button
                 key={p.id}
@@ -176,7 +169,7 @@ export const StyleSection: React.FC = () => {
                   'justify-start font-medium text-xs',
                   active
                     ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                    : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
+                    : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
                 )}
               >
                 {/* Theme dot — the one visual the label can't carry. */}
@@ -186,12 +179,12 @@ export const StyleSection: React.FC = () => {
                     'size-2.5 shrink-0 rounded-full border',
                     p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
                     p.state.theme === 'white' && 'bg-white border-neutral-300',
-                    p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300'
+                    p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
                   )}
                 />
                 {copy[p.nameKey]}
               </Button>
-            );
+            )
           })}
         </div>
       </div>
@@ -239,7 +232,10 @@ export const StyleSection: React.FC = () => {
           >
             {copy.headline_size_label}
           </label>
-          <HeadlineSizeInput value={data.headlineSize} onCommit={(n) => update('headlineSize', n)} />
+          <HeadlineSizeInput
+            value={data.headlineSize}
+            onCommit={(n) => update('headlineSize', n)}
+          />
         </div>
         <Slider.Root
           value={data.headlineSize}
@@ -278,13 +274,13 @@ export const StyleSection: React.FC = () => {
         </label>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export const HeadlineSection: React.FC = () => {
-  const { copy } = useUiCopy();
-  const data = useCardStore((s) => s.card);
-  const update = useCardUpdate();
+  const { copy } = useUiCopy()
+  const data = useCardStore((s) => s.card)
+  const update = useCardUpdate()
 
   return (
     <div className="flex flex-col gap-4">
@@ -336,51 +332,51 @@ export const HeadlineSection: React.FC = () => {
         />
       </Field.Root>
     </div>
-  );
-};
+  )
+}
 
 export const IdentitySection: React.FC = () => {
-  const { copy } = useUiCopy();
-  const data = useCardStore((s) => s.card);
-  const update = useCardUpdate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { copy } = useUiCopy()
+  const data = useCardStore((s) => s.card)
+  const update = useCardUpdate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     // Clear value so re-uploading the same file still triggers onChange
-    e.target.value = '';
-    if (!file) return;
+    e.target.value = ''
+    if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      toast.error(copy.avatar_file_error);
-      return;
+      toast.error(copy.avatar_file_error)
+      return
     }
 
     if (file.size > MAX_AVATAR_BYTES) {
-      toast.error(copy.avatar_too_large);
-      return;
+      toast.error(copy.avatar_too_large)
+      return
     }
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (uploadEvent) => {
-      const result = uploadEvent.target?.result;
+      const result = uploadEvent.target?.result
       if (result) {
-        update('avatarUrl', result as string);
+        update('avatarUrl', result as string)
       } else {
-        logDebug('Inspector.handleAvatarUpload', `read "${file.name}" returned no data`);
-        toast.error(copy.avatar_read_error);
+        logDebug('Inspector.handleAvatarUpload', `read "${file.name}" returned no data`)
+        toast.error(copy.avatar_read_error)
       }
-    };
+    }
     reader.onerror = () => {
       logDebug(
         'Inspector.handleAvatarUpload',
         `failed to read avatar file "${file.name}" (${file.size} bytes)`,
-        reader.error
-      );
-      toast.error(copy.avatar_file_error);
-    };
-    reader.readAsDataURL(file);
-  };
+        reader.error,
+      )
+      toast.error(copy.avatar_file_error)
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -497,5 +493,5 @@ export const IdentitySection: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}

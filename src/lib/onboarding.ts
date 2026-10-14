@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react'
 
 /**
  * Onboarding persistence: one localStorage bit records whether the visitor
@@ -6,27 +6,27 @@ import { useCallback, useState } from 'react';
  * skipped). Refreshing must never restart onboarding — a returning visitor
  * always counts as done.
  */
-export type OnboardingStatus = 'new' | 'done';
+export type OnboardingStatus = 'new' | 'done'
 
 /** localStorage key persisting the onboarding status. */
-export const ONBOARDING_STORAGE_KEY = 'social-card.onboarding';
+export const ONBOARDING_STORAGE_KEY = 'social-card.onboarding'
 
 function parse(raw: string | null): OnboardingStatus | null {
-  if (raw === null) return null;
+  if (raw === null) return null
   try {
-    const value: unknown = JSON.parse(raw);
-    return value === 'done' ? 'done' : null;
+    const value: unknown = JSON.parse(raw)
+    return value === 'done' ? 'done' : null
   } catch {
-    return null;
+    return null
   }
 }
 
 export function readOnboardingStatus(): OnboardingStatus {
-  return parse(window.localStorage.getItem(ONBOARDING_STORAGE_KEY)) ?? 'new';
+  return parse(window.localStorage.getItem(ONBOARDING_STORAGE_KEY)) ?? 'new'
 }
 
 function writeOnboardingStatus(status: OnboardingStatus) {
-  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(status));
+  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(status))
 }
 
 /**
@@ -36,26 +36,26 @@ function writeOnboardingStatus(status: OnboardingStatus) {
  * Tips popover (NN/g: easy to dismiss, easy to recall).
  */
 export function useOnboarding() {
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState(() => readOnboardingStatus() === 'new');
-  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(() => readOnboardingStatus() === 'new')
+  const [isTourOpen, setIsTourOpen] = useState(false)
 
   const finishOnboarding = useCallback(() => {
-    setIsWelcomeOpen(false);
-    writeOnboardingStatus('done');
-  }, []);
+    setIsWelcomeOpen(false)
+    writeOnboardingStatus('done')
+  }, [])
 
   const startTour = useCallback(() => {
-    finishOnboarding();
-    setIsTourOpen(true);
-  }, [finishOnboarding]);
+    finishOnboarding()
+    setIsTourOpen(true)
+  }, [finishOnboarding])
 
   const dismissWelcome = useCallback(() => {
-    finishOnboarding();
-  }, [finishOnboarding]);
+    finishOnboarding()
+  }, [finishOnboarding])
 
   const endTour = useCallback(() => {
-    setIsTourOpen(false);
-  }, []);
+    setIsTourOpen(false)
+  }, [])
 
-  return { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour };
+  return { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour }
 }

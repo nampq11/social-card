@@ -1,11 +1,11 @@
-import { useRef, useState, type RefObject } from 'react';
-import { RotateCcw, Undo2, Redo2 } from 'lucide-react';
-import { SegmentedControl } from './SegmentedControl';
-import { useCardStore } from '../lib/card-store';
-import { useUiCopy } from '../lib/i18n';
-import { Button } from './ui/Button';
-import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs';
-import { useSheetDrag } from '../lib/use-sheet-drag';
+import { useRef, useState, type RefObject } from 'react'
+import { RotateCcw, Undo2, Redo2 } from 'lucide-react'
+import { SegmentedControl } from './SegmentedControl'
+import { useCardStore } from '../lib/card-store'
+import { useUiCopy } from '../lib/i18n'
+import { Button } from './ui/Button'
+import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs'
+import { useSheetDrag } from '../lib/use-sheet-drag'
 
 // Mobile Shell host (GLOSSARY.md / ADR 0002): a standard, NON-MODAL bottom
 // sheet behind a mode toolbar — the Canvas stays visible and live-updating.
@@ -17,26 +17,26 @@ import { useSheetDrag } from '../lib/use-sheet-drag';
 // the canvas padding, so Fit-to-View keeps the card fully visible as the
 // sheet moves.
 interface MobileSheetProps {
-  canvasRef: RefObject<HTMLElement | null>;
+  canvasRef: RefObject<HTMLElement | null>
 }
 
 export function MobileSheet({ canvasRef }: MobileSheetProps) {
-  const { copy } = useUiCopy();
-  const resetCard = useCardStore((s) => s.resetCard);
+  const { copy } = useUiCopy()
+  const resetCard = useCardStore((s) => s.resetCard)
   // Edit history joins Reset here on mobile — the Header keeps its copy only
   // from lg up, so touch users get their undo affordance in the sheet header.
-  const canUndo = useCardStore((s) => s.canUndo);
-  const canRedo = useCardStore((s) => s.canRedo);
-  const undo = useCardStore((s) => s.undo);
-  const redo = useCardStore((s) => s.redo);
-  const [tab, setTab] = useState<InspectorTabId>('content');
+  const canUndo = useCardStore((s) => s.canUndo)
+  const canRedo = useCardStore((s) => s.canRedo)
+  const undo = useCardStore((s) => s.undo)
+  const redo = useCardStore((s) => s.redo)
+  const [tab, setTab] = useState<InspectorTabId>('content')
 
-  const sheetRef = useRef<HTMLElement>(null);
-  const navRef = useRef<HTMLElement>(null);
-  const { expanded, handleProps, dragProps } = useSheetDrag(sheetRef, navRef, canvasRef);
+  const sheetRef = useRef<HTMLElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const { expanded, handleProps, dragProps } = useSheetDrag(sheetRef, navRef, canvasRef)
 
-  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0];
-  const tabTitle = copy[active.nameKey];
+  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
+  const tabTitle = copy[active.nameKey]
 
   return (
     <div data-tour="inspector" className="fixed inset-x-0 bottom-0 z-40 flex flex-col">
@@ -127,5 +127,5 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
         </div>
       </section>
     </div>
-  );
+  )
 }

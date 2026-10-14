@@ -7,17 +7,17 @@
 // max-width queries don't. triggerMediaQuery lets hook tests drive changes.
 
 interface StubMediaQueryList extends MediaQueryList {
-  __set(matches: boolean): void;
+  __set(matches: boolean): void
 }
 
-const instances = new Map<string, StubMediaQueryList>();
+const instances = new Map<string, StubMediaQueryList>()
 
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   window.matchMedia = ((query: string) => {
-    const existing = instances.get(query);
-    if (existing) return existing;
+    const existing = instances.get(query)
+    if (existing) return existing
 
-    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const listeners = new Set<(event: MediaQueryListEvent) => void>()
     const mql = {
       matches: query.includes('min-width'),
       media: query,
@@ -30,18 +30,18 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
         listeners.delete(cb),
       dispatchEvent: () => false,
       __set(next: boolean) {
-        mql.matches = next;
-        listeners.forEach((cb) => cb({ matches: next, media: query } as MediaQueryListEvent));
+        mql.matches = next
+        listeners.forEach((cb) => cb({ matches: next, media: query } as MediaQueryListEvent))
       },
-    };
-    instances.set(query, mql as StubMediaQueryList);
-    return mql as StubMediaQueryList;
-  }) as unknown as typeof window.matchMedia;
+    }
+    instances.set(query, mql as StubMediaQueryList)
+    return mql as StubMediaQueryList
+  }) as unknown as typeof window.matchMedia
 }
 
 /** Flip a stubbed query so reactive consumers can be tested for real. */
 export function triggerMediaQuery(query: string, matches: boolean): void {
-  const mql = instances.get(query);
-  if (!mql) throw new Error(`No stubbed matchMedia instance for "${query}"`);
-  mql.__set(matches);
+  const mql = instances.get(query)
+  if (!mql) throw new Error(`No stubbed matchMedia instance for "${query}"`)
+  mql.__set(matches)
 }

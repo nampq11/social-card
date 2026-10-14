@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Sparkles, RotateCcw } from 'lucide-react';
-import { useCardStore } from '../lib/card-store';
-import { useUiCopy } from '../lib/i18n';
-import { Button } from './ui/Button';
-import { SegmentedControl } from './SegmentedControl';
-import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs';
+import React, { useState } from 'react'
+import { Sparkles, RotateCcw } from 'lucide-react'
+import { useCardStore } from '../lib/card-store'
+import { useUiCopy } from '../lib/i18n'
+import { Button } from './ui/Button'
+import { SegmentedControl } from './SegmentedControl'
+import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs'
 
 // Desktop Shell host (GLOSSARY.md / ADR 0002): the Inspector groups its
 // sections behind tabs from the shared INSPECTOR_TABS registry — the same
@@ -13,10 +13,10 @@ import { INSPECTOR_TABS, type InspectorTabId } from './inspector-tabs';
 // overflow-y-auto stays only as the graceful-degradation floor for windows
 // shorter than any real laptop.
 export const Inspector: React.FC = () => {
-  const { copy } = useUiCopy();
-  const resetCard = useCardStore((s) => s.resetCard);
-  const [tab, setTab] = useState<InspectorTabId>('content');
-  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0];
+  const { copy } = useUiCopy()
+  const resetCard = useCardStore((s) => s.resetCard)
+  const [tab, setTab] = useState<InspectorTabId>('content')
+  const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
 
   return (
     <aside
@@ -78,5 +78,5 @@ export const Inspector: React.FC = () => {
         </span>
       </div>
     </aside>
-  );
-};
+  )
+}

@@ -5,20 +5,20 @@
 // that velocity.
 
 /** Fixed peek height: the toolbar plus the top of the active tab. */
-export const SHEET_PEEK_PX = 144;
+export const SHEET_PEEK_PX = 144
 
 /** Sheet spring response (critically damped, no overshoot). */
-export const SHEET_RESPONSE_S = 0.3;
+export const SHEET_RESPONSE_S = 0.3
 
 // Chrome the sheet shares the viewport with: Header ≈84px + tab nav ≈52px.
 // Measured mobile shell chrome above the canvas: header 94px + ratio nav
 // 60px, plus a small margin. Undercounting here lets the expanded sheet
 // swallow the header; overcounting needlessly shrinks it.
-const SHEET_CHROME_PX = 160;
+const SHEET_CHROME_PX = 160
 // Canvas floor: an expanded sheet still leaves this much card visible.
-const SHEET_CANVAS_FLOOR_PX = 150;
+const SHEET_CANVAS_FLOOR_PX = 150
 // Landscape phones have no headroom; the sheet still needs working room.
-const MIN_EXPANSION_PX = 120;
+const MIN_EXPANSION_PX = 120
 
 /**
  * Working height of the expanded sheet: 58dvh (ADR 0002), clamped so the
@@ -26,9 +26,9 @@ const MIN_EXPANSION_PX = 120;
  * (landscape), the minimum expansion wins and covers the canvas instead.
  */
 export function sheetExpandedPx(viewportHeight: number): number {
-  const target = Math.round(viewportHeight * 0.58);
-  const headroom = viewportHeight - SHEET_CHROME_PX - SHEET_CANVAS_FLOOR_PX;
-  return Math.max(SHEET_PEEK_PX + MIN_EXPANSION_PX, Math.min(target, headroom));
+  const target = Math.round(viewportHeight * 0.58)
+  const headroom = viewportHeight - SHEET_CHROME_PX - SHEET_CANVAS_FLOOR_PX
+  return Math.max(SHEET_PEEK_PX + MIN_EXPANSION_PX, Math.min(target, headroom))
 }
 
 /**
@@ -38,23 +38,17 @@ export function sheetExpandedPx(viewportHeight: number): number {
 export function rubberbandDistance(
   overshootPx: number,
   dimensionPx: number,
-  constant = 0.55
+  constant = 0.55,
 ): number {
-  return (
-    (overshootPx * dimensionPx * constant) /
-    (dimensionPx + constant * Math.abs(overshootPx))
-  );
+  return (overshootPx * dimensionPx * constant) / (dimensionPx + constant * Math.abs(overshootPx))
 }
 
 /**
  * Where the sheet would rest if it decelerated like a scroll view:
  * exponential decay at `decelRate` per millisecond (0.998 ≈ UIScrollView).
  */
-export function projectionDistance(
-  velocityPxPerS: number,
-  decelRate = 0.998
-): number {
-  return ((velocityPxPerS / 1000) * decelRate) / (1 - decelRate);
+export function projectionDistance(velocityPxPerS: number, decelRate = 0.998): number {
+  return ((velocityPxPerS / 1000) * decelRate) / (1 - decelRate)
 }
 
 /**
@@ -66,10 +60,10 @@ export function projectionDistance(
 export function snapSheetTarget(
   offsetPx: number,
   velocityPxPerS: number,
-  maxOffsetPx: number
+  maxOffsetPx: number,
 ): number {
-  const projected = offsetPx + projectionDistance(velocityPxPerS);
-  return projected >= maxOffsetPx / 2 ? maxOffsetPx : 0;
+  const projected = offsetPx + projectionDistance(velocityPxPerS)
+  return projected >= maxOffsetPx / 2 ? maxOffsetPx : 0
 }
 
 /**
@@ -83,10 +77,10 @@ export function springStep(
   velocity: number,
   target: number,
   dtS: number,
-  responseS: number = SHEET_RESPONSE_S
+  responseS: number = SHEET_RESPONSE_S,
 ): { position: number; velocity: number } {
-  const omega = (2 * Math.PI) / responseS;
-  const accel = omega * omega * (target - position) - 2 * omega * velocity;
-  const nextVelocity = velocity + accel * dtS;
-  return { position: position + nextVelocity * dtS, velocity: nextVelocity };
+  const omega = (2 * Math.PI) / responseS
+  const accel = omega * omega * (target - position) - 2 * omega * velocity
+  const nextVelocity = velocity + accel * dtS
+  return { position: position + nextVelocity * dtS, velocity: nextVelocity }
 }

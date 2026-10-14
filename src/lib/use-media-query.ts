@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react'
 
 /**
  * Reactive matchMedia for the one breakpoint the studio owns: the Desktop
@@ -10,15 +10,12 @@ import { useCallback, useSyncExternalStore } from 'react';
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
-      const mql = window.matchMedia(query);
-      mql.addEventListener('change', onStoreChange);
-      return () => mql.removeEventListener('change', onStoreChange);
+      const mql = window.matchMedia(query)
+      mql.addEventListener('change', onStoreChange)
+      return () => mql.removeEventListener('change', onStoreChange)
     },
-    [query]
-  );
+    [query],
+  )
 
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches
-  );
+  return useSyncExternalStore(subscribe, () => window.matchMedia(query).matches)
 }

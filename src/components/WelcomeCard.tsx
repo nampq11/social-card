@@ -1,12 +1,12 @@
-import { Dialog } from '@base-ui/react/dialog';
-import { Sparkles } from 'lucide-react';
-import { useUiCopy } from '../lib/i18n';
-import { Button } from './ui/Button';
+import { Dialog } from '@base-ui/react/dialog'
+import { Sparkles } from 'lucide-react'
+import { useUiCopy } from '../lib/i18n'
+import { Button } from './ui/Button'
 
 interface WelcomeCardProps {
-  open: boolean;
-  onStartTour: () => void;
-  onSkip: () => void;
+  open: boolean
+  onStartTour: () => void
+  onSkip: () => void
 }
 
 /**
@@ -15,7 +15,7 @@ interface WelcomeCardProps {
  * Either choice ends first-run onboarding for good.
  */
 export function WelcomeCard({ open, onStartTour, onSkip }: WelcomeCardProps) {
-  const { copy } = useUiCopy();
+  const { copy } = useUiCopy()
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => !next && onSkip()}>
@@ -45,5 +45,5 @@ export function WelcomeCard({ open, onStartTour, onSkip }: WelcomeCardProps) {
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
-  );
+  )
 }

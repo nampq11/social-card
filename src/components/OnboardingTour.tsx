@@ -14,12 +14,12 @@ import {
   TourStep,
   TourStepCounter,
   TourTitle,
-} from './ui/tour';
-import { useUiCopy } from '../lib/i18n';
+} from './ui/tour'
+import { useUiCopy } from '../lib/i18n'
 
 interface OnboardingTourProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 // The card every step renders into — one visual voice with the studio's
@@ -27,10 +27,11 @@ interface OnboardingTourProps {
 // (shadcn-token) colors via cn's tailwind-merge.
 const STEP_CARD_CLASS =
   'relative z-50 w-80 rounded-2xl bg-white/95 dark:bg-[#1E1E22]/95 backdrop-blur ' +
-  'border border-black/[0.08] dark:border-white/[0.1] shadow-2xl p-5 gap-3';
+  'border border-black/[0.08] dark:border-white/[0.1] shadow-2xl p-5 gap-3'
 
-const STEP_TITLE_CLASS = 'text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100';
-const STEP_BODY_CLASS = 'text-xs leading-relaxed text-neutral-500 dark:text-neutral-400';
+const STEP_TITLE_CLASS =
+  'text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100'
+const STEP_BODY_CLASS = 'text-xs leading-relaxed text-neutral-500 dark:text-neutral-400'
 
 /**
  * First-run spotlight tour (4 steps, ≤25 words each — auto-tours get
@@ -41,7 +42,7 @@ const STEP_BODY_CLASS = 'text-xs leading-relaxed text-neutral-500 dark:text-neut
  * shell's host of the same control group (GLOSSARY: Shell, Inspector).
  */
 export function OnboardingTour({ open, onOpenChange }: OnboardingTourProps) {
-  const { copy } = useUiCopy();
+  const { copy } = useUiCopy()
 
   return (
     <Tour open={open} onOpenChange={onOpenChange} spotlightPadding={8}>
@@ -53,11 +54,7 @@ export function OnboardingTour({ open, onOpenChange }: OnboardingTourProps) {
             Inspector panel itself. They are viewport-sized (ADR 0002), so the
             vendored shift corrects both axes to keep the popover on screen,
             floating over the dimmed target. */}
-        <TourStep
-          target="#social-card-node"
-          collisionPadding={12}
-          className={STEP_CARD_CLASS}
-        >
+        <TourStep target="#social-card-node" collisionPadding={12} className={STEP_CARD_CLASS}>
           <StepContent
             title={copy.tour_step_canvas_title}
             body={copy.tour_step_canvas_body}
@@ -109,7 +106,7 @@ export function OnboardingTour({ open, onOpenChange }: OnboardingTourProps) {
         </TourStep>
       </TourPortal>
     </Tour>
-  );
+  )
 }
 
 /** Header + body + controls shared by every step. */
@@ -119,10 +116,10 @@ function StepContent({
   copy,
   lastLabel,
 }: {
-  title: string;
-  body: string;
-  copy: ReturnType<typeof useUiCopy>['copy'];
-  lastLabel?: string;
+  title: string
+  body: string
+  copy: ReturnType<typeof useUiCopy>['copy']
+  lastLabel?: string
 }) {
   return (
     <>
@@ -150,5 +147,5 @@ function StepContent({
         </div>
       </TourFooter>
     </>
-  );
+  )
 }

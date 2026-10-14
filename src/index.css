@@ -1,8 +1,10 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Be Vietnam Pro", system-ui, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Be Vietnam Pro',
+      system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Touch polish: no gray tap flash, and the viewport-locked shell never
@@ -33,12 +35,15 @@
 /* Card renders its own stack: Be Vietnam Pro leads here while the page
    chrome leads with system fonts; single source per spec story 21. */
 #social-card-node {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Apple Design tactile touch feedback */
 .apple-button {
-  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 120ms ease, opacity 120ms ease;
+  transition:
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 120ms ease,
+    opacity 120ms ease;
 }
 
 /* DESIGN.md button micro-interaction: scale(0.95) */
@@ -49,7 +54,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .apple-button {
-    transition: background-color 120ms ease, opacity 120ms ease;
+    transition:
+      background-color 120ms ease,
+      opacity 120ms ease;
   }
   .apple-button:active {
     transform: none;
@@ -58,14 +65,14 @@
 
 /* Infinite Canvas Background (Apple Freeform) */
 .apple-canvas-bg {
-  background-color: #F2F2F7;
-  background-image: radial-gradient(#C7C7CC 1px, transparent 1px);
+  background-color: #f2f2f7;
+  background-image: radial-gradient(#c7c7cc 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: center center;
 }
 
 .dark .apple-canvas-bg {
-  background-color: #0B0B0C;
+  background-color: #0b0b0c;
   background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: center center;
@@ -78,7 +85,7 @@
   backdrop-filter: saturate(190%) blur(28px);
   -webkit-backdrop-filter: saturate(190%) blur(28px);
   border: 1px solid rgba(0, 0, 0, 0.07);
-  box-shadow: 
+  box-shadow:
     0 10px 30px -5px rgba(0, 0, 0, 0.06),
     0 2px 6px -1px rgba(0, 0, 0, 0.03),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
@@ -90,7 +97,7 @@
   backdrop-filter: saturate(190%) blur(28px);
   -webkit-backdrop-filter: saturate(190%) blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
+  box-shadow:
     0 10px 30px -5px rgba(0, 0, 0, 0.3),
     0 2px 6px -1px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
@@ -102,7 +109,7 @@
     0 32px 64px -16px rgba(0, 0, 0, 0.14),
     0 12px 28px -8px rgba(0, 0, 0, 0.07),
     0 0 0 1px rgba(0, 0, 0, 0.05);
-  transition: 
+  transition:
     transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1),
     width 0.3s cubic-bezier(0.2, 0.85, 0.25, 1),
     height 0.3s cubic-bezier(0.2, 0.85, 0.25, 1),

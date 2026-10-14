@@ -1,22 +1,22 @@
-import { forwardRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import { useCardStore } from '../lib/card-store';
-import { RATIO_INFO } from '../constants/ratios';
-import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets';
-import { splitSublines } from '../lib/card-text';
-import { useUiCopy } from '../lib/i18n';
+import { forwardRef } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
+import { useCardStore } from '../lib/card-store'
+import { RATIO_INFO } from '../constants/ratios'
+import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets'
+import { splitSublines } from '../lib/card-text'
+import { useUiCopy } from '../lib/i18n'
 
 interface CardPreviewProps {
-  scale?: number;
+  scale?: number
   /** Fit-driven refits change scale per frame; only manual zoom steps animate. */
-  animated?: boolean;
+  animated?: boolean
 }
 
 export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
   ({ scale = 1, animated = true }, ref) => {
-    const { copy } = useUiCopy();
-    const data = useCardStore((s) => s.card);
-    const { width, height } = RATIO_INFO[data.ratio];
+    const { copy } = useUiCopy()
+    const data = useCardStore((s) => s.card)
+    const { width, height } = RATIO_INFO[data.ratio]
 
     // Theme styles
     const themeStyles = {
@@ -30,11 +30,11 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         avatarBorder: 'ring-1 ring-black/10',
       },
       paper: {
-        bg: 'bg-[#FDFCF9]',
-        text: 'text-[#18181B]',
-        subtext: 'text-[#52525B]',
-        qrBg: 'bg-transparent',
-        qrFg: '#18181B',
+        bg: 'bg-[#FAF9F5]',
+        text: 'text-[#1D1D1F]',
+        subtext: 'text-[#424245]',
+        qrBg: 'bg-white',
+        qrFg: '#1D1D1F',
         border: 'border-stone-200/60',
         avatarBorder: 'ring-1 ring-stone-300',
       },
@@ -47,9 +47,9 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         border: 'border-white/10',
         avatarBorder: 'ring-1 ring-white/20',
       },
-    }[data.theme];
+    }[data.theme]
 
-    const sublineList = splitSublines(data.sublines);
+    const sublineList = splitSublines(data.sublines)
 
     return (
       <div
@@ -164,8 +164,8 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           </div>
         </div>
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-CardPreview.displayName = 'CardPreview';
+CardPreview.displayName = 'CardPreview'
