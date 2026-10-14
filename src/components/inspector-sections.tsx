@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import type { CardState, AspectRatio, CardTheme } from '../types'
+import type { CardState, AspectRatio, CardTheme, CardType } from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
 import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
@@ -79,6 +79,36 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
 const PRESET_ACTIVE_CLASS = 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
 const PRESET_INACTIVE_CLASS =
   'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
+
+// The Card Type switcher (spec #33): the one control visible in BOTH modes —
+// Quote mode's only new control. Pressing a segment calls the store's
+// dedicated atomic switch action; the checked segment mirrors the Card Type.
+export const CardTypeSwitcherSection: React.FC = () => {
+  const { copy } = useUiCopy()
+  const cardType = useCardStore((s) => s.card.cardType)
+  const switchCardType = useCardStore((s) => s.switchCardType)
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        id="card-type-label"
+        className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
+      >
+        {copy.card_type_label}
+      </label>
+      <SegmentedControl<CardType>
+        aria-labelledby="card-type-label"
+        value={cardType}
+        onChange={switchCardType}
+        className="w-full"
+        options={[
+          { value: 'quote', label: copy.card_type_quote },
+          { value: 'showcase', label: copy.card_type_showcase },
+        ]}
+      />
+    </div>
+  )
+}
 
 export const PresetsSection: React.FC = () => {
   const { copy } = useUiCopy()

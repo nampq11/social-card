@@ -380,3 +380,36 @@ describe('Inspector segmented controls a11y', () => {
     expect(useCardStore.getState().card.ratio).toBe('16:9')
   })
 })
+
+describe('Inspector Card Type switcher', () => {
+  const typeGroup = () => screen.getByRole('radiogroup', { name: 'Loại Card' })
+
+  it('leads the Content tab in Quote mode with Quote checked', () => {
+    renderInspector()
+
+    const group = typeGroup()
+    expect(
+      within(group).getByRole('radio', { name: 'Trích dẫn' }).getAttribute('aria-checked'),
+    ).toBe('true')
+    expect(
+      within(group).getByRole('radio', { name: 'Giới thiệu' }).getAttribute('aria-checked'),
+    ).toBe('false')
+  })
+
+  it('switches to Showcase through the store action when its segment is pressed', () => {
+    renderInspector()
+
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Giới thiệu' }))
+
+    expect(useCardStore.getState().card.cardType).toBe('showcase')
+  })
+
+  it('stays visible in Showcase mode and switches back to Quote', () => {
+    renderInspector()
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Giới thiệu' }))
+
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Trích dẫn' }))
+
+    expect(useCardStore.getState().card.cardType).toBe('quote')
+  })
+})

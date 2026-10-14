@@ -51,6 +51,10 @@ const vi = {
   state_off: 'TẮT',
   qr_cta_placeholder: 'Build Trợ lý AI cho riêng bạn!',
 
+  card_type_label: 'Loại Card',
+  card_type_quote: 'Trích dẫn',
+  card_type_showcase: 'Giới thiệu',
+
   inspector_title: 'Tùy chỉnh Card',
   reset_title: 'Đặt lại mặc định',
   reset_button: 'Mặc định',
@@ -173,6 +177,10 @@ const en: typeof vi = {
   state_on: 'ON',
   state_off: 'OFF',
   qr_cta_placeholder: 'Build your own AI assistant!',
+
+  card_type_label: 'Card type',
+  card_type_quote: 'Quote',
+  card_type_showcase: 'Showcase',
 
   inspector_title: 'Customize card',
   reset_title: 'Reset to defaults',
