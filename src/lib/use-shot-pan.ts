@@ -19,7 +19,7 @@ interface PanGesture {
 
 export function useShotPan(
   shotId: string,
-  fit: ShotFit | undefined,
+  fit: ShotFit,
   selected: boolean,
   onSelect: (shotId: string) => void,
 ) {
@@ -29,7 +29,7 @@ export function useShotPan(
   const gesture = useRef<PanGesture | null>(null)
   const tapStart = useRef<{ x: number; y: number } | null>(null)
 
-  const cover = (fit ?? 'cover') === 'cover'
+  const cover = fit === 'cover'
   // Touch arms through selection; desktop pans from the first press. Only
   // the armed surface claims touch-action — an unarmed slot keeps native
   // scrolling, which is the whole point of the hybrid model.
@@ -38,7 +38,6 @@ export function useShotPan(
   const onPointerDown = (event: ReactPointerEvent<HTMLImageElement>) => {
     tapStart.current = { x: event.clientX, y: event.clientY }
     if (!interactive) return
-    if (!hoverCapable && !selected) return // waiting for the tap
     const shot = useCardStore.getState().card.showcase?.shots.find((s) => s.id === shotId)
     gesture.current = {
       pointerId: event.pointerId,
@@ -68,7 +67,7 @@ export function useShotPan(
       el.offsetHeight,
       el.naturalWidth,
       el.naturalHeight,
-      fit ?? 'cover',
+      fit,
     )
     setShotFocus(shotId, next)
   }

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Annotation, AnnotationSide, CardState, CardType } from '../types'
 import type { ShotFit, ShotFocus } from '../types'
-import { clampFocus } from './shot-fit'
+import { clampFocus, shotFit } from './shot-fit'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -169,7 +169,7 @@ export const useCardStore = create<CardStore>((set) => ({
     set((state) => {
       const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
       // Same-fit requests and unknown shots change nothing and cost no step.
-      if (!shot || (shot.fit ?? 'cover') === fit) return state
+      if (!shot || shotFit(shot) === fit) return state
       lastEdit = null
       const shots = state.card.showcase!.shots.map((shot) =>
         shot.id === shotId ? { ...shot, fit } : shot,
@@ -185,7 +185,7 @@ export const useCardStore = create<CardStore>((set) => ({
     set((state) => {
       const shot = state.card.showcase?.shots.find((shot) => shot.id === shotId)
       if (!shot) return state
-      const clamped = clampFocus(focus, shot.fit ?? 'cover')
+      const clamped = clampFocus(focus, shotFit(shot))
       const key = `shotFocus:${shotId}`
       const now = Date.now()
       const coalesce = lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS

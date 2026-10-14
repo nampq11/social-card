@@ -1,8 +1,13 @@
-import type { ShotFit, ShotFocus } from '../types'
+import type { Shot, ShotFit, ShotFocus } from '../types'
 
 // Absent focus renders exactly like the original object-cover object-top:
 // horizontally centered, top-anchored (ADR 0005).
 export const DEFAULT_SHOT_FOCUS: ShotFocus = { x: 0.5, y: 0 }
+
+// A Shot's effective Fit (GLOSSARY.md "Fit"): the absent field is cover,
+// reproducing the original object-cover render (ADR 0005). One accessor so
+// the defaulting rule has a single home instead of one per read site.
+export const shotFit = (shot: Shot): ShotFit => shot.fit ?? 'cover'
 
 // Sanitize one focus axis: non-finite values collapse to neutral, anything
 // outside 0..1 clamps to the edge. Focus is the normalized 0..1 anchor of

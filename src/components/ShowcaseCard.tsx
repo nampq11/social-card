@@ -2,7 +2,7 @@ import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { useState } from 'react'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
-import { DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
+import { DEFAULT_SHOT_FOCUS, shotAnchorCss, shotFit } from '../lib/shot-fit'
 import { useShotPan } from '../lib/use-shot-pan'
 import { useUiCopy } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
@@ -63,8 +63,9 @@ const ShotImage = ({
   selected: boolean
   onSelect: (shotId: string | null) => void
 }) => {
-  const pan = useShotPan(shot.id, shot.fit, selected, onSelect)
-  const windowCard = (shot.fit ?? 'cover') === 'contain'
+  const pan = useShotPan(shot.id, shotFit(shot), selected, onSelect)
+  const fit = shotFit(shot)
+  const windowCard = fit === 'contain'
   return (
     <img
       src={shot.dataUrl}
@@ -74,7 +75,7 @@ const ShotImage = ({
       onPointerUp={pan.handlers.onPointerUp}
       onPointerCancel={pan.handlers.onPointerCancel}
       style={{
-        objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, shot.fit ?? 'cover'),
+        objectPosition: shotAnchorCss(shot.focus ?? DEFAULT_SHOT_FOCUS, fit),
       }}
       className={`relative h-full w-full ${
         windowCard
@@ -122,7 +123,7 @@ const Slot = ({
             {/* Fit (contain) fills the leftover area with a blurred cover copy
                 of the same Shot — the genre's standard against letterbox bars
                 (ADR 0005). Slightly oversized so the blur has no soft edges. */}
-            {(shot.fit ?? 'cover') === 'contain' && (
+            {shotFit(shot) === 'contain' && (
               <img
                 src={shot.dataUrl}
                 alt=""

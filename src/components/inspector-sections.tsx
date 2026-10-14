@@ -11,6 +11,7 @@ import type {
 import { SegmentedControl } from './SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
+import { shotFit } from '../lib/shot-fit'
 import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
@@ -211,7 +212,7 @@ export const ScreenshotsSection: React.FC = () => {
           </label>
           <SegmentedControl<ShotFit>
             aria-labelledby={`shot-fit-label-${selectedShot.id}`}
-            value={selectedShot.fit ?? 'cover'}
+            value={shotFit(selectedShot)}
             onChange={(fit) => setShotFit(selectedShot.id, fit)}
             className="w-full"
             options={[

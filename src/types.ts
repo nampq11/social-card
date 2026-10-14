@@ -10,6 +10,8 @@ export type CardType = 'quote' | 'showcase'
 export interface Shot {
   id: string
   dataUrl: string
+  fit?: ShotFit
+  focus?: ShotFocus
 }
 // How a Shot meets its Screenshot Slot (GLOSSARY.md "Fit"): cover fills the
 // Slot and crops, contain shows the whole Shot over a blurred backdrop of
@@ -22,16 +24,6 @@ export type ShotFit = 'cover' | 'contain'
 export interface ShotFocus {
   x: number
   y: number
-}
-
-// One uploaded screenshot in a Showcase Card's content, carrying a stable
-// identity (GLOSSARY.md "Shot"). Array order is upload order; the first Shot
-// renders in the Hero Slot.
-export interface Shot {
-  id: string
-  dataUrl: string
-  fit?: ShotFit
-  focus?: ShotFocus
 }
 
 export type AnnotationSide = 'left' | 'right' | 'top'
