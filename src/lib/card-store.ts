@@ -24,11 +24,19 @@ interface CardStore {
   undo: () => void
   redo: () => void
   switchCardType: () => void
+  addShot: (dataUrl: string) => void
 }
 
 const HISTORY_CAP = 50
 const COALESCE_WINDOW_MS = 600
 
+// Stable identity for Shots and Annotations (GLOSSARY.md): unique per
+// creation, never derived from list position, so references survive any
+// rearrangement of the arrays.
+let nextId = 0
+const createId = (prefix: string) => `${prefix}-${++nextId}`
+
+// Bookkeeping shared by every dedicated action below: the previous card
 // Bookkeeping shared by every dedicated action below: the previous card
 // becomes exactly one undo step and the redo stack is discarded.
 const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState) => ({
@@ -110,6 +118,22 @@ export const useCardStore = create<CardStore>((set) => ({
       }
     }),
 
+  // Each Shot upload is its own atomic undo step, like any dedicated edit.
+  addShot: (dataUrl: string) =>
+    set((state) => {
+      // The collage holds at most three Shots (hero + two details); a
+      // refused upload changes nothing and costs no undo step.
+      if ((state.card.showcase?.shots.length ?? 0) >= 3) return state
+      lastEdit = null
+      const shot = { id: createId('shot'), dataUrl }
+      const showcase = state.card.showcase ?? { shots: [], annotations: [] }
+      return undoStep(state, {
+        ...state.card,
+        showcase: { ...showcase, shots: [...showcase.shots, shot] },
+      })
+    }),
+
+  // The type switch is a dedicated atomic action (ADR 0004): always its own
   // The type switch is a dedicated atomic action (ADR 0004): always its own
   // undo step — never coalesced with adjacent edits — and non-destructive in
   // both directions: Quote fields and the showcase nest are left untouched.

@@ -157,3 +157,30 @@ describe('card-store card type switch', () => {
     expect(s().card.cardType).toBe('showcase')
   })
 })
+
+describe('card-store showcase content', () => {
+  it('addShot caps at three shots and a refused shot costs no undo step', () => {
+    for (const n of [1, 2, 3]) s().addShot(`data:${n}`)
+    const stepsBefore = s().past.length
+
+    s().addShot('data:4')
+
+    expect(s().card.showcase?.shots.map((shot) => shot.dataUrl)).toEqual([
+      'data:1',
+      'data:2',
+      'data:3',
+    ])
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('addShot appends shots in upload order with unique stable ids', () => {
+    // Array order is upload order: the first Shot renders in the Hero Slot.
+    s().addShot('data:hero')
+    s().addShot('data:detail-a')
+
+    const shots = s().card.showcase?.shots ?? []
+    expect(shots.map((shot) => shot.dataUrl)).toEqual(['data:hero', 'data:detail-a'])
+    expect(new Set(shots.map((shot) => shot.id)).size).toBe(2)
+    expect(s().card.showcase?.annotations).toEqual([])
+  })
+})
