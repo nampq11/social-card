@@ -216,4 +216,56 @@ describe('Showcase Card', () => {
     expect(container.querySelector('[data-testid="sublines"]')).toBeNull()
     expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
   })
+
+  it('renders the first shot as the hero alone when one shot exists', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    expect(screen.queryByTestId('detail-slot')).toBeNull()
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('renders hero plus one detail slot with two shots', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getAllByTestId('detail-slot')).toHaveLength(1)
+  })
+
+  it('renders added shots as a hero above side-by-side detail slots', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.addShot('data:image/png;base64,TWO')
+      store.addShot('data:image/png;base64,THREE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    const details = screen.getAllByTestId('detail-slot')
+    expect(details).toHaveLength(2)
+    expect(details[0].parentElement).toBe(details[1].parentElement)
+    const order = screen.getByTestId('hero-slot').compareDocumentPosition(details[0])
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(details[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
 })
