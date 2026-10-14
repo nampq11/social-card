@@ -97,6 +97,7 @@ const PanHarness = () => {
   const anchor = shotAnchorCss(shot?.focus ?? DEFAULT_SHOT_FOCUS, 'cover')
   return (
     <img
+      ref={pan.wheelRef}
       data-testid="pan-target"
       src={shot?.dataUrl}
       style={{
@@ -233,5 +234,82 @@ describe('pan physics (ADR 0006 §3, issue #38)', () => {
     expect(focusOf().x).toBe(afterGrab)
     // And the grab really interrupted a moving glide.
     expect(midGlide).not.toBe(0.5)
+  })
+})
+
+describe('ctrl+wheel zoom (ADR 0006 §4)', () => {
+  it('ctrl+wheel zooms exponentially, anchored at the cursor; plain wheel does nothing', async () => {
+    render(<PanHarness />)
+    const el = screen.getByTestId('pan-target')
+    // Focus the shot first so the wheel surface exists (cover shot).
+    fireEvent.pointerDown(el, { pointerId: 1, pointerType: 'touch', clientX: 150, clientY: 75 })
+    fireEvent.pointerUp(el, { pointerId: 1, clientX: 150, clientY: 75 })
+    await flushFrames(1)
+
+    const scaleOf = () => useCardStore.getState().card.showcase!.shots[0].scale
+    const focusOf = () => useCardStore.getState().card.showcase!.shots[0].focus
+
+    // Plain wheel: page scroll intent — the slot must not react.
+    el.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: -120, clientX: 225, clientY: 40, cancelable: true }),
+    )
+    expect(scaleOf()).toBeUndefined()
+    // dispatchEvent resolves to "not canceled" — false means we claimed it.
+    expect(
+      el.dispatchEvent(
+        new WheelEvent('wheel', {
+          ctrlKey: true,
+          deltaY: -120,
+          clientX: 225,
+          clientY: 40,
+          cancelable: true,
+        }),
+      ),
+    ).toBe(false)
+    // exp(0.24) ≈ 1.27: one notch is a gentle zoom nudge.
+    expect(scaleOf()).toBeCloseTo(Math.exp(0.24), 5)
+    // Anchored: the content point under the cursor (x=75% into the slot)
+    // stays under it, so focus moves toward the cursor.
+    const fx = focusOf()!.x
+    expect(fx).toBeGreaterThan(0.5)
+    // A zoom back out returns scale to 1 and clears focus in the same burst.
+    el.dispatchEvent(
+      new WheelEvent('wheel', {
+        ctrlKey: true,
+        deltaY: 240,
+        clientX: 225,
+        clientY: 40,
+        cancelable: true,
+      }),
+    )
+    expect(scaleOf()).toBe(1)
+  })
+
+  it('wheel zoom is inactive for contain shots', async () => {
+    function ContainHarness() {
+      const shot = useCardStore((s) => s.card.showcase?.shots[0])
+      const pan = useShotPan(shot?.id ?? '', 'contain', false, () => {})
+      return (
+        <img
+          ref={pan.wheelRef}
+          src={shot?.dataUrl ?? ''}
+          data-testid="pan-target"
+          {...pan.handlers}
+          style={{ width: 300, height: 150, objectFit: 'contain' }}
+        />
+      )
+    }
+    render(<ContainHarness />)
+    const el = screen.getByTestId('pan-target')
+    el.dispatchEvent(
+      new WheelEvent('wheel', {
+        ctrlKey: true,
+        deltaY: -120,
+        clientX: 150,
+        clientY: 75,
+        cancelable: true,
+      }),
+    )
+    expect(useCardStore.getState().card.showcase!.shots[0].scale).toBeUndefined()
   })
 })

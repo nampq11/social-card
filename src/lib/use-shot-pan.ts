@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useCardStore } from './card-store'
 import {
@@ -33,6 +33,9 @@ const DOUBLE_CLICK_SCALE = 2
 // A release below this speed is a deliberate rest, not a flick: pixel-level
 // nudging must not coast (ADR 0006 §3 — momentum carries intent, not jitter).
 const MOMENTUM_MIN_VELOCITY = 200
+// ctrl+wheel sensitivity: one notch (deltaY 100) is a gentle multiplicative
+// nudge — exp keeps the steps proportional to the current zoom.
+const WHEEL_ZOOM_FACTOR = 0.002
 // Two clicks within this window read as a double-click (desktop only).
 const DOUBLE_CLICK_WINDOW_MS = 350
 
@@ -100,7 +103,11 @@ export function useShotPan(
     }
   }
 
-  const shotIn = () => useCardStore.getState().card.showcase?.shots.find((s) => s.id === shotId)
+  // Stable identity so the wheel effect subscribes once per cover change.
+  const shotIn = useCallback(
+    () => useCardStore.getState().card.showcase?.shots.find((s) => s.id === shotId),
+    [shotId],
+  )
 
   // The settle loop (ADR 0006 §3): focus glides into its projected target
   // while any rubber-band excess melts to zero — one critically damped loop,
@@ -360,10 +367,55 @@ export function useShotPan(
     onSelect(shotId)
   }
 
+  // ctrl+wheel zoom (ADR 0006 §4), anchored at the cursor. React's root
+  // wheel listener is passive, so preventDefault — keeping the browser's own
+  // page-zoom from firing — needs a native non-passive listener on the img.
+  const wheelRef = useRef<HTMLImageElement | null>(null)
+  useEffect(() => {
+    const el = wheelRef.current
+    if (!el || !cover) return
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return
+      event.preventDefault()
+      const rect = el.getBoundingClientRect()
+      const shot = shotIn()
+      const currentScale = clampScale(shot?.scale ?? 1)
+      const nextScale = clampScale(currentScale * Math.exp(-event.deltaY * WHEEL_ZOOM_FACTOR))
+      setShotScale(shotId, nextScale)
+      if (nextScale === currentScale) return
+      // The cursor fraction doubles as start and end anchor: the content
+      // point under it stays under it (focusForPinch with a zero midpoint
+      // travel).
+      const anchor = {
+        x: rect.width > 0 ? (event.clientX - rect.x) / rect.width : 0.5,
+        y: rect.height > 0 ? (event.clientY - rect.y) / rect.height : 0.5,
+      }
+      setShotFocus(
+        shotId,
+        focusForPinch(
+          shot?.focus ?? DEFAULT_SHOT_FOCUS,
+          currentScale,
+          nextScale,
+          anchor,
+          anchor,
+          el.offsetWidth,
+          el.offsetHeight,
+          el.naturalWidth,
+          el.naturalHeight,
+        ),
+      )
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+    // shotIn is a per-render closure that reads fresh state at event time;
+    // listing it re-subscribes the native listener on unrelated renders.
+  }, [cover, setShotScale, setShotFocus, shotId, shotIn])
+
   return {
     dragging,
     interactive,
     overdrag,
+    wheelRef,
     handlers: {
       onPointerDown,
       onPointerMove,

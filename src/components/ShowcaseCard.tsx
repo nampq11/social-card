@@ -85,6 +85,7 @@ const ShotImage = ({
       .join(' ') || undefined
   return (
     <img
+      ref={pan.wheelRef}
       src={shot.dataUrl}
       alt=""
       onPointerDown={pan.handlers.onPointerDown}
