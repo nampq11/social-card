@@ -308,4 +308,32 @@ describe('Showcase Card', () => {
       'AI Engineer',
     )
   })
+
+  it('reuses the theme tokens on the showcase canvas, slots and footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode?.className).toContain(CARD_THEME_STYLES.dark.bg)
+    expect(screen.getByTestId('hero-slot').className).toContain(CARD_THEME_STYLES.dark.avatarBorder)
+    expect(container.querySelector('[data-testid="author-bio"]')?.className).toContain(
+      CARD_THEME_STYLES.dark.subtext,
+    )
+  })
+
+  it('renders square dimensions when the store switches a 16:9 card to showcase', () => {
+    const { container } = renderCard({ ratio: '16:9' })
+    act(() => {
+      useCardStore.getState().switchCardType()
+    })
+
+    const cardNode = container.querySelector('#social-card-node') as HTMLElement | null
+    expect(cardNode?.style.width).toBe('720px')
+    expect(cardNode?.style.height).toBe('720px')
+  })
 })
