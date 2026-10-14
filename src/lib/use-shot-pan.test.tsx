@@ -100,6 +100,7 @@ const PanHarness = () => {
     <img
       ref={wheelElement}
       data-testid="pan-target"
+      data-selected={selected ? '' : undefined}
       src={shot?.dataUrl}
       style={{
         objectPosition: anchor,
@@ -339,5 +340,39 @@ describe('ctrl+wheel zoom (ADR 0006 §4)', () => {
     await flushFrames(60)
     // The settle loop must not write over the cleared state.
     expect(focusOf().x).toBe(afterClear)
+  })
+
+  describe('desktop click semantics (ADR 0006 §2/§4)', () => {
+    it('a click without drag selects the cover shot — the pill stays reachable', () => {
+      const { getByTestId } = render(<PanHarness />)
+      const el = getByTestId('pan-target')
+      expect(el.getAttribute('data-selected')).toBeNull()
+      fireEvent.pointerDown(el, { pointerId: 1, pointerType: 'mouse', clientX: 150, clientY: 75 })
+      fireEvent.pointerUp(el, { pointerId: 1, clientX: 150, clientY: 75 })
+      expect(el.getAttribute('data-selected')).not.toBeNull()
+      // A click is not a pan: focus is untouched.
+      expect(focusOf().x).toBe(0.5)
+    })
+
+    it('a double-click zooms the cover shot 1 → 2 (toggle target of the next double-click)', () => {
+      const { getByTestId } = render(<PanHarness />)
+      const el = getByTestId('pan-target')
+      for (const x of [150, 158]) {
+        fireEvent.pointerDown(el, { pointerId: 1, pointerType: 'mouse', clientX: x, clientY: 75 })
+        fireEvent.pointerUp(el, { pointerId: 1, clientX: x, clientY: 75 })
+      }
+      expect(useCardStore.getState().card.showcase!.shots[0].scale).toBe(2)
+    })
+
+    it('a real drag still pans and never selects', () => {
+      const { getByTestId } = render(<PanHarness />)
+      const el = getByTestId('pan-target')
+      drag(el, [
+        [150, 75, 0],
+        [200, 75, 16],
+      ])
+      expect(el.getAttribute('data-selected')).toBeNull()
+      expect(focusOf().x).not.toBe(0.5)
+    })
   })
 })

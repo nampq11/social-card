@@ -38,12 +38,16 @@ const MOMENTUM_MIN_VELOCITY = 200
 const WHEEL_ZOOM_FACTOR = 0.002
 // Two clicks within this window read as a double-click (desktop only).
 const DOUBLE_CLICK_WINDOW_MS = 350
+// A hover-pointer press that stays within this slop is a click, not a
+// drag — it must reach the tap branch (select + double-click zoom).
+const CLICK_SLOP_PX = 8
 
 interface DragGesture {
   pointerId: number
   startX: number
   startY: number
   startFocus: ShotFocus
+  moved: boolean
 }
 
 // Active pinch: two pointers, anchored at their midpoint (ADR 0006 §4).
@@ -228,6 +232,7 @@ export function useShotPan(
       startX: event.clientX,
       startY: event.clientY,
       startFocus: shot?.focus ?? DEFAULT_SHOT_FOCUS,
+      moved: false,
     }
     velocity.current = null
     setDragging(true)
@@ -271,6 +276,12 @@ export function useShotPan(
 
     const active = gesture.current
     if (!active || event.pointerId !== active.pointerId) return
+    if (
+      !active.moved &&
+      Math.abs(event.clientX - active.startX) + Math.abs(event.clientY - active.startY) >=
+        CLICK_SLOP_PX
+    )
+      active.moved = true
     velocity.current = trackVelocity(
       velocity.current,
       event.clientX,
@@ -323,27 +334,34 @@ export function useShotPan(
     if (active?.pointerId === event.pointerId) {
       gesture.current = null
       setDragging(false)
-      // Momentum (ADR 0006 §3): the release velocity projects where the
-      // content coasts to a stop; a rubber-band excess springs home in the
-      // same settle. Reduced motion lands instantly.
-      const released = shotIn()?.focus ?? active.startFocus
-      const v = velocity.current
-      const flick =
-        Math.abs(v?.velocityX ?? 0) >= MOMENTUM_MIN_VELOCITY ||
-        Math.abs(v?.velocityY ?? 0) >= MOMENTUM_MIN_VELOCITY
-      glide(flick ? momentumTargets(event.currentTarget, v, released) : released)
-      velocity.current = null
-      return
+      if (active.moved) {
+        // Momentum (ADR 0006 §3): the release velocity projects where the
+        // content coasts to a stop; a rubber-band excess springs home in the
+        // same settle. Reduced motion lands instantly.
+        const released = shotIn()?.focus ?? active.startFocus
+        const v = velocity.current
+        const flick =
+          Math.abs(v?.velocityX ?? 0) >= MOMENTUM_MIN_VELOCITY ||
+          Math.abs(v?.velocityY ?? 0) >= MOMENTUM_MIN_VELOCITY
+        glide(flick ? momentumTargets(event.currentTarget, v, released) : released)
+        velocity.current = null
+        return
+      }
+      // A press that never left the click slop is a click, not a drag: it
+      // falls through to the tap branch so select (the pill, ADR 0006 §2)
+      // and the double-click zoom (§4) stay reachable on hover-capable
+      // pointers — drag-always is untouched because a real drag returns
+      // above.
     }
-    // No gesture was armed: a tap selects the Shot — any Fit, either pointer
-    // class — so the on-shot pill (ADR 0006 §2) is reachable everywhere.
-    // Drag-always on hover-capable pointers is unaffected: a drag arms on
-    // pointer-down and never reaches this branch.
+    // No gesture (unarmed surface) or a click-without-drag lands here: a
+    // tap selects the Shot — any Fit, either pointer class — so the on-shot
+    // pill (ADR 0006 §2) is reachable everywhere. Real drags return in the
+    // gesture branch above.
     const start = tapStart.current
     tapStart.current = null
     if (!start) return
     const moved = Math.abs(event.clientX - start.x) + Math.abs(event.clientY - start.y)
-    if (moved >= 8) return
+    if (moved >= CLICK_SLOP_PX) return
     const now = event.timeStamp
     const isDoubleClick = hoverCapable && now - lastTapAt.current < DOUBLE_CLICK_WINDOW_MS
     lastTapAt.current = isDoubleClick ? 0 : now
