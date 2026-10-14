@@ -7,6 +7,7 @@ import { SegmentedControl } from './SegmentedControl'
 import {
   CardTypeSwitcherSection,
   PresetsSection,
+  ScreenshotsSection,
   StyleSection,
   HeadlineSection,
   IdentitySection,
@@ -37,8 +38,12 @@ export const INSPECTOR_TABS: InspectorTab[] = [
     nameKey: 'tab_content',
     icon: <Type />,
     // The type switcher leads the Content tab in BOTH modes (spec #33) —
-    // Quote mode's only new control.
-    sections: () => [CardTypeSwitcherSection, PresetsSection, HeadlineSection],
+    // Quote mode's only new control. Showcase swaps Presets + Headline
+    // (dead in that mode) for the Screenshots section.
+    sections: (cardType) =>
+      cardType === 'showcase'
+        ? [CardTypeSwitcherSection, ScreenshotsSection]
+        : [CardTypeSwitcherSection, PresetsSection, HeadlineSection],
   },
   { id: 'style', nameKey: 'tab_style', icon: <Palette />, sections: () => [StyleSection] },
   {

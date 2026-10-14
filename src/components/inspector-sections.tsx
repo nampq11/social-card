@@ -1,7 +1,8 @@
 import React, { useRef } from 'react'
 import type { CardState, AspectRatio, CardTheme, CardType } from '../types'
 import { SegmentedControl } from './SegmentedControl'
-import { useCardStore } from '../lib/card-store'
+import { MAX_SHOTS, useCardStore } from '../lib/card-store'
+import { ingestScreenshot } from '../lib/shot-ingest'
 import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
@@ -19,6 +20,8 @@ import {
   User,
   Upload,
   Check,
+  Plus,
+  X,
 } from 'lucide-react'
 import { logDebug } from '../lib/log-debug'
 import { useUiCopy } from '../lib/i18n'
@@ -105,6 +108,104 @@ export const CardTypeSwitcherSection: React.FC = () => {
           { value: 'quote', label: copy.card_type_quote },
           { value: 'showcase', label: copy.card_type_showcase },
         ]}
+      />
+    </div>
+  )
+}
+
+// One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
+// through the shared ingest (normalize + re-encode) into the store; the
+// thumbnail grid shows upload order — the first Shot renders in the Hero
+// Slot — with a delete per Shot. Adding disables at MAX_SHOTS with the cap
+// spelled out, mirroring the store's own refusal.
+export const ScreenshotsSection: React.FC = () => {
+  const { copy } = useUiCopy()
+  // Select the array reference itself (stable while untouched); defaulting
+  // inside the selector would mint a fresh [] per check and loop React's
+  // store sync.
+  const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
+  const addShot = useCardStore((s) => s.addShot)
+  const removeShot = useCardStore((s) => s.removeShot)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleShotPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    // Clear value so re-picking the same file still triggers onChange
+    event.target.value = ''
+    if (!file) return
+    try {
+      addShot(await ingestScreenshot(file))
+    } catch (error) {
+      logDebug(
+        'ScreenshotsSection.handleShotPick',
+        `failed to ingest "${file.name}" (${file.size} bytes)`,
+        error,
+      )
+      toast.error(copy.shot_file_error)
+    }
+  }
+
+  const atCap = shots.length >= MAX_SHOTS
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+          {copy.shots_label}
+        </label>
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {shots.length}/{MAX_SHOTS}
+        </span>
+      </div>
+
+      {shots.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5">
+          {shots.map((shot) => (
+            <div
+              key={shot.id}
+              className="relative aspect-square overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1]"
+            >
+              {/* Named alt so identical thumbnails stay distinguishable to
+                  screen readers; position = upload order = Hero Slot first. */}
+              <img
+                src={shot.dataUrl}
+                alt={`${copy.shots_label} ${shots.indexOf(shot) + 1}`}
+                className="h-full w-full object-cover object-top"
+              />
+              <button
+                type="button"
+                aria-label={copy.shots_remove_title}
+                onClick={() => removeShot(shot.id)}
+                className="absolute right-1 top-1 flex size-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={atCap}
+        variant="secondary"
+        size="sm"
+        className="w-full"
+      >
+        <Plus className="w-3 h-3" />
+        <span>{copy.shots_add}</span>
+      </Button>
+      {atCap && (
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {copy.shots_cap_hint}
+        </span>
+      )}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleShotPick}
+        accept="image/*"
+        className="hidden"
       />
     </div>
   )
