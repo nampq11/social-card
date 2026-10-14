@@ -201,3 +201,139 @@ describe('CardPreview', () => {
     expect(line.className).not.toContain('tracking-tight')
   })
 })
+
+describe('Showcase Card', () => {
+  it('renders a dashed hero placeholder and no Quote content when no shots exist', () => {
+    const { container } = renderCard({ cardType: 'showcase' })
+
+    const placeholder = screen
+      .getByTestId('hero-slot')
+      .querySelector('[data-testid="slot-placeholder"]')
+    expect(placeholder).not.toBeNull()
+    expect(placeholder?.className).toContain('border-dashed')
+    expect(screen.getByTestId('hero-slot').querySelector('img')).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+    expect(container.querySelector('[data-testid="sublines"]')).toBeNull()
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+  })
+
+  it('renders the first shot as the hero alone when one shot exists', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    expect(screen.queryByTestId('detail-slot')).toBeNull()
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('renders hero plus one detail slot with two shots', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getAllByTestId('detail-slot')).toHaveLength(1)
+  })
+
+  it('renders added shots as a hero above side-by-side detail slots', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.addShot('data:image/png;base64,TWO')
+      store.addShot('data:image/png;base64,THREE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    const details = screen.getAllByTestId('detail-slot')
+    expect(details).toHaveLength(2)
+    expect(details[0].parentElement).toBe(details[1].parentElement)
+    const order = screen.getByTestId('hero-slot').compareDocumentPosition(details[0])
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(details[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('centers the avatar above name and bio in the showcase footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      qrEnabled: true,
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer\nBuilder',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    // QR is Quote-only content, even when the flag survived a type switch
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+
+    const avatar = screen.getByAltText('Nam Phạm')
+    const name = screen.getByText('Nam Phạm')
+    expect(avatar.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    const bio = footer?.querySelector('[data-testid="author-bio"]')
+    expect(bio?.textContent).toContain('AI Engineer')
+    expect(bio?.textContent).toContain('Builder')
+  })
+
+  it('centers name and bio without an avatar, with no monogram stand-in', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: '',
+    })
+
+    expect(container.querySelector('img')).toBeNull()
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    expect(screen.getByText('Nam Phạm')).not.toBeNull()
+    expect(footer?.querySelector('[data-testid="author-bio"]')?.textContent).toContain(
+      'AI Engineer',
+    )
+  })
+
+  it('reuses the theme tokens on the showcase canvas, slots and footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode?.className).toContain(CARD_THEME_STYLES.dark.bg)
+    expect(screen.getByTestId('hero-slot').className).toContain(CARD_THEME_STYLES.dark.avatarBorder)
+    expect(container.querySelector('[data-testid="author-bio"]')?.className).toContain(
+      CARD_THEME_STYLES.dark.subtext,
+    )
+  })
+
+  it('renders square dimensions when the store switches a 16:9 card to showcase', () => {
+    const { container } = renderCard({ ratio: '16:9' })
+    act(() => {
+      useCardStore.getState().switchCardType()
+    })
+
+    const cardNode = container.querySelector('#social-card-node') as HTMLElement | null
+    expect(cardNode?.style.width).toBe('720px')
+    expect(cardNode?.style.height).toBe('720px')
+  })
+})
