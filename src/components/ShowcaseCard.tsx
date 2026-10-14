@@ -39,9 +39,10 @@ const AnnotationCurve = ({ className }: { className: string }) => (
   </svg>
 )
 
-// The touch-selection chrome: [Đặt lại] resets Focus to the absent-field
-// default, [Xong] disarms the Shot. Lives on an export-excluded overlay so
-// Card Export never captures the ring or the buttons (ADR 0005).
+// The selection chrome (ADR 0006 §2): [Đặt lại] clears the Shot's whole
+// adjustment set — fit override, Focus, Scale — back to the derived
+// defaults; [Xong] disarms the Shot. Lives on an export-excluded overlay so
+// Card Export never captures the ring or the buttons.
 const PanOverlayButton = ({ onClick, children }: { onClick: () => void; children: string }) => (
   <button
     type="button"

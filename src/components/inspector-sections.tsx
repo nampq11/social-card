@@ -174,7 +174,7 @@ export const ScreenshotsSection: React.FC = () => {
 
       {shots.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
-          {shots.map((shot) => (
+          {shots.map((shot, index) => (
             <div
               key={shot.id}
               onClick={() => setSelectedShotId((current) => (current === shot.id ? null : shot.id))}
@@ -186,7 +186,7 @@ export const ScreenshotsSection: React.FC = () => {
                   screen readers; position = upload order = Hero Slot first. */}
               <img
                 src={shot.dataUrl}
-                alt={`${copy.shots_label} ${shots.indexOf(shot) + 1}`}
+                alt={shotName(copy, index + 1)}
                 className="h-full w-full object-cover object-top"
               />
               <button

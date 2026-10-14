@@ -124,6 +124,33 @@ try {
       `ratio-matched hero must render cover alone, got ${JSON.stringify(heroIsCover)}`,
     )
   console.log('1a. hero shot matching the slot ratio keeps cover ✓')
+
+  // --- 1c. desktop click (no drag) on a COVER shot surfaces the pill -------
+  // Regression for the review finding: a hover-capable press used to arm the
+  // drag gesture and return before onSelect, leaving the pill unreachable on
+  // desktop cover shots (contain shots and touch worked — which is exactly
+  // what the old step below accidentally tested).
+  const heroCenter = await evalJs(`(() => {
+    const r = document.querySelector('[data-testid=hero-slot]').getBoundingClientRect()
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+  })()`)
+  const mouse = (type, x, y, clickCount = 1) =>
+    send('Input.dispatchMouseEvent', {
+      type,
+      x,
+      y,
+      button: 'left',
+      buttons: 0,
+      pointerType: 'mouse',
+      clickCount,
+    })
+  await mouse('mousePressed', heroCenter.x, heroCenter.y)
+  await mouse('mouseReleased', heroCenter.x, heroCenter.y)
+  await waitUntil('selection pill on a cover shot', () =>
+    evalJs(`!!document.querySelector('[data-testid=shot-pan-overlay]')`),
+  )
+  console.log('1c. desktop click selects the ratio-matched cover shot (pill) ✓')
+
   await pickShot('/tmp/zoom-wide.png')
   await sleep(1500)
   await waitUntil('wide shot in detail band', () =>
@@ -194,19 +221,6 @@ try {
 
   // --- 3. force cover via the pill (the wide sibling changed the hero's
   //      derived default; the explicit override must win) -------------------
-  const heroCenter = await evalJs(`(() => {
-    const r = document.querySelector('[data-testid=hero-slot]').getBoundingClientRect()
-    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
-  })()`)
-  const mouse = (type, x, y) =>
-    send('Input.dispatchMouseEvent', {
-      type,
-      x,
-      y,
-      button: 'left',
-      buttons: 0,
-      pointerType: 'mouse',
-    })
   await mouse('mousePressed', heroCenter.x, heroCenter.y)
   await mouse('mouseReleased', heroCenter.x, heroCenter.y)
   await waitUntil('selection pill', () =>
@@ -225,6 +239,35 @@ try {
   if (!heroCoverOverride.cover || heroCoverOverride.blur)
     throw new Error(`explicit cover override did not win, got ${JSON.stringify(heroCoverOverride)}`)
   console.log('3. pill fit toggle forces cover over the derived default ✓')
+
+  // --- 3b. double-click zoom toggles 1 ↔ 2 on the now-cover hero (§4) ------
+  // Regression for the review finding: the toggle lived behind
+  // interactive=false, which a hover-capable cover press can never reach —
+  // dead code. Two CDP click pairs inside the 350ms window.
+  const dblclick = async () => {
+    for (const clickCount of [1, 2]) {
+      await mouse('mousePressed', heroCenter.x, heroCenter.y, clickCount)
+      await mouse('mouseReleased', heroCenter.x, heroCenter.y, clickCount)
+    }
+  }
+  await dblclick()
+  await sleep(200)
+  const zoomedIn = await evalJs(
+    `document.querySelector('[data-testid=hero-slot] img.object-cover').style.transform`,
+  )
+  if (zoomedIn !== 'scale(2)')
+    throw new Error(
+      `double-click should zoom the cover hero to scale(2), got ${JSON.stringify(zoomedIn)}`,
+    )
+  console.log('3b. double-click zooms the cover hero to scale(2) ✓')
+  await dblclick()
+  await sleep(200)
+  const zoomedOut = await evalJs(
+    `document.querySelector('[data-testid=hero-slot] img.object-cover').style.transform`,
+  )
+  if (zoomedOut)
+    throw new Error(`second double-click should restore scale 1, got ${JSON.stringify(zoomedOut)}`)
+  console.log('3c. second double-click restores scale 1 ✓')
 
   // --- 4. touch: tap-to-select arms the shot, two-finger pinch zooms -------
   await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 })
