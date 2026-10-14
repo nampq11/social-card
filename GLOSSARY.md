@@ -43,6 +43,14 @@ _Avoid_: image placeholder, upload box
 One uploaded screenshot in a Showcase Card's content, carrying a stable identity. The first Shot renders in the Hero Slot.
 _Avoid_: image, upload
 
+**Fit**:
+How a Shot meets its Screenshot Slot — Fill (cover: the slot fills, content crops) or Fit (contain: the whole Shot shows over a blurred backdrop of itself). A per-Shot choice, defaulting to Fill.
+_Avoid_: resize mode, object-fit
+
+**Focus**:
+Which part of a Shot is visible when the Shot crops inside its Slot — a normalized 0..1 anchor the user drags on the Canvas. Stored per Shot; never alters the Shot's pixels.
+_Avoid_: position (ambiguous with the Position control group), crop (crop is the outcome, Focus is the control)
+
 **Annotation**:
 A handwritten-style callout on a Showcase Card: script text plus an arrow, anchored to one Shot from a fixed side. An Annotation follows its Shot, not the Slot the Shot currently occupies.
 _Avoid_: callout, note, comment
