@@ -44,7 +44,6 @@ let nextId = 0
 const createId = (prefix: string) => `${prefix}-${++nextId}`
 
 // Bookkeeping shared by every dedicated action below: the previous card
-// Bookkeeping shared by every dedicated action below: the previous card
 // becomes exactly one undo step and the redo stack is discarded.
 const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState) => ({
   card,

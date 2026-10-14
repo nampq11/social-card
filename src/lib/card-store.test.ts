@@ -251,6 +251,22 @@ describe('card-store showcase content', () => {
     expect(s().card.showcase?.annotations).toHaveLength(1)
   })
 
+  it('switching is non-destructive both ways: quote and showcase content both survive', () => {
+    s().patchCard({ headline: 'Em vừa được tậu đất:', sublines: 'a\nb' })
+    s().switchCardType()
+    s().addShot('data:1')
+    s().addAnnotation({ shotId: s().card.showcase!.shots[0].id, text: 'x', side: 'top' })
+
+    s().switchCardType()
+    expect(s().card.cardType).toBe('quote')
+    expect(s().card.headline).toBe('Em vừa được tậu đất:')
+    expect(s().card.sublines).toBe('a\nb')
+    expect(s().card.showcase?.shots).toHaveLength(1)
+
+    s().switchCardType()
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['x'])
+  })
+
   it('addShot appends shots in upload order with unique stable ids', () => {
     // Array order is upload order: the first Shot renders in the Hero Slot.
     s().addShot('data:hero')
