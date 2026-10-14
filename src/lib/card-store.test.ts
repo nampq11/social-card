@@ -173,6 +173,84 @@ describe('card-store showcase content', () => {
     expect(s().past.length).toBe(stepsBefore)
   })
 
+  it('addAnnotation anchors to a shot; at most one annotation per shot', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+
+    s().addAnnotation({ shotId: shot.id, text: 'Màn hình chính', side: 'top' })
+    expect(s().card.showcase?.annotations).toEqual([
+      { id: expect.any(String), shotId: shot.id, text: 'Màn hình chính', side: 'top' },
+    ])
+
+    // A second annotation for the same shot is refused and costs no step.
+    const stepsBefore = s().past.length
+    s().addAnnotation({ shotId: shot.id, text: 'b', side: 'left' })
+    expect(s().card.showcase?.annotations).toHaveLength(1)
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('addAnnotation for an unknown shot is a no-op', () => {
+    s().addAnnotation({ shotId: 'missing', text: 'b', side: 'left' })
+    expect(s().card.showcase?.annotations ?? []).toEqual([])
+    expect(s().past.length).toBe(0)
+  })
+
+  it('removeShot deletes its annotation in the same undo step', () => {
+    s().addShot('data:1')
+    s().addShot('data:2')
+    const [shotA, shotB] = s().card.showcase!.shots
+    s().addAnnotation({ shotId: shotA.id, text: 'a', side: 'left' })
+    s().addAnnotation({ shotId: shotB.id, text: 'b', side: 'right' })
+
+    s().removeShot(shotA.id)
+    expect(s().card.showcase?.shots.map((shot) => shot.id)).toEqual([shotB.id])
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['b'])
+
+    // One Cmd+Z restores both the shot and its annotation.
+    s().undo()
+    expect(s().card.showcase?.shots.map((shot) => shot.id)).toEqual([shotA.id, shotB.id])
+    expect(s().card.showcase?.annotations.map((a) => a.text)).toEqual(['a', 'b'])
+  })
+
+  it('updateAnnotation edits text and side, and retargets only to a free shot', () => {
+    s().addShot('data:1')
+    s().addShot('data:2')
+    const [shotA, shotB] = s().card.showcase!.shots
+    s().addAnnotation({ shotId: shotA.id, text: 'a', side: 'left' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    s().updateAnnotation(annotation.id, { text: 'Tổng quan', side: 'top' })
+    expect(s().card.showcase?.annotations).toEqual([
+      { id: annotation.id, shotId: shotA.id, text: 'Tổng quan', side: 'top' },
+    ])
+
+    // Retargeting to a free shot follows the shot, not the slot.
+    s().updateAnnotation(annotation.id, { shotId: shotB.id })
+    expect(s().card.showcase?.annotations[0].shotId).toBe(shotB.id)
+
+    // Retargeting to an already-annotated shot is refused.
+    s().addShot('data:3')
+    const shotC = s().card.showcase!.shots[2]
+    s().addAnnotation({ shotId: shotC.id, text: 'c', side: 'left' })
+    const stepsBefore = s().past.length
+    s().updateAnnotation(annotation.id, { shotId: shotC.id })
+    expect(s().card.showcase?.annotations[0].shotId).toBe(shotB.id)
+    expect(s().past.length).toBe(stepsBefore)
+  })
+
+  it('removeAnnotation deletes exactly its own annotation, undoable in one step', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    s().addAnnotation({ shotId: shot.id, text: 'a', side: 'top' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    s().removeAnnotation(annotation.id)
+    expect(s().card.showcase?.annotations).toEqual([])
+
+    s().undo()
+    expect(s().card.showcase?.annotations).toHaveLength(1)
+  })
+
   it('addShot appends shots in upload order with unique stable ids', () => {
     // Array order is upload order: the first Shot renders in the Hero Slot.
     s().addShot('data:hero')
