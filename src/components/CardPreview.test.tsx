@@ -396,3 +396,28 @@ describe('Showcase Annotation sides', () => {
     expect(mark?.className).toContain(marginFragment[side])
   })
 })
+
+describe('Showcase Annotation following', () => {
+  it('follows its shot into the hero slot when an earlier shot is removed', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [{ id: 'annotation-2', shotId: 'shot-2', text: 'Điểm nhấn', side: 'top' }],
+      },
+    })
+
+    act(() => {
+      useCardStore.getState().removeShot('shot-1')
+    })
+
+    // shot-2 was a detail slot; removing shot-1 promotes it to hero and the
+    // annotation must ride along (binds to Shots, not slots).
+    const text = screen.getByText('Điểm nhấn')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+    expect(screen.queryByTestId('detail-slot')?.contains(text) ?? false).toBe(false)
+  })
+})
