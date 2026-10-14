@@ -22,6 +22,7 @@ export const DEFAULT_CARD_STATE: CardState = {
   headlineSize: 42,
   uppercaseHeadline: true,
   boldSublines: false,
+  avatarGrayscale: false,
 }
 
 // Preset names are UI Copy (button labels) — resolved through the dictionary

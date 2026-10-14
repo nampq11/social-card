@@ -85,7 +85,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         <img
           src={data.avatarUrl}
           alt={data.authorName || FALLBACK_AUTHOR_NAME}
-          className="w-full h-full object-cover object-top"
+          className={`w-full h-full object-cover object-top ${data.avatarGrayscale ? 'grayscale' : ''}`}
         />
       </div>
     ) : null

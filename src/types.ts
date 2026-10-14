@@ -16,4 +16,5 @@ export interface CardState {
   headlineSize: number // in rem / px scale
   uppercaseHeadline: boolean
   boldSublines: boolean
+  avatarGrayscale: boolean
 }
