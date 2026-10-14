@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   autoFitForSlot,
   momentumFocus,
+  springStep,
   clampFocus,
   DEFAULT_SHOT_FOCUS,
   focusForPinch,
@@ -239,18 +240,76 @@ describe('momentumFocus', () => {
     // Unzoomed shot: 150px of layout overflow. The old formula computed
     // 450 - 300/0.5 = -150 → inert; converting velocity instead keeps the
     // domain, and the flick coasts to the edge.
-    expect(momentumFocus({ x: 0.5, y: 0.5 }, 200, 0, 0.5, g, 1).x).toBe(0)
+    expect(momentumFocus({ x: 0.5, y: 0.5 }, 200, 0, 0.5, g, 1).focus.x).toBe(0)
   })
 
   it("a half-size preview doubles the same screen flick's layout speed", () => {
     // Scale 2: 600px of overflow. 600 screen px/s coasts 299.4px →
     // 0.5 − 299.4/600 = 0.001. Through a 0.5 preview the same flick is
     // 1200 layout px/s → past the edge.
-    expect(momentumFocus({ x: 0.5, y: 0.5 }, 600, 0, 1, g, 2).x).toBeCloseTo(0.001, 5)
-    expect(momentumFocus({ x: 0.5, y: 0.5 }, 600, 0, 0.5, g, 2).x).toBe(0)
+    expect(momentumFocus({ x: 0.5, y: 0.5 }, 600, 0, 1, g, 2).focus.x).toBeCloseTo(0.001, 5)
+    expect(momentumFocus({ x: 0.5, y: 0.5 }, 600, 0, 0.5, g, 2).focus.x).toBe(0)
   })
 
   it('is inert on an axis without overflow', () => {
-    expect(momentumFocus({ x: 0.5, y: 0.5 }, 0, 5000, 1, g, 1).y).toBeCloseTo(0.5)
+    const outcome = momentumFocus({ x: 0.5, y: 0.5 }, 0, 5000, 1, g, 1)
+    expect(outcome.focus.y).toBeCloseTo(0.5)
+    // No overflow — no velocity handoff for the settle spring either.
+    expect(outcome.velocity.y).toBe(0)
+  })
+
+  it('hands the release velocity to the settle spring in focus units', () => {
+    // 600 layout px/s against 600px of overflow (scale 2) = 1 focus unit/s,
+    // signed AGAINST the pointer (a rightward flick coasts leftward).
+    expect(momentumFocus({ x: 0.5, y: 0.5 }, 600, 0, 1, g, 2).velocity.x).toBeCloseTo(-1, 5)
+  })
+
+  // Settle spring (ADR 0006 §3): critically damped (ratio 1.0) in closed form,
+  // so two half-length steps land exactly where one full step does (jank-safe)
+  // and a release velocity hands off without a kink.
+  describe('springStep', () => {
+    const RESPONSE = 0.3
+
+    it('never overshoots the target from rest', () => {
+      let state = { value: 1, velocity: 0 }
+      let previous = state.value
+      for (let i = 0; i < 200; i++) {
+        state = springStep(state, 0, 16, RESPONSE)
+        // Monotone approach: it may touch the target but never cross it.
+        expect(state.value).toBeLessThanOrEqual(previous + 1e-12)
+        expect(state.value).toBeGreaterThanOrEqual(0)
+        previous = state.value
+      }
+      expect(state.value).toBeCloseTo(0, 3)
+    })
+
+    it('composes: two half steps land where one full step does', () => {
+      const halfA = springStep({ value: 0.9, velocity: -3 }, 0.2, 8, RESPONSE)
+      const halfB = springStep(halfA, 0.2, 8, RESPONSE)
+      const whole = springStep({ value: 0.9, velocity: -3 }, 0.2, 16, RESPONSE)
+      expect(halfB.value).toBeCloseTo(whole.value, 10)
+      expect(halfB.velocity).toBeCloseTo(whole.velocity, 10)
+    })
+
+    it('carries velocity: a fast entry approaches faster than from rest', () => {
+      const rest = springStep({ value: 1, velocity: 0 }, 0, 16, RESPONSE)
+      const moving = springStep({ value: 1, velocity: -50 }, 0, 16, RESPONSE)
+      expect(moving.value).toBeLessThan(rest.value)
+      // ...and the closed form's velocity decays without sign flips back
+      // toward the target: no oscillation.
+      expect(moving.velocity).toBeLessThanOrEqual(0)
+    })
+
+    it('settles: position and velocity both reach the target', () => {
+      let state = { value: 1, velocity: -80 }
+      for (let i = 0; i < 400; i++) state = springStep(state, 0, 16, RESPONSE)
+      expect(Math.abs(state.value)).toBeLessThan(0.001)
+      expect(Math.abs(state.velocity)).toBeLessThan(0.05)
+    })
+
+    it('is inert for a non-advancing clock', () => {
+      const state = { value: 0.7, velocity: 2 }
+      expect(springStep(state, 0, 0, RESPONSE)).toEqual(state)
+    })
   })
 })

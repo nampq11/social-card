@@ -3,13 +3,14 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useCardStore } from './card-store'
 import {
   clampScale,
-  dampedStep,
   DEFAULT_SHOT_FOCUS,
   focusForPinch,
   focusFromDrag,
   momentumFocus,
+  springStep,
   trackVelocity,
   type ShotGeometry,
+  type SpringState,
   type VelocityState,
 } from './shot-fit'
 import { useMediaQuery } from './use-media-query'
@@ -132,10 +133,11 @@ export function useShotPan(
   )
 
   // The settle loop (ADR 0006 §3): focus glides into its projected target
-  // while any rubber-band excess melts to zero — one critically damped loop,
-  // interruptible by the next pointer-down. Focus frames go through the
-  // store, so export and undo see what the screen sees.
-  const glide = (target: ShotFocus) => {
+  // while any rubber-band excess melts to zero — one critically damped
+  // spring per axis (a flick's release velocity seeds it, so the handoff
+  // has no kink), interruptible by the next pointer-down. Focus frames go
+  // through the store, so export and undo see what the screen sees.
+  const glide = (target: ShotFocus, seed: ShotFocus = { x: 0, y: 0 }) => {
     if (reducedMotion) {
       setShotFocus(shotId, target)
       applyOverdrag(null)
@@ -144,6 +146,10 @@ export function useShotPan(
     stopGlide()
     let last = performance.now()
     lastGlideWrite.current = getShot()?.focus ?? DEFAULT_SHOT_FOCUS
+    let springX = { value: lastGlideWrite.current.x, velocity: seed.x }
+    let springY = { value: lastGlideWrite.current.y, velocity: seed.y }
+    let springOverX: SpringState = { value: overdragRef.current?.x ?? 0, velocity: 0 }
+    let springOverY: SpringState = { value: overdragRef.current?.y ?? 0, velocity: 0 }
     const step = (now: number) => {
       glideFrame.current = null
       const dtMs = Math.min(64, now - last)
@@ -158,29 +164,48 @@ export function useShotPan(
         lastGlideWrite.current = null
         return
       }
-      const currentOver = overdragRef.current ?? { x: 0, y: 0 }
+      // Values re-read from the store each frame (it holds this loop's own
+      // last write); the spring state carries the velocity forward.
       const next = {
-        x: dampedStep(current.x, target.x, dtMs, GLIDE_RESPONSE),
-        y: dampedStep(current.y, target.y, dtMs, GLIDE_RESPONSE),
+        x: springStep(
+          { value: current.x, velocity: springX.velocity },
+          target.x,
+          dtMs,
+          GLIDE_RESPONSE,
+        ),
+        y: springStep(
+          { value: current.y, velocity: springY.velocity },
+          target.y,
+          dtMs,
+          GLIDE_RESPONSE,
+        ),
       }
       const nextOver = {
-        x: dampedStep(currentOver.x, 0, dtMs, GLIDE_RESPONSE),
-        y: dampedStep(currentOver.y, 0, dtMs, GLIDE_RESPONSE),
+        x: springStep(springOverX, 0, dtMs, GLIDE_RESPONSE),
+        y: springStep(springOverY, 0, dtMs, GLIDE_RESPONSE),
       }
       const settled =
-        Math.abs(next.x - target.x) < 0.001 &&
-        Math.abs(next.y - target.y) < 0.001 &&
-        Math.abs(nextOver.x) < 0.5 &&
-        Math.abs(nextOver.y) < 0.5
+        Math.abs(next.x.value - target.x) < 0.001 &&
+        Math.abs(next.y.value - target.y) < 0.001 &&
+        Math.abs(next.x.velocity) < 0.05 &&
+        Math.abs(next.y.velocity) < 0.05 &&
+        Math.abs(nextOver.x.value) < 0.5 &&
+        Math.abs(nextOver.y.value) < 0.5 &&
+        Math.abs(nextOver.x.velocity) < 10 &&
+        Math.abs(nextOver.y.velocity) < 10
       if (settled) {
         setShotFocus(shotId, target)
         lastGlideWrite.current = null
         applyOverdrag(null)
         return
       }
-      setShotFocus(shotId, next)
-      lastGlideWrite.current = next
-      applyOverdrag(nextOver)
+      springX = next.x
+      springY = next.y
+      springOverX = nextOver.x
+      springOverY = nextOver.y
+      setShotFocus(shotId, { x: next.x.value, y: next.y.value })
+      lastGlideWrite.current = { x: next.x.value, y: next.y.value }
+      applyOverdrag({ x: nextOver.x.value, y: nextOver.y.value })
       glideFrame.current = requestAnimationFrame(step)
     }
     glideFrame.current = requestAnimationFrame(step)
@@ -314,18 +339,15 @@ export function useShotPan(
           Math.abs(v?.velocityX ?? 0) >= MOMENTUM_MIN_VELOCITY ||
           Math.abs(v?.velocityY ?? 0) >= MOMENTUM_MIN_VELOCITY
         const el = event.currentTarget
-        glide(
-          flick
-            ? momentumFocus(
-                released,
-                v?.velocityX ?? 0,
-                v?.velocityY ?? 0,
-                previewScaleOf(el),
-                geometryOf(el),
-                clampScale(getShot()?.scale ?? 1),
-              )
-            : released,
+        const coast = momentumFocus(
+          released,
+          v?.velocityX ?? 0,
+          v?.velocityY ?? 0,
+          previewScaleOf(el),
+          geometryOf(el),
+          clampScale(getShot()?.scale ?? 1),
         )
+        glide(flick ? coast.focus : released, flick ? coast.velocity : { x: 0, y: 0 })
         velocity.current = null
         return
       }

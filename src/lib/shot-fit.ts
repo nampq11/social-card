@@ -130,6 +130,13 @@ export const focusFromDrag = (
 export const rubberbandDelta = (overshootPx: number, dimensionPx: number, constant = 0.55) =>
   (overshootPx * dimensionPx * constant) / (dimensionPx + constant * Math.abs(overshootPx))
 
+export interface MomentumOutcome {
+  focus: ShotFocus
+  // The release velocity in focus units per second, for the settle spring's
+  // handoff — zero on an inert axis (nowhere to coast).
+  velocity: ShotFocus
+}
+
 export const momentumFocus = (
   from: ShotFocus,
   velocityXScreen: number,
@@ -137,18 +144,40 @@ export const momentumFocus = (
   previewScale: number,
   geometry: ShotGeometry,
   scale: number,
-): ShotFocus => {
+): MomentumOutcome => {
   const overflow = coverOverflowOf(geometry, scale)
   // Pointer velocity is tracked in screen px/s while the overflow domain is
   // slot layout px — convert like the drag deltas do, or a CSS-scaled
   // preview coasts the wrong distance (or finds negative overflow and
   // coasts not at all).
   const toLayout = previewScale > 0 ? 1 / previewScale : 1
+  const velocityX = velocityXScreen * toLayout
+  const velocityY = velocityYScreen * toLayout
+  const focus = {
+    x: projectedFocus(from.x, velocityX, overflow.x),
+    y: projectedFocus(from.y, velocityY, overflow.y),
+  }
+  // Handoff velocity for the settle spring, in focus units per second.
+  // Focus moves AGAINST the pointer, so the coast runs at -v/overflow. When
+  // the projection clamped at an edge, the wall absorbed the momentum —
+  // seeding it would fling the Shot off the clamped target.
+  const axisSeed = (fromValue: number, targetValue: number, vLayout: number, over: number) => {
+    if (!(over > 0)) return 0
+    if (Math.abs(targetValue - fromValue) < Math.abs(coastPx(vLayout)) / over - 1e-9) return 0
+    return -vLayout / over
+  }
   return {
-    x: projectedFocus(from.x, velocityXScreen * toLayout, overflow.x),
-    y: projectedFocus(from.y, velocityYScreen * toLayout, overflow.y),
+    focus,
+    velocity: {
+      x: axisSeed(from.x, focus.x, velocityX, overflow.x),
+      y: axisSeed(from.y, focus.y, velocityY, overflow.y),
+    },
   }
 }
+
+// Apple's exponential-decay coast (r = 0.998): px traveled is ~0.499 times
+// the release velocity, shared by the projection and the seed check.
+const coastPx = (velocityPxPerS: number) => (velocityPxPerS / 1000) * (0.998 / (1 - 0.998))
 
 // Momentum projection (ADR 0006 §3): a release velocity coasts a projected
 // distance (Apple's exponential-decay form, r = 0.998 — px coast ≈ 0.499·v),
@@ -157,8 +186,7 @@ export const momentumFocus = (
 export const projectedFocus = (value: number, velocityPxPerS: number, overflowPx: number) => {
   // `!(overflowPx > 0)` fires for NaN too — degenerate measurements stay inert.
   if (!(overflowPx > 0)) return sanitizeAxis(value)
-  const coastPx = (velocityPxPerS / 1000) * (0.998 / (1 - 0.998))
-  return Math.min(1, Math.max(0, value - coastPx / overflowPx))
+  return Math.min(1, Math.max(0, value - coastPx(velocityPxPerS) / overflowPx))
 }
 
 // One velocity sample of the pointer (ADR 0006 §3): instantaneous px/s,
@@ -190,14 +218,36 @@ export const trackVelocity = (
   }
 }
 
-// One frame of a critically damped approach (damping ratio 1.0 — no
-// overshoot; ADR 0006 §3 settles on Apple's "response" scale, seconds).
-// Frame-rate independent: two half-length steps land exactly where one full
-// step does, which is what makes the rAF loop safe under jank.
-export const dampedStep = (current: number, target: number, dtMs: number, response: number) => {
-  if (dtMs <= 0) return current
-  const tau = (response * 1000) / 4
-  return target + (current - target) * Math.exp(-dtMs / tau)
+// One frame of a critically damped spring (damping ratio 1.0 — no
+// oscillation; ADR 0006 §3 settles on Apple's "response" scale, seconds).
+// Exact closed-form integration of the continuous system, which buys two
+// things a hand-rolled exponential approach does not: two half-length steps
+// land exactly where one full step does (the rAF loop is safe under jank),
+// and the carried velocity hands off from a flick without a kink.
+export interface SpringState {
+  value: number
+  velocity: number
+}
+
+export const springStep = (
+  state: SpringState,
+  target: number,
+  dtMs: number,
+  response: number,
+): SpringState => {
+  if (dtMs <= 0) return state
+  const dtS = dtMs / 1000
+  // ω = 4/response (per second — dtS is seconds) keeps the old
+  // τ = response/4 settle scale.
+  const omega = 4 / response
+  const offset = state.value - target
+  const slope = state.velocity + omega * offset
+  const decay = Math.exp(-omega * dtS)
+  const settled = offset + slope * dtS
+  return {
+    value: target + settled * decay,
+    velocity: (slope - omega * settled) * decay,
+  }
 }
 
 // Pinch anchoring (ADR 0006 §4): zooming keeps the content point under the
