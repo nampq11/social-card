@@ -7,13 +7,31 @@ import type { Annotation, AnnotationSide, CardState, CardTheme, Shot } from '../
 // target slot — never free-dragged. Tailwind edges do the parking (right-full
 // = the mark's right edge sits on the slot's left edge), and the w-14 row
 // matches the card's page margin so the text wraps inside it. Child order
-// keeps the curve toward the slot edge once it exists: normal row on the
-// left, reversed on the right, column for top.
-const ANNOTATION_PLACEMENT: Record<AnnotationSide, string> = {
-  left: 'right-full top-0 mr-1 flex w-14 flex-row',
-  right: 'left-full top-0 ml-1 flex w-14 flex-row-reverse',
-  top: 'bottom-full left-0 mb-1 flex flex-col',
+// keeps the curve at the slot-facing end: normal row on the left, reversed
+// on the right, column (curve last, pointing down) for top. The curve class
+// re-aims the same preset stroke at the slot's edge from each margin.
+const ANNOTATION_PLACEMENT: Record<AnnotationSide, { mark: string; curve: string }> = {
+  left: { mark: 'right-full top-0 mr-1 flex w-14 flex-row', curve: '' },
+  right: { mark: 'left-full top-0 ml-1 flex w-14 flex-row-reverse', curve: '-scale-x-100' },
+  top: { mark: 'bottom-full left-0 mb-1 flex flex-col', curve: 'rotate-90' },
 }
+
+// The one preset stroke every annotation uses (issue #33): a handwritten
+// arc ending in a small head, drawn pointing right; placement re-aims it.
+const AnnotationCurve = ({ className }: { className: string }) => (
+  <svg
+    data-testid="annotation-curve"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    strokeLinecap="round"
+    className={`h-5 w-5 shrink-0 ${className}`}
+  >
+    <path d="M2 4 C 8 2.5, 15 6, 16 14" />
+    <path d="M16 14 l-4.6 -1.4 M16 14 l-0.6 -4.8" />
+  </svg>
+)
 
 // One Screenshot Slot (GLOSSARY.md): holds its Shot, or shows the dashed
 // placeholder when empty — a pure preview affordance; capturing Shots is the
@@ -48,8 +66,12 @@ const Slot = ({
       )}
     </div>
     {shot && annotation && (
-      <div data-testid="annotation" className={`absolute ${ANNOTATION_PLACEMENT[annotation.side]}`}>
+      <div
+        data-testid="annotation"
+        className={`absolute ${ANNOTATION_PLACEMENT[annotation.side].mark}`}
+      >
         <p>{annotation.text}</p>
+        <AnnotationCurve className={ANNOTATION_PLACEMENT[annotation.side].curve} />
       </div>
     )}
   </div>

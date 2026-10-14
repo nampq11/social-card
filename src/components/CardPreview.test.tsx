@@ -421,3 +421,28 @@ describe('Showcase Annotation following', () => {
     expect(screen.queryByTestId('detail-slot')?.contains(text) ?? false).toBe(false)
   })
 })
+
+describe('Showcase Annotation curve', () => {
+  it('renders the preset curve only in the slot its annotation targets', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: [{ id: 'annotation-3', shotId: 'shot-3', text: 'Chi tiết này', side: 'left' }],
+      },
+    })
+
+    const [firstDetail, secondDetail] = screen.getAllByTestId('detail-slot')
+    expect(firstDetail.querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(secondDetail.querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,THREE',
+    )
+
+    expect(firstDetail.querySelector('[data-testid="annotation-curve"]')).toBeNull()
+    expect(secondDetail.querySelector('[data-testid="annotation-curve"]')).not.toBeNull()
+  })
+})
