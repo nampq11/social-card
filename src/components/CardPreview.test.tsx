@@ -211,7 +211,7 @@ describe('Showcase Card', () => {
       .querySelector('[data-testid="slot-placeholder"]')
     expect(placeholder).not.toBeNull()
     expect(placeholder?.className).toContain('border-dashed')
-    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByTestId('hero-slot').querySelector('img')).toBeNull()
     expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
     expect(container.querySelector('[data-testid="sublines"]')).toBeNull()
     expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
@@ -267,5 +267,45 @@ describe('Showcase Card', () => {
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(details[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
     expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('centers the avatar above name and bio in the showcase footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      qrEnabled: true,
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer\nBuilder',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    // QR is Quote-only content, even when the flag survived a type switch
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+
+    const avatar = screen.getByAltText('Nam Phạm')
+    const name = screen.getByText('Nam Phạm')
+    expect(avatar.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    const bio = footer?.querySelector('[data-testid="author-bio"]')
+    expect(bio?.textContent).toContain('AI Engineer')
+    expect(bio?.textContent).toContain('Builder')
+  })
+
+  it('centers name and bio without an avatar, with no monogram stand-in', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: '',
+    })
+
+    expect(container.querySelector('img')).toBeNull()
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    expect(screen.getByText('Nam Phạm')).not.toBeNull()
+    expect(footer?.querySelector('[data-testid="author-bio"]')?.textContent).toContain(
+      'AI Engineer',
+    )
   })
 })
