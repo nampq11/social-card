@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, within } from '@testing-library/react'
+import { triggerMediaQuery } from '../test/match-media'
 import { CardPreview } from './CardPreview'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { UiCopyProvider } from '../lib/i18n'
@@ -267,6 +269,105 @@ describe('Showcase Card', () => {
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(details[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
     expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('positions a cover shot by its stored focus through object-position', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFocus(useCardStore.getState().card.showcase!.shots[0].id, { x: 0.25, y: 0.75 })
+    })
+
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    expect(img.getAttribute('class')).toContain('object-cover')
+    expect(img.style.objectPosition).toBe('25% 75%')
+  })
+
+  it('renders a Fit shot contained over a blurred self backdrop as a window card', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFit(useCardStore.getState().card.showcase!.shots[0].id, 'contain')
+    })
+
+    const slot = screen.getByTestId('hero-slot')
+    const imgs = slot.querySelectorAll('img')
+    expect(imgs).toHaveLength(2)
+    // Backdrop first in DOM (it must paint underneath): a blurred cover copy.
+    expect(imgs[0].className).toContain('blur')
+    expect(imgs[0].className).toContain('object-cover')
+    // The visible Shot shows whole, framed as a floating window card.
+    expect(imgs[1].className).toContain('object-contain')
+    expect(imgs[1].className).toContain('rounded')
+    expect(imgs[1].className).toContain('shadow')
+  })
+
+  it('renders a default cover shot without a backdrop layer', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      useCardStore.getState().addShot('data:image/png;base64,ONE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelectorAll('img')).toHaveLength(1)
+  })
+
+  it('pans a cover shot by dragging on desktop without any selection step', () => {
+    triggerMediaQuery('(hover: hover)', true)
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot('data:image/png;base64,ONE'))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    // Geometry the pan math needs (jsdom lays nothing out).
+    Object.defineProperty(img, 'naturalWidth', { value: 900, configurable: true })
+    Object.defineProperty(img, 'naturalHeight', { value: 300, configurable: true })
+    Object.defineProperty(img, 'offsetWidth', { value: 300, configurable: true })
+    Object.defineProperty(img, 'offsetHeight', { value: 150, configurable: true })
+    vi.spyOn(img, 'getBoundingClientRect').mockReturnValue({
+      width: 300,
+      height: 150,
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      bottom: 150,
+      right: 300,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    fireEvent.pointerDown(img, { pointerId: 1, button: 0, clientX: 150, clientY: 75 })
+    fireEvent.pointerMove(img, { pointerId: 1, clientX: 75, clientY: 75 })
+    fireEvent.pointerUp(img, { pointerId: 1 })
+
+    // Dragging 75px left against 150px of overflow moves focus +0.5.
+    expect(useCardStore.getState().card.showcase!.shots[0].focus!.x).toBeCloseTo(1)
+    // No touch-selection chrome on the desktop path.
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+    act(() => triggerMediaQuery('(hover: hover)', false))
+  })
+
+  it('selects a shot on tap before touch-panning, with a resettable overlay', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot('data:image/png;base64,ONE'))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    // Unselected: no pan chrome, page scroll stays native (no touch-action).
+    expect(img.className).not.toContain('touch-none')
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'touch', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    expect(overlay.dataset.exportExclude).toBe('true')
+    // Now armed: the gesture surface takes over touch scrolling.
+    expect(img.className).toContain('touch-none')
+
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Đặt lại' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].focus).toBeUndefined()
+
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Xong' }))
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+    expect(img.className).not.toContain('touch-none')
   })
 
   it('centers the avatar above name and bio in the showcase footer', () => {

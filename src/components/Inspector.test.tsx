@@ -477,6 +477,31 @@ describe('Inspector Showcase Screenshots section', () => {
     )
     expect(screen.getByText(/Tối đa 3 ảnh/)).not.toBeNull()
   })
+  it('reveals a fit switcher for a selected shot and applies the choice to the store', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+
+    // Nothing to switch until a shot is selected.
+    expect(screen.queryByRole('radiogroup', { name: 'Hiển thị ảnh' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' }))
+    expect(screen.getByRole('radio', { name: 'Đầy khung' }).getAttribute('aria-checked')).toBe(
+      'true',
+    )
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Trọn ảnh' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBe('contain')
+  })
+
+  it('deselects a selected shot when its thumbnail is clicked again', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+    fireEvent.click(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' }))
+    expect(screen.getByRole('radiogroup', { name: 'Hiển thị ảnh' })).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('img', { name: 'Ảnh chụp màn hình 1' }))
+    expect(screen.queryByRole('radiogroup', { name: 'Hiển thị ảnh' })).toBeNull()
+  })
 })
 
 describe('Inspector Showcase Annotations section', () => {

@@ -1,5 +1,13 @@
-import React, { useRef } from 'react'
-import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, Shot } from '../types'
+import React, { useRef, useState } from 'react'
+import type {
+  AnnotationSide,
+  CardState,
+  AspectRatio,
+  CardTheme,
+  CardType,
+  Shot,
+  ShotFit,
+} from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
@@ -127,6 +135,11 @@ export const ScreenshotsSection: React.FC = () => {
   const addShot = useCardStore((s) => s.addShot)
   const removeShot = useCardStore((s) => s.removeShot)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const setShotFit = useCardStore((s) => s.setShotFit)
+  // The fit switcher acts on one selected thumbnail; which thumbnail the
+  // user is looking at is UI-transient, so it stays out of the Card State.
+  const [selectedShotId, setSelectedShotId] = useState<string | null>(null)
+  const selectedShot = shots.find((shot) => shot.id === selectedShotId)
 
   const handleShotPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -163,7 +176,10 @@ export const ScreenshotsSection: React.FC = () => {
           {shots.map((shot) => (
             <div
               key={shot.id}
-              className="relative aspect-square overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1]"
+              onClick={() => setSelectedShotId((current) => (current === shot.id ? null : shot.id))}
+              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1] ${
+                selectedShotId === shot.id ? 'ring-2 ring-blue-600 dark:ring-blue-500' : ''
+              }`}
             >
               {/* Named alt so identical thumbnails stay distinguishable to
                   screen readers; position = upload order = Hero Slot first. */}
@@ -182,6 +198,27 @@ export const ScreenshotsSection: React.FC = () => {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedShot && (
+        <div className="flex flex-col gap-1.5">
+          <label
+            id={`shot-fit-label-${selectedShot.id}`}
+            className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
+          >
+            {copy.shot_fit_label}
+          </label>
+          <SegmentedControl<ShotFit>
+            aria-labelledby={`shot-fit-label-${selectedShot.id}`}
+            value={selectedShot.fit ?? 'cover'}
+            onChange={(fit) => setShotFit(selectedShot.id, fit)}
+            className="w-full"
+            options={[
+              { value: 'cover', label: copy.shot_fit_cover },
+              { value: 'contain', label: copy.shot_fit_contain },
+            ]}
+          />
         </div>
       )}
 
