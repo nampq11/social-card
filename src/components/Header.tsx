@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="text-[13px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7] leading-none whitespace-nowrap">
                 Social Card
               </h1>
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6]">
+              <span className="hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6]">
                 HIG Studio
               </span>
             </div>
@@ -165,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <>
                 <Copy className="stroke-[2]" />
-                <span className="hidden sm:inline">{copy.copy_button}</span>
+                <span>{copy.copy_button}</span>
                 <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded bg-white/15 font-mono text-white/90">
                   ⌘C
                 </kbd>
@@ -190,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
           title={copy.language_toggle_title}
           aria-label={copy.language_toggle_title}
           variant="secondary"
-          className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
+          className="hidden lg:inline-flex h-8 px-2.5 rounded-xl text-[11px] font-semibold"
         >
           <Globe className="w-3.5 h-3.5" />
           <span>{language === 'vi' ? 'VI' : 'EN'}</span>

@@ -1,5 +1,5 @@
 import { useRef, type RefObject } from 'react'
-import { RotateCcw, Undo2, Redo2 } from 'lucide-react'
+import { RotateCcw, Undo2, Redo2, Globe } from 'lucide-react'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
@@ -21,7 +21,7 @@ interface MobileSheetProps {
 }
 
 export function MobileSheet({ canvasRef }: MobileSheetProps) {
-  const { copy } = useUiCopy()
+  const { copy, language, setLanguage } = useUiCopy()
   const resetCard = useCardStore((s) => s.resetCard)
   // Edit history joins Reset here on mobile — the Header keeps its copy only
   // from lg up, so touch users get their undo affordance in the sheet header.
@@ -94,6 +94,18 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
             <Button onClick={resetCard} variant="ghost" size="sm" title={copy.reset_title}>
               <RotateCcw />
               <span>{copy.reset_button}</span>
+            </Button>
+            {/* Language joins Reset on touch — the Header shows it from lg up. */}
+            <Button
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              title={copy.language_toggle_title}
+              aria-label={copy.language_toggle_title}
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+            >
+              <Globe />
+              <span>{language === 'vi' ? 'VI' : 'EN'}</span>
             </Button>
           </div>
         </div>

@@ -3,7 +3,7 @@ import type { UiCopyKey } from '../lib/i18n'
 
 // Shared fallbacks so the preview placeholders and the default state never
 // drift apart.
-export const FALLBACK_AUTHOR_NAME = 'Nam Pham'
+export const FALLBACK_AUTHOR_NAME = 'Nam Phạm'
 export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 
 // Headlines are stored in sentence case; the Uppercase toggle drives the
