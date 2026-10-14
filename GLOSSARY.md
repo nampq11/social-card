@@ -17,7 +17,7 @@ The language UI Copy is displayed in (Vietnamese or English). Switchable at runt
 _Avoid_: locale, i18n language
 
 **Preset**:
-A named starting point that fills several Card Content fields at once (headline, sublines, theme, CTA).
+A named starting point that fills several Card Content fields and style toggles at once (headline, sublines, theme, CTA, plus style choices such as bold sublines or grayscale avatar).
 _Avoid_: template, sample
 
 **Card State**:

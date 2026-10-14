@@ -68,6 +68,25 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
       uppercaseHeadline: true,
     },
   },
+  {
+    id: 'quote',
+    nameKey: 'preset_quote',
+    // The full replica look in one click. Unlike the other presets it sets
+    // the bio: the two-line bio is part of the replica (approved in #24).
+    state: {
+      headline: 'Làm ít, làm sâu, làm thật.',
+      sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',
+      authorBio: 'Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư',
+      qrCta: 'Theo dõi hành trình indie!',
+      qrEnabled: false,
+      theme: 'mist',
+      ratio: '1:1',
+      headlineSize: 46,
+      uppercaseHeadline: true,
+      boldSublines: true,
+      avatarGrayscale: true,
+    },
+  },
 ]
 
 // Style Presets (GLOSSARY.md) restyle the card without touching any Card
