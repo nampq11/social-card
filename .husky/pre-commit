@@ -1,0 +1,2 @@
+# Single gate for every commit: glossary terms, lint, format, tests, typecheck + build.
+pnpm check

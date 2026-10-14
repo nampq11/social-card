@@ -43,9 +43,10 @@ export const toFilename = (headline: string): string => {
   return `${stem}.png`
 }
 
-// Splits the multi-line sublines field into rendered lines, dropping blanks.
-export const splitSublines = (sublines: string): string[] =>
-  sublines
+// Splits any multi-line text field (sublines, bio) into rendered lines,
+// dropping blanks.
+export const splitLines = (text: string): string[] =>
+  text
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)

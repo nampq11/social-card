@@ -54,6 +54,43 @@ describe('Inspector style presets', () => {
   })
 })
 
+describe('Inspector Quote sample preset', () => {
+  it('assembles the whole replica look and content in one undoable step', () => {
+    renderInspector()
+
+    fireEvent.click(screen.getByRole('button', { name: /Trích dẫn/i }))
+
+    const card = useCardStore.getState().card
+    expect(card).toMatchObject({
+      theme: 'mist',
+      ratio: '1:1',
+      uppercaseHeadline: true,
+      headlineSize: 46,
+      qrEnabled: false,
+      boldSublines: true,
+      avatarGrayscale: true,
+      headline: 'Làm ít, làm sâu, làm thật.',
+      sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',
+      authorBio: 'Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư',
+      qrCta: 'Theo dõi hành trình indie!',
+    })
+
+    // The whole preset is one history step, not one per field.
+    act(() => useCardStore.getState().undo())
+    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE)
+  })
+
+  it('marks the Quote preset active while the current state matches it', () => {
+    renderInspector()
+
+    const quote = screen.getByRole('button', { name: /Trích dẫn/i })
+    expect(quote.getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.click(quote)
+    expect(quote.getAttribute('aria-pressed')).toBe('true')
+  })
+})
+
 describe('Inspector', () => {
   it('hosts the same tab groups as the Mobile Sheet, one group visible at a time', () => {
     renderInspector()
@@ -88,6 +125,17 @@ describe('Inspector', () => {
     expect(screen.getByLabelText(/Nội dung kêu gọi bên cạnh QR/i)).not.toBeNull()
   })
 
+  it('offers the bio as a textarea that accepts newlines', () => {
+    renderInspector('identity')
+    const bio = screen.getByLabelText(/Bio \/ Chức danh/i)
+
+    expect(bio.tagName).toBe('TEXTAREA')
+    expect(bio.getAttribute('rows')).toBe('2')
+
+    fireEvent.change(bio, { target: { value: 'Founder\nMentor' } })
+    expect(useCardStore.getState().card.authorBio).toBe('Founder\nMentor')
+  })
+
   it('provides an accessible name and state for the QR toggle switch', () => {
     renderInspector('identity')
     const qrToggle = screen.getByRole('switch', { name: /Mã QR & Kêu gọi/i })
@@ -103,6 +151,28 @@ describe('Inspector', () => {
 
     expect(useCardStore.getState().card.uppercaseHeadline).toBe(false)
     expect(upper.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('toggles grayscale avatar through the checkbox beside the avatar controls', () => {
+    renderInspector('identity')
+    const toggle = screen.getByRole('checkbox', { name: /Avatar đen trắng/i })
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(toggle)
+
+    expect(useCardStore.getState().card.avatarGrayscale).toBe(true)
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('toggles bold sublines through the checkbox next to the sublines editor', () => {
+    renderInspector()
+    const toggle = screen.getByRole('checkbox', { name: /Subline đậm/i })
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(toggle)
+
+    expect(useCardStore.getState().card.boldSublines).toBe(true)
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
   })
 
   it('adjusts headline size from the slider thumb with the arrow keys', async () => {
@@ -243,6 +313,15 @@ describe('Inspector segmented controls a11y', () => {
     const dark = within(themeGroup).getByRole('radio', { name: /Tối OLED/i })
     expect(paper.getAttribute('aria-checked')).toBe('true')
     expect(dark.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('switches the theme when the fourth segment (mist) is selected', () => {
+    renderInspector('style')
+
+    const themeGroup = screen.getByRole('radiogroup', { name: /Màu nền/i })
+    fireEvent.click(within(themeGroup).getByRole('radio', { name: /Sương/i }))
+
+    expect(useCardStore.getState().card.theme).toBe('mist')
   })
 
   it('keeps one tab stop per control group, on the checked option', async () => {

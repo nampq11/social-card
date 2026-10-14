@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import type { CardState, AspectRatio, CardTheme } from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
-import { SAMPLE_PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
+import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
 import { Slider } from '@base-ui/react/slider'
@@ -14,6 +14,7 @@ import {
   Sun,
   Scroll,
   Moon,
+  Cloud,
   QrCode,
   User,
   Upload,
@@ -24,6 +25,33 @@ import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
 import { toast } from 'sonner'
 import { clsx } from 'clsx'
+
+// A checkbox that flips one boolean card-state field (e.g. bold sublines, grayscale avatar)
+const CardStateToggle: React.FC<{
+  id: string
+  label: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}> = ({ id, label, checked, onCheckedChange }) => (
+  <div className="flex items-center gap-1.5">
+    <Checkbox.Root
+      id={id}
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+    >
+      <Checkbox.Indicator>
+        <Check className="size-3" strokeWidth={3} />
+      </Checkbox.Indicator>
+    </Checkbox.Root>
+    <label
+      htmlFor={id}
+      className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
+    >
+      <span>{label}</span>
+    </label>
+  </div>
+)
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
@@ -68,7 +96,7 @@ export const PresetsSection: React.FC = () => {
         </span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {SAMPLE_PRESETS.map((p) => {
+        {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
           return (
             <Button
@@ -207,6 +235,7 @@ export const StyleSection: React.FC = () => {
             { value: 'paper', label: copy.theme_paper, icon: <Scroll /> },
             { value: 'white', label: copy.theme_white, icon: <Sun /> },
             { value: 'dark', label: copy.theme_dark, icon: <Moon /> },
+            { value: 'mist', label: copy.theme_mist, icon: <Cloud /> },
           ]}
         />
       </div>
@@ -322,6 +351,13 @@ export const HeadlineSection: React.FC = () => {
           }
         />
       </Field.Root>
+
+      <CardStateToggle
+        id="inspector-bold-sublines"
+        label={copy.bold_sublines_label}
+        checked={data.boldSublines}
+        onCheckedChange={(checked) => update('boldSublines', checked)}
+      />
     </div>
   )
 }
@@ -410,6 +446,13 @@ export const IdentitySection: React.FC = () => {
         </div>
       </div>
 
+      <CardStateToggle
+        id="inspector-grayscale-avatar"
+        label={copy.grayscale_avatar_label}
+        checked={data.avatarGrayscale}
+        onCheckedChange={(checked) => update('avatarGrayscale', checked)}
+      />
+
       <div className="grid grid-cols-2 gap-2">
         <Field.Root className="flex flex-col gap-1.5">
           <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
@@ -428,9 +471,14 @@ export const IdentitySection: React.FC = () => {
           </Field.Label>
           <Field.Control
             id="inspector-author-bio"
-            value={data.authorBio}
-            onChange={(e) => update('authorBio', e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            render={
+              <textarea
+                rows={2}
+                value={data.authorBio}
+                onChange={(e) => update('authorBio', e.target.value)}
+                className="w-full resize-none px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              />
+            }
           />
         </Field.Root>
       </div>

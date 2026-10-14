@@ -21,17 +21,19 @@ export const DEFAULT_CARD_STATE: CardState = {
   theme: 'paper',
   headlineSize: 42,
   uppercaseHeadline: true,
+  boldSublines: false,
+  avatarGrayscale: false,
 }
 
 // Preset names are UI Copy (button labels) — resolved through the dictionary
 // at render time, never stored on the state.
-export interface SamplePreset {
+export interface Preset {
   id: string
   nameKey: UiCopyKey
   state: Partial<CardState>
 }
 
-export const SAMPLE_PRESETS: SamplePreset[] = [
+export const PRESETS: Preset[] = [
   {
     id: 'original',
     nameKey: 'preset_original',
@@ -64,6 +66,25 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
       qrCta: 'Theo dõi để nhận thêm mẹo AI & Dev',
       theme: 'dark',
       uppercaseHeadline: true,
+    },
+  },
+  {
+    id: 'quote',
+    nameKey: 'preset_quote',
+    // The full replica look in one click. Unlike the other presets it sets
+    // the bio: the two-line bio is part of the replica look.
+    state: {
+      headline: 'Làm ít, làm sâu, làm thật.',
+      sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',
+      authorBio: 'Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư',
+      qrCta: 'Theo dõi hành trình indie!',
+      qrEnabled: false,
+      theme: 'mist',
+      ratio: '1:1',
+      headlineSize: 46,
+      uppercaseHeadline: true,
+      boldSublines: true,
+      avatarGrayscale: true,
     },
   },
 ]

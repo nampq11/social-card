@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitSublines, toFilename } from './card-text'
+import { splitLines, toFilename } from './card-text'
 
 describe('toFilename', () => {
   it('slugifies a headline into a png filename', () => {
@@ -41,19 +41,19 @@ describe('toFilename', () => {
   })
 })
 
-describe('splitSublines', () => {
+describe('splitLines', () => {
   it('splits on newlines and trims each line', () => {
-    expect(splitSublines('github.com/nampq11\n  threads.net/@nampq  ')).toEqual([
+    expect(splitLines('github.com/nampq11\n  threads.net/@nampq  ')).toEqual([
       'github.com/nampq11',
       'threads.net/@nampq',
     ])
   })
 
   it('drops blank lines', () => {
-    expect(splitSublines('first\n\n   \nsecond')).toEqual(['first', 'second'])
+    expect(splitLines('first\n\n   \nsecond')).toEqual(['first', 'second'])
   })
 
   it('returns no lines for blank input', () => {
-    expect(splitSublines('')).toEqual([])
+    expect(splitLines('')).toEqual([])
   })
 })

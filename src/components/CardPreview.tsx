@@ -3,8 +3,9 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useCardStore } from '../lib/card-store'
 import { RATIO_INFO } from '../constants/ratios'
 import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets'
-import { splitSublines } from '../lib/card-text'
+import { splitLines } from '../lib/card-text'
 import { useUiCopy } from '../lib/i18n'
+import { CARD_THEME_STYLES } from '../constants/card-theme'
 
 interface CardPreviewProps {
   scale?: number
@@ -18,38 +19,40 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
     const data = useCardStore((s) => s.card)
     const { width, height } = RATIO_INFO[data.ratio]
 
-    // Theme styles
-    const themeStyles = {
-      white: {
-        bg: 'bg-white',
-        text: 'text-[#111111]',
-        subtext: 'text-[#555558]',
-        qrBg: 'bg-white',
-        qrFg: '#111111',
-        border: 'border-black/5',
-        avatarBorder: 'ring-1 ring-black/10',
-      },
-      paper: {
-        bg: 'bg-[#FAF9F5]',
-        text: 'text-[#1D1D1F]',
-        subtext: 'text-[#424245]',
-        qrBg: 'bg-white',
-        qrFg: '#1D1D1F',
-        border: 'border-stone-200/60',
-        avatarBorder: 'ring-1 ring-stone-300',
-      },
-      dark: {
-        bg: 'bg-[#121214]',
-        text: 'text-[#F4F4F5]',
-        subtext: 'text-[#A1A1AA]',
-        qrBg: 'bg-white',
-        qrFg: '#121214',
-        border: 'border-white/10',
-        avatarBorder: 'ring-1 ring-white/20',
-      },
-    }[data.theme]
+    const themeStyles = CARD_THEME_STYLES[data.theme]
 
-    const sublineList = splitSublines(data.sublines)
+    const sublineList = splitLines(data.sublines)
+    const bioLines = splitLines(data.authorBio)
+
+    const signatureText = (alignRight: boolean) => (
+      <div className={alignRight ? 'text-right' : ''}>
+        <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
+          {data.authorName || FALLBACK_AUTHOR_NAME}
+        </h3>
+        {bioLines.length > 0 && (
+          <div
+            data-testid="author-bio"
+            className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
+          >
+            {bioLines.map((line, idx) => (
+              <p key={idx}>{line}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+
+    const signatureAvatar = data.avatarUrl ? (
+      <div
+        className={`w-14 h-14 rounded-full overflow-hidden shrink-0 shadow-sm ${themeStyles.avatarBorder}`}
+      >
+        <img
+          src={data.avatarUrl}
+          alt={data.authorName || FALLBACK_AUTHOR_NAME}
+          className={`w-full h-full object-cover object-top ${data.avatarGrayscale ? 'grayscale' : ''}`}
+        />
+      </div>
+    ) : null
 
     return (
       <div
@@ -90,11 +93,16 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
 
             {sublineList.length > 0 && (
               <div
+                data-testid="sublines"
                 style={{
                   fontSize: `${Math.max(16, Math.round(data.headlineSize * 0.52))}px`,
                   lineHeight: 1.55,
                 }}
-                className={`space-y-1.5 ${themeStyles.subtext} font-normal max-w-lg break-words`}
+                className={`space-y-1.5 ${
+                  data.boldSublines
+                    ? `${themeStyles.text} font-semibold`
+                    : `${themeStyles.subtext} font-normal`
+                } max-w-lg break-words`}
               >
                 {sublineList.map((line, idx) => (
                   <p key={idx} className="tracking-normal">
@@ -106,9 +114,12 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           </div>
 
           {/* Bottom Footer Section */}
-          <div className="flex items-center justify-between pt-6 border-t border-transparent">
+          <div
+            data-testid="card-footer"
+            className={`flex ${data.qrEnabled ? 'items-center justify-between' : 'justify-center'} pt-6 border-t border-transparent`}
+          >
             {/* Left: QR Code & Call to Action */}
-            {data.qrEnabled ? (
+            {data.qrEnabled && (
               <div className="flex items-center gap-3.5 max-w-[50%]">
                 <div
                   data-testid="qr-container"
@@ -130,37 +141,21 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   </span>
                 )}
               </div>
-            ) : (
-              <div />
             )}
 
-            {/* Right: Circular Avatar & Author Signature */}
-            <div className="flex items-center gap-3.5 shrink-0 ml-auto">
-              <div className="text-right">
-                <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
-                  {data.authorName || FALLBACK_AUTHOR_NAME}
-                </h3>
-                {data.authorBio && (
-                  <p
-                    className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
-                  >
-                    {data.authorBio}
-                  </p>
-                )}
+            {data.qrEnabled ? (
+              /* Right: Circular Avatar & Author Signature */
+              <div className="flex items-center gap-3.5 shrink-0 ml-auto">
+                {signatureText(true)}
+                {signatureAvatar}
               </div>
-
-              {data.avatarUrl && (
-                <div
-                  className={`w-14 h-14 rounded-full overflow-hidden shrink-0 shadow-sm ${themeStyles.avatarBorder}`}
-                >
-                  <img
-                    src={data.avatarUrl}
-                    alt={data.authorName || FALLBACK_AUTHOR_NAME}
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
-              )}
-            </div>
+            ) : (
+              /* Centered signature: avatar first, then name + bio */
+              <div className="flex items-center gap-3.5 shrink-0">
+                {signatureAvatar}
+                {signatureText(false)}
+              </div>
+            )}
           </div>
         </div>
       </div>
