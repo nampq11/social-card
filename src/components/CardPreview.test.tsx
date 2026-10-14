@@ -415,7 +415,7 @@ describe('Showcase Card', () => {
     )
   })
 
-  it('reuses the theme tokens on the showcase canvas, slots and footer', () => {
+  it('reuses the theme tokens on the showcase canvas, avatar and footer', () => {
     const { container } = renderCard({
       cardType: 'showcase',
       theme: 'dark',
@@ -426,7 +426,11 @@ describe('Showcase Card', () => {
 
     const cardNode = container.querySelector('#social-card-node')
     expect(cardNode?.className).toContain(CARD_THEME_STYLES.dark.bg)
-    expect(screen.getByTestId('hero-slot').className).toContain(CARD_THEME_STYLES.dark.avatarBorder)
+    // Slots deliberately carry no ring — a contain Shot's letterbox area
+    // would read as an empty frame. The avatar keeps the avatarBorder token.
+    expect(container.querySelector('[data-testid="card-footer"] > div')?.className).toContain(
+      CARD_THEME_STYLES.dark.avatarBorder,
+    )
     expect(container.querySelector('[data-testid="author-bio"]')?.className).toContain(
       CARD_THEME_STYLES.dark.subtext,
     )

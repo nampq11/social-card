@@ -142,7 +142,11 @@ const Slot = ({
     <div
       ref={slotRef}
       data-testid={testId}
-      className={`relative rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
+      // No decorative ring on the slot itself: a contain Shot's letterbox
+      // area would read as an empty frame around the floating window card,
+      // and the empty state already frames itself with the dashed
+      // placeholder border.
+      className={`relative rounded-2xl ${sizeClassName}`}
     >
       {/* The slot clips its Shot; the annotation mark must overflow into the
           margin, so clipping stays on the inner box (issue #33). */}
