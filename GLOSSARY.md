@@ -44,12 +44,16 @@ One uploaded screenshot in a Showcase Card's content, carrying a stable identity
 _Avoid_: image, upload
 
 **Fit**:
-How a Shot meets its Screenshot Slot — Fill (cover: the slot fills, content crops) or Fit (contain: the whole Shot shows over a blurred backdrop of itself). A per-Shot choice, defaulting to Fill.
+How a Shot meets its Screenshot Slot — Fill (cover: the slot fills, content crops) or Fit (contain: the whole Shot shows over a blurred backdrop of itself). A per-Shot choice; absent an override, derived from the shot-to-slot ratio (ADR 0006 auto-fit).
 _Avoid_: resize mode, object-fit
 
 **Focus**:
 Which part of a Shot is visible when the Shot crops inside its Slot — a normalized 0..1 anchor the user drags on the Canvas. Stored per Shot; never alters the Shot's pixels.
 _Avoid_: position (ambiguous with the Position control group), crop (crop is the outcome, Focus is the control)
+
+**Scale**:
+A Shot's zoom level (1..4) on top of Fill — how far the visible region magnifies. Stored per Shot; 1 renders exactly like no zoom. Pan range grows with Scale; Focus stays the anchor of what shows.
+_Avoid_: zoom level (Scale is the stored field), size (size is the card dimension control)
 
 **Annotation**:
 A handwritten-style callout on a Showcase Card: script text plus an arrow, anchored to one Shot from a fixed side. An Annotation follows its Shot, not the Slot the Shot currently occupies.
