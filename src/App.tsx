@@ -11,23 +11,23 @@ import { TipsPopover } from './components/TipsPopover'
 import { WelcomeCard } from './components/WelcomeCard'
 import { OnboardingTour } from './components/OnboardingTour'
 import { useOnboarding } from './lib/onboarding'
-import { CardPreview } from './components/CardPreview'
 import { Header } from './components/Header'
-import { copyCardToClipboard, downloadCardImage } from './lib/export'
-import { toFilename } from './lib/card-text'
-import { useFlash } from './lib/use-flash'
-import { logDebug } from './lib/log-debug'
+import { CardPreview } from './components/CardPreview'
+import { useCardExport } from './lib/use-card-export'
 import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
-import { Toaster, toast } from 'sonner'
+import { Toaster } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
 /** Canvas padding follows the shell: mobile keeps a slim margin; desktop
  * reserves the floating Inspector's rail unless focus mode collapsed it. */
 function canvasPaddingClass(isDesktop: boolean, inspectorCollapsed: boolean): string {
-  if (!isDesktop) return 'p-4'
+  // Mobile top padding clears the floating ratio-chip row (top-3 + its
+  // 44pt touch target + breathing room) so fit-to-view never tucks the
+  // card under the chips.
+  if (!isDesktop) return 'px-4 pt-16 pb-4'
   if (inspectorCollapsed) return 'p-8'
   return 'p-8 pl-[380px]'
 }
@@ -43,10 +43,9 @@ const RATIO_LABEL_KEY: Record<AspectRatio, UiStringKey> = {
 export function App() {
   const { copy } = useUiCopy()
   // The Card State lives in its store; the app root only reads it for the
-  // canvas toolbar label, the export filename, and the Fit-to-View sizes.
+  // canvas toolbar label and the Fit-to-View sizes.
   const cardState = useCardStore((s) => s.card)
   const patchCard = useCardStore((s) => s.patchCard)
-  const [isExporting, setIsExporting] = useState<boolean>(false)
 
   // Desktop focus mode: collapsing the Inspector gives the card the whole
   // width; Fit-to-View refills the freed space via its ResizeObserver. The
@@ -57,15 +56,15 @@ export function App() {
   const undo = useCardStore((s) => s.undo)
   const redo = useCardStore((s) => s.redo)
 
-  // Export feedback is Sonner's job (promise toasts); the only transient
-  // button state left here is the copy action's "Copied!" flag on useFlash.
-  const [isCopied, copiedFlag] = useFlash<boolean>(false)
+  // Card Export (GLOSSARY.md): the export node, re-entry guard, feedback
+  // toasts and the Copied! flash all live in one module — the app root only
+  // forwards its interface to the Header and the keyboard shortcuts.
+  const { cardRef, isExporting, isCopied, copy: copyCard, download: downloadCard } = useCardExport()
 
   // First-run onboarding lives purely in the UI layer — it never touches
   // Card State; both paths (tour taken or skipped) persist via localStorage.
   const { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour } = useOnboarding()
 
-  const cardRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const { width: cardWidth, height: cardHeight } = RATIO_INFO[cardState.ratio]
   const { scale, mode, zoomIn, zoomOut, fit } = useFitScale(canvasRef, cardWidth, cardHeight)
@@ -77,56 +76,11 @@ export function App() {
     patchCard({ ratio: ratios[nextIdx] })
   }, [cardState.ratio, patchCard])
 
-  // Shared shell for export actions: guards re-entry, then flows the action
-  // through one promise-style toast (processing → success/error) — Sonner
-  // owns queueing, timing and interruption, the UI Copy stays ours.
-  const runExport = (
-    action: (card: HTMLDivElement) => Promise<unknown>,
-    messages: { loading: string; success: string; error: string },
-    onSuccess?: () => void,
-  ) => {
-    const card = cardRef.current
-    if (!card || isExporting) return
-    setIsExporting(true)
-    const request = action(card)
-    toast.promise(request, {
-      loading: messages.loading,
-      success: () => {
-        onSuccess?.()
-        return messages.success
-      },
-      error: messages.error,
-    })
-    // Sonner turns the rejection into the error toast; this catch keeps the
-    // failure log and clears the re-entry guard on either outcome.
-    request
-      .catch((err) => logDebug('App.runExport', `export failed during "${messages.loading}"`, err))
-      .finally(() => setIsExporting(false))
-  }
-
-  const handleCopy = () =>
-    runExport(
-      (card) => copyCardToClipboard(card),
-      {
-        loading: copy.copy_processing,
-        success: copy.copy_success,
-        error: copy.copy_error,
-      },
-      () => copiedFlag.flash(true, 3500),
-    )
-
-  const handleDownload = () =>
-    runExport((card) => downloadCardImage(card, toFilename(cardState.headline)), {
-      loading: copy.download_processing,
-      success: copy.download_success,
-      error: copy.download_error,
-    })
-
   useStudioShortcuts({
     onUndo: undo,
     onRedo: redo,
     onToggleInspector: toggleInspector,
-    onCopy: handleCopy,
+    onCopy: copyCard,
   })
 
   // Apple HIG Canvas-first Studio shell: 100vw × 100vh with seamless dot-grid canvas.
@@ -134,8 +88,8 @@ export function App() {
   return (
     <div className="h-dvh w-screen overflow-hidden apple-canvas-bg text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans transition-colors duration-200 select-none">
       <Header
-        onCopy={handleCopy}
-        onDownload={handleDownload}
+        onCopy={copyCard}
+        onDownload={downloadCard}
         isCopied={isCopied}
         isExporting={isExporting}
         isDesktop={isDesktop}
@@ -173,7 +127,7 @@ export function App() {
                 onClick={cycleRatio}
                 title={copy.ratio_cycle_title}
                 aria-label={copy.ratio_cycle_title}
-                className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate"
+                className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate [@media(pointer:coarse)]:min-h-11"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
                 <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
