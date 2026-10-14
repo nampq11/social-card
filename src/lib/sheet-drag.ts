@@ -4,10 +4,11 @@
 // release velocity to choose where it settles, and springs there carrying
 // that velocity.
 
-/** Floor for the peek height — sheet chrome (grabber + header + tab bar) at
- * minimum. The live resting points are measured from the DOM in
- * use-sheet-drag, so font metrics can never half-clip a control at rest. */
-export const SHEET_PEEK_PX = 144
+/** Fallback chrome height for environments that report no layout (jsdom):
+ * the live peek is measured from the DOM in use-sheet-drag (top of the
+ * scrollable content), so the resting sheet always ends exactly where the
+ * content begins — nothing is ever half-clipped at rest. */
+export const SHEET_MIN_CHROME_PX = 96
 
 /** Sheet spring response (critically damped, no overshoot). */
 export const SHEET_RESPONSE_S = 0.3
@@ -29,7 +30,7 @@ const MIN_EXPANSION_PX = 120
 export function sheetExpandedPx(viewportHeight: number): number {
   const target = Math.round(viewportHeight * 0.58)
   const headroom = viewportHeight - SHEET_CHROME_PX - SHEET_CANVAS_FLOOR_PX
-  return Math.max(SHEET_PEEK_PX + MIN_EXPANSION_PX, Math.min(target, headroom))
+  return Math.max(SHEET_MIN_CHROME_PX + MIN_EXPANSION_PX, Math.min(target, headroom))
 }
 
 /**

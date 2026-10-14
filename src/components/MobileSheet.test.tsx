@@ -3,7 +3,7 @@ import { createRef } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { MobileSheet } from './MobileSheet'
-import { SHEET_PEEK_PX, sheetExpandedPx } from '../lib/sheet-drag'
+import { SHEET_MIN_CHROME_PX, sheetExpandedPx } from '../lib/sheet-drag'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
@@ -92,7 +92,8 @@ describe('MobileSheet tab pill docking', () => {
     // The nav is inside the sheet plane (iOS HIG: grabber → header → tabs → content),
     // riding the sheet's transform down to peek so it hugs below the canvas.
     expect(section.contains(nav)).toBe(true)
-    const peekOffset = sheetExpandedPx(window.innerHeight) - SHEET_PEEK_PX
+    // jsdom reports no layout, so the content top falls back to the chrome floor.
+    const peekOffset = sheetExpandedPx(window.innerHeight) - SHEET_MIN_CHROME_PX
     expect(section.style.transform).toBe(`translateY(${peekOffset}px)`)
   })
 

@@ -7,8 +7,7 @@ import {
   Globe,
   Undo2,
   Redo2,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
   ChevronDown,
 } from 'lucide-react'
 import { useUiCopy } from '../lib/i18n'
@@ -61,13 +60,14 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onToggleInspector}
               title={copy.inspector_toggle_title}
               aria-label={copy.inspector_toggle_title}
-              className="w-8 h-8 rounded-xl hidden lg:inline-flex text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/[0.06] dark:hover:bg-white/[0.08]"
+              aria-pressed={!isInspectorCollapsed}
+              className={`w-8 h-8 rounded-xl hidden lg:inline-flex transition-colors ${
+                isInspectorCollapsed
+                  ? 'text-[#86868B] dark:text-[#A1A1A6] hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
+                  : 'bg-black/[0.08] dark:bg-white/[0.12] text-[#0071E3] dark:text-[#2997FF] shadow-xs'
+              }`}
             >
-              {isInspectorCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4" />
-              ) : (
-                <PanelLeftClose className="w-4 h-4" />
-              )}
+              <PanelLeft className="w-4 h-4" />
             </Button>
             <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden lg:block" />
           </>

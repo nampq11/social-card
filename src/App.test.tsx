@@ -197,12 +197,16 @@ describe('App', () => {
 
   it('the panel toggle (button and Ctrl+\\) collapses and restores the Inspector', () => {
     renderApp()
+    const toggleBtn = screen.getByRole('button', { name: /bảng điều khiển/ })
+    expect(toggleBtn.getAttribute('aria-pressed')).toBe('true')
 
-    fireEvent.click(screen.getByRole('button', { name: /bảng điều khiển/ }))
+    fireEvent.click(toggleBtn)
     expect(screen.queryByLabelText(/Tiêu đề chính/)).toBeNull()
+    expect(toggleBtn.getAttribute('aria-pressed')).toBe('false')
 
     fireEvent.keyDown(window, { key: '\\', ctrlKey: true })
     expect(screen.getByLabelText(/Tiêu đề chính/)).toBeTruthy()
+    expect(toggleBtn.getAttribute('aria-pressed')).toBe('true')
   })
 
   it('Ctrl+B collapses and restores the Inspector', () => {

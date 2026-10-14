@@ -9,7 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react'
 import {
-  SHEET_PEEK_PX,
+  SHEET_MIN_CHROME_PX,
   rubberbandDistance,
   sheetExpandedPx,
   snapSheetTarget,
@@ -75,7 +75,7 @@ export function useSheetDrag(
     offset: Number.POSITIVE_INFINITY,
     maxOffset: 0,
     expandedPx: 0,
-    contentTop: SHEET_PEEK_PX,
+    contentTop: SHEET_MIN_CHROME_PX,
     velocity: 0,
     animating: false,
     pointerId: -1,
@@ -108,7 +108,10 @@ export function useSheetDrag(
     drag.expandedPx = sheetExpandedPx(window.innerHeight)
     // Peek rests exactly at the top of the scrollable content: the chrome
     // above it (grabber + header + tabs) shows in full, nothing half-clipped.
-    drag.contentTop = Math.max(SHEET_PEEK_PX, contentRef.current?.offsetTop ?? SHEET_PEEK_PX)
+    drag.contentTop = Math.max(
+      SHEET_MIN_CHROME_PX,
+      contentRef.current?.offsetTop ?? SHEET_MIN_CHROME_PX,
+    )
     drag.maxOffset = Math.max(0, drag.expandedPx - drag.contentTop)
     sheet.style.height = `${drag.expandedPx}px`
     drag.offset = Math.min(drag.offset, drag.maxOffset)
@@ -240,11 +243,11 @@ export function useSheetDrag(
 
       let next = drag.startOffset + dy
       if (next < 0) {
-        next = -rubberbandDistance(-next, drag.maxOffset || SHEET_PEEK_PX)
+        next = -rubberbandDistance(-next, drag.maxOffset || SHEET_MIN_CHROME_PX)
       } else if (next > drag.maxOffset) {
         next =
           drag.maxOffset +
-          rubberbandDistance(next - drag.maxOffset, drag.maxOffset || SHEET_PEEK_PX)
+          rubberbandDistance(next - drag.maxOffset, drag.maxOffset || SHEET_MIN_CHROME_PX)
       }
       drag.offset = next
       writePosition()

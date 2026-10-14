@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  SHEET_PEEK_PX,
+  SHEET_MIN_CHROME_PX,
   SHEET_RESPONSE_S,
   projectionDistance,
   rubberbandDistance,
@@ -23,7 +23,7 @@ describe('sheetExpandedPx', () => {
 
   it('falls back to a minimum working height on landscape phones', () => {
     // 390px landscape has no headroom; the sheet still needs to expand.
-    expect(sheetExpandedPx(390)).toBe(SHEET_PEEK_PX + 120)
+    expect(sheetExpandedPx(390)).toBe(SHEET_MIN_CHROME_PX + 120)
   })
 })
 
