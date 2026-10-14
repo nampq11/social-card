@@ -81,6 +81,14 @@ describe('CardPreview', () => {
     expect(qrContainer?.className).toContain('border-black/5')
   })
 
+  it('applies the mist palette: cool-gray card background and QR container border', () => {
+    const { container } = renderCard({ qrEnabled: true, theme: 'mist' })
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode?.className).toContain('bg-[#E8EDF0]')
+    const qrContainer = container.querySelector('#social-card-node [data-testid="qr-container"]')
+    expect(qrContainer?.className).toContain('border-slate-300/60')
+  })
+
   it('uses normal tracking on subline elements for optical legibility', () => {
     renderCard({ sublines: 'Testing optical tracking' })
     const line = screen.getByText('Testing optical tracking')

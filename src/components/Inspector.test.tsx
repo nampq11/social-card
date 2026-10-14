@@ -245,6 +245,15 @@ describe('Inspector segmented controls a11y', () => {
     expect(dark.getAttribute('aria-checked')).toBe('false')
   })
 
+  it('switches the theme when the fourth segment (mist) is selected', () => {
+    renderInspector('style')
+
+    const themeGroup = screen.getByRole('radiogroup', { name: /Màu nền/i })
+    fireEvent.click(within(themeGroup).getByRole('radio', { name: /Sương/i }))
+
+    expect(useCardStore.getState().card.theme).toBe('mist')
+  })
+
   it('keeps one tab stop per control group, on the checked option', async () => {
     renderInspector('style')
 
