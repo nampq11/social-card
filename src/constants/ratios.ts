@@ -1,15 +1,15 @@
-import type { Language } from '../lib/i18n';
-import type { AspectRatio } from '../types';
+import type { AspectRatio } from '../types'
+import type { Language } from '../lib/i18n'
 
 // Multiplier applied to preview dimensions when rendering the exported PNG.
-export const EXPORT_PIXEL_RATIO = 2.5;
+export const EXPORT_PIXEL_RATIO = 2.5
 
 interface RatioInfo {
-  width: number;
-  height: number;
-  name: string;
+  width: number
+  height: number
+  name: string
   // Per-language UI Copy; the ratio names themselves stay untranslated.
-  platform: Record<Language, string>;
+  platform: Record<Language, string>
 }
 
 // Single source of truth for card dimensions. The preview and the toolbar
@@ -34,9 +34,9 @@ export const RATIO_INFO: Record<AspectRatio, RatioInfo> = {
     name: 'Landscape',
     platform: { vi: 'X Card, Facebook Post', en: 'X Card, Facebook Post' },
   },
-};
+}
 
 export const ratioLabel = (ratio: AspectRatio, language: Language): string => {
-  const { width, height, name, platform } = RATIO_INFO[ratio];
-  return `${name} (${width * EXPORT_PIXEL_RATIO} × ${height * EXPORT_PIXEL_RATIO} px) — ${platform[language]}`;
-};
+  const { width, height, name, platform } = RATIO_INFO[ratio]
+  return `${name} (${width * EXPORT_PIXEL_RATIO} × ${height * EXPORT_PIXEL_RATIO} px) — ${platform[language]}`
+}

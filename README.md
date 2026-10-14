@@ -7,7 +7,7 @@ Công cụ tạo ảnh bài viết tối giản chuẩn tỉ lệ cho **Threads,
 ## 🚀 Tính năng nổi bật
 
 - **Khớp 100% phong cách ảnh mẫu**: Card tối giản, typography phân cấp rõ nét (Be Vietnam Pro), khoảng thở rộng rãi.
-- **Apple Design Interface**: Giao diện macOS Studio với kính mờ (*Translucent Frosted Glass*), tương tác tactile `:active` nhạy bén, các nút chuyển tỉ lệ *Segmented Control* kiểu iOS.
+- **Apple Design Interface**: Giao diện macOS Studio với kính mờ (_Translucent Frosted Glass_), tương tác tactile `:active` nhạy bén, các nút chuyển tỉ lệ _Segmented Control_ kiểu iOS.
 - **Đa tỉ lệ mạng xã hội**:
   - `1:1 Square` (2048 × 2048 px) cho Threads, X, Instagram.
   - `4:5 Portrait` (1080 × 1350 px) tối ưu diện tích hiển thị trên mobile feed.
@@ -40,6 +40,7 @@ Mở trình duyệt tại: `http://localhost:5173`
 Dự án đã có sẵn file cấu hình `vercel.json` tối ưu cho Vite Single Page Application.
 
 ### Cách 1: Deploy qua GitHub (Khuyên dùng)
+
 1. Tạo repo mới trên GitHub (ví dụ: `social-card`).
 2. Đẩy code lên:
    ```bash
@@ -50,6 +51,7 @@ Dự án đã có sẵn file cấu hình `vercel.json` tối ưu cho Vite Single
 3. Truy cập [vercel.com/new](https://vercel.com/new), chọn repository và bấm **Deploy**.
 
 ### Cách 2: Deploy trực tiếp bằng Vercel CLI
+
 ```bash
 # Đăng nhập và deploy production
 npx vercel --prod

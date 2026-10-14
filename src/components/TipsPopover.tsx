@@ -1,11 +1,11 @@
-import { Popover } from '@base-ui/react/popover';
-import { Info, Sparkles } from 'lucide-react';
-import { useUiCopy } from '../lib/i18n';
-import { Button } from './ui/Button';
+import { Popover } from '@base-ui/react/popover'
+import { Info, Sparkles } from 'lucide-react'
+import { useUiCopy } from '../lib/i18n'
+import { Button } from './ui/Button'
 
 interface TipsPopoverProps {
   /** Restarts the first-run tour on demand (NN/g: easy to dismiss, easy to recall). */
-  onReplayTour: () => void;
+  onReplayTour: () => void
 }
 
 /**
@@ -14,18 +14,13 @@ interface TipsPopoverProps {
  * replay so the onboarding stays recallable after the first run.
  */
 export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
-  const { copy } = useUiCopy();
+  const { copy } = useUiCopy()
 
   return (
     <Popover.Root>
       <Popover.Trigger
         render={
-          <Button
-            size="icon"
-            variant="ghost"
-            title={copy.tips_title}
-            aria-label={copy.tips_title}
-          >
+          <Button size="icon" variant="ghost" title={copy.tips_title} aria-label={copy.tips_title}>
             <Info className="w-4 h-4 text-blue-500" />
           </Button>
         }
@@ -54,5 +49,5 @@ export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
         </Popover.Positioner>
       </Popover.Portal>
     </Popover.Root>
-  );
+  )
 }

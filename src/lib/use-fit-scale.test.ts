@@ -1,59 +1,56 @@
-import { describe, expect, it } from 'vitest';
-import {
-  MAX_FIT_SCALE,
-  computeFitScale,
-} from './use-fit-scale';
+import { describe, expect, it } from 'vitest'
+import { MAX_FIT_SCALE, computeFitScale } from './use-fit-scale'
 
 describe('computeFitScale', () => {
   it('fits a landscape card by width in a tall container', () => {
     // 800×450 card in 720×900 of canvas: width is the binding side.
-    expect(computeFitScale(720, 900, 800, 450)).toBe(0.9);
-  });
+    expect(computeFitScale(720, 900, 800, 450)).toBe(0.9)
+  })
 
   it('fits a portrait card by height in a narrow container', () => {
     // 640×800 card in 600×900 of canvas: height is the binding side.
-    expect(computeFitScale(600, 900, 640, 800)).toBeCloseTo(0.9375);
-  });
+    expect(computeFitScale(600, 900, 640, 800)).toBeCloseTo(0.9375)
+  })
 
   it('never upscales past the card natural size', () => {
-    expect(computeFitScale(5000, 5000, 720, 720)).toBe(MAX_FIT_SCALE);
-  });
+    expect(computeFitScale(5000, 5000, 720, 720)).toBe(MAX_FIT_SCALE)
+  })
 
   it('shrinks both dimensions together to keep the ratio', () => {
-    const scale = computeFitScale(400, 300, 720, 720);
-    expect(720 * scale).toBeLessThanOrEqual(400);
-    expect(720 * scale).toBeLessThanOrEqual(300);
-  });
+    const scale = computeFitScale(400, 300, 720, 720)
+    expect(720 * scale).toBeLessThanOrEqual(400)
+    expect(720 * scale).toBeLessThanOrEqual(300)
+  })
 
   it('returns 0 while the container has no measurable size', () => {
-    expect(computeFitScale(0, 500, 720, 720)).toBe(0);
-    expect(computeFitScale(500, 0, 720, 720)).toBe(0);
-  });
+    expect(computeFitScale(0, 500, 720, 720)).toBe(0)
+    expect(computeFitScale(500, 0, 720, 720)).toBe(0)
+  })
 
   it('returns 0 for a degenerate card size', () => {
-    expect(computeFitScale(500, 500, 0, 720)).toBe(0);
-  });
-});
+    expect(computeFitScale(500, 500, 0, 720)).toBe(0)
+  })
+})
 
 // @vitest-environment jsdom
 
-import { renderHook } from '@testing-library/react';
-import { useFitScale } from './use-fit-scale';
+import { renderHook } from '@testing-library/react'
+import { useFitScale } from './use-fit-scale'
 
 describe('useFitScale', () => {
   it('fits the content box, excluding the container padding', () => {
     // The mobile canvas reserves bottom padding for the Mobile Sheet; a
     // square card must fit the 408px the padding leaves, not the full 600px
     // border box, or it spills behind the sheet.
-    const host = document.createElement('div');
-    Object.defineProperty(host, 'clientWidth', { value: 800 });
-    Object.defineProperty(host, 'clientHeight', { value: 600 });
-    host.style.padding = '0px 0px 192px 0px';
-    document.body.appendChild(host);
+    const host = document.createElement('div')
+    Object.defineProperty(host, 'clientWidth', { value: 800 })
+    Object.defineProperty(host, 'clientHeight', { value: 600 })
+    host.style.padding = '0px 0px 192px 0px'
+    document.body.appendChild(host)
 
-    const { result } = renderHook(() => useFitScale({ current: host }, 600, 600));
+    const { result } = renderHook(() => useFitScale({ current: host }, 600, 600))
 
-    expect(result.current.scale).toBeCloseTo(408 / 600, 5);
-    host.remove();
-  });
-});
+    expect(result.current.scale).toBeCloseTo(408 / 600, 5)
+    host.remove()
+  })
+})

@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from 'react'
 
 /**
  * Interface Language: the language the UI Copy is displayed in.
@@ -15,10 +15,10 @@ import {
 // Single-file i18n module is the spec-bound layout (dictionaries + resolver +
 // provider + hook), so fast refresh can't split it — remount-on-edit is fine.
 // oxlint-disable react/only-export-components
-export type Language = 'vi' | 'en';
+export type Language = 'vi' | 'en'
 
 /** localStorage key persisting the manually chosen Interface Language. */
-export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language';
+export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language'
 
 /**
  * UI Copy dictionary — everything the tool itself says (GLOSSARY.md).
@@ -39,9 +39,17 @@ const vi = {
   undo_button_title: 'Hoàn tác (Ctrl+Z)',
   redo_button_title: 'Làm lại (Ctrl+Shift+Z)',
   inspector_toggle_title: 'Ẩn/hiện bảng điều khiển (Ctrl+\\)',
-  copy_button: 'Copy ảnh (Ctrl+V)',
+  copy_button: 'Copy ảnh',
   copy_button_done: 'Đã copy vào Clipboard!',
   download_button: 'Tải PNG 2x',
+  ratio_cycle_title: 'Bấm để chuyển đổi tỷ lệ khung hình',
+  inspector_footer_layout: 'Bố cục Apple HIG',
+  inspector_toggle_shortcut_hint: '⌘\\ Ẩn/hiện bảng',
+  presets_badge: 'Mẫu 1-chạm',
+  sublines_badge: 'Nhiều dòng',
+  state_on: 'BẬT',
+  state_off: 'TẮT',
+  qr_cta_placeholder: 'Build Trợ lý AI cho riêng bạn!',
 
   inspector_title: 'Tùy chỉnh Card',
   reset_title: 'Đặt lại mặc định',
@@ -94,9 +102,9 @@ const vi = {
 
   posting_tips: (
     <>
-      Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code>{' '}
-      và <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị
-      hoàn hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
+      Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> và{' '}
+      <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị hoàn
+      hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
       <strong>Copy ảnh</strong> để dán trực tiếp vào bài viết mà không cần tải và lưu file rác.
     </>
   ) as ReactNode,
@@ -112,8 +120,7 @@ const vi = {
   tour_step_canvas_title: 'Ảnh xem trước trực tiếp',
   tour_step_canvas_body: 'Mọi chỉnh sửa cập nhật ngay tại đây. Card luôn sẵn sàng để chia sẻ.',
   tour_step_inspector_title: 'Bảng điều khiển',
-  tour_step_inspector_body:
-    'Sửa tiêu đề, nội dung chi tiết và chọn Mẫu nhanh trong tab Nội dung.',
+  tour_step_inspector_body: 'Sửa tiêu đề, nội dung chi tiết và chọn Mẫu nhanh trong tab Nội dung.',
   tour_step_tabs_title: 'Đổi kiểu & định danh',
   tour_step_tabs_body:
     'Tab Kiểu đổi tỉ lệ khung hình và màu nền; tab Định danh cho avatar, tên và mã QR.',
@@ -126,10 +133,10 @@ const vi = {
   tour_finish: 'Xong',
   tour_close: 'Đóng hướng dẫn',
   replay_tour: 'Xem lại hướng dẫn',
-};
+}
 
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
-export type UiCopyKey = keyof typeof vi;
+export type UiCopyKey = keyof typeof vi
 
 /**
  * UI Copy keys whose value is plain text (excludes JSX fragments like the
@@ -137,8 +144,8 @@ export type UiCopyKey = keyof typeof vi;
  * labels, option labels — not just children content.
  */
 export type UiStringKey = {
-  [K in keyof typeof vi]: (typeof vi)[K] extends string ? K : never;
-}[keyof typeof vi];
+  [K in keyof typeof vi]: (typeof vi)[K] extends string ? K : never
+}[keyof typeof vi]
 
 const en: typeof vi = {
   header_tagline: 'Pixel-perfect card images for X, Threads & Facebook',
@@ -151,9 +158,17 @@ const en: typeof vi = {
   undo_button_title: 'Undo (Ctrl+Z)',
   redo_button_title: 'Redo (Ctrl+Shift+Z)',
   inspector_toggle_title: 'Toggle panel (Ctrl+\\)',
-  copy_button: 'Copy image (Ctrl+V)',
+  copy_button: 'Copy image',
   copy_button_done: 'Copied to clipboard!',
   download_button: 'Download PNG 2x',
+  ratio_cycle_title: 'Click to cycle aspect ratio',
+  inspector_footer_layout: 'Apple HIG Layout',
+  inspector_toggle_shortcut_hint: '⌘\\ Toggle panel',
+  presets_badge: '1-click template',
+  sublines_badge: 'Multi-line',
+  state_on: 'ON',
+  state_off: 'OFF',
+  qr_cta_placeholder: 'Build your own AI assistant!',
 
   inspector_title: 'Customize card',
   reset_title: 'Reset to defaults',
@@ -184,13 +199,13 @@ const en: typeof vi = {
   qr_label: 'QR code & call to action',
   qr_url_label: 'Link',
   qr_cta_label: 'Call-to-action text beside QR',
-  avatar_read_error: 'Couldn\'t read that image. Try a different file!',
-  avatar_file_error: 'Couldn\'t read the image file. Please try again!',
+  avatar_read_error: "Couldn't read that image. Try a different file!",
+  avatar_file_error: "Couldn't read the image file. Please try again!",
   avatar_too_large: 'That image is over 5 MB. Please choose a smaller file!',
 
   copy_processing: 'Processing Retina image...',
   copy_success: 'Image copied! Paste (Ctrl+V) straight into Threads or X.',
-  copy_error: 'Couldn\'t copy to clipboard. Try downloading the PNG instead!',
+  copy_error: "Couldn't copy to clipboard. Try downloading the PNG instead!",
   download_processing: 'Rendering PNG 2x file...',
   download_success: 'Image downloaded successfully!',
   download_error: 'Download failed. Please try again!',
@@ -206,11 +221,10 @@ const en: typeof vi = {
 
   posting_tips: (
     <>
-      The{' '}
-      <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> and{' '}
-      <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> ratios look
-      best on the mobile timelines of Threads and X. Use <strong>Copy image</strong> to paste
-      straight into your post — no stray files to download and delete.
+      The <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> and{' '}
+      <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> ratios look best
+      on the mobile timelines of Threads and X. Use <strong>Copy image</strong> to paste straight
+      into your post — no stray files to download and delete.
     </>
   ) as ReactNode,
 
@@ -230,66 +244,65 @@ const en: typeof vi = {
   tour_step_tabs_body:
     'The Style tab switches ratio and background; Identity holds your avatar, name and QR.',
   tour_step_export_title: 'Export in one click',
-  tour_step_export_body: 'Copy the image and paste (Ctrl+V) straight into Threads/X, or download Retina PNG.',
+  tour_step_export_body:
+    'Copy the image and paste (Ctrl+V) straight into Threads/X, or download Retina PNG.',
   tour_next: 'Next',
   tour_prev: 'Back',
   tour_skip: 'Skip',
   tour_finish: 'Finish',
   tour_close: 'Close tour',
   replay_tour: 'Replay the guide',
-};
+}
 
-export const dictionaries: Record<Language, typeof vi> = { vi, en };
+export const dictionaries: Record<Language, typeof vi> = { vi, en }
 
 /**
  * Initial Interface Language is ALWAYS Vietnamese (no browser detection);
  * only a persisted valid value wins. Pure so tests inject storage fakes
  * and the provider stays thin.
  */
-export function resolveInitialLanguage(
-  storage: { getItem(key: string): string | null }
-): Language {
-  const stored = storage.getItem(UI_LANGUAGE_STORAGE_KEY);
-  return stored === 'vi' || stored === 'en' ? stored : 'vi';
+export function resolveInitialLanguage(storage: { getItem(key: string): string | null }): Language {
+  const stored = storage.getItem(UI_LANGUAGE_STORAGE_KEY)
+  return stored === 'vi' || stored === 'en' ? stored : 'vi'
 }
 
 type UiCopyContextValue = {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  copy: typeof vi;
-};
+  language: Language
+  setLanguage: (language: Language) => void
+  copy: typeof vi
+}
 
-const UiCopyContext = createContext<UiCopyContextValue | null>(null);
+const UiCopyContext = createContext<UiCopyContextValue | null>(null)
 
 export function UiCopyProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() =>
-    resolveInitialLanguage(window.localStorage)
-  );
+    resolveInitialLanguage(window.localStorage),
+  )
 
   // Persist only manual choices; loading never writes to storage.
   const setLanguage = useCallback((next: Language) => {
-    setLanguageState(next);
-    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, next);
-  }, []);
+    setLanguageState(next)
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, next)
+  }, [])
 
   // Keep the document language in sync for screen readers and translators.
   useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+    document.documentElement.lang = language
+  }, [language])
 
   const value = useMemo(
     () => ({ language, setLanguage, copy: dictionaries[language] }),
-    [language, setLanguage]
-  );
+    [language, setLanguage],
+  )
 
-  return <UiCopyContext.Provider value={value}>{children}</UiCopyContext.Provider>;
+  return <UiCopyContext.Provider value={value}>{children}</UiCopyContext.Provider>
 }
 
 /** Whole-dictionary lookup: `const { language, setLanguage, copy } = useUiCopy()`. */
 export function useUiCopy(): UiCopyContextValue {
-  const context = useContext(UiCopyContext);
+  const context = useContext(UiCopyContext)
   if (!context) {
-    throw new Error('useUiCopy must be used within a UiCopyProvider');
+    throw new Error('useUiCopy must be used within a UiCopyProvider')
   }
-  return context;
+  return context
 }

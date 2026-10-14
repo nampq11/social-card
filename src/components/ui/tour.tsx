@@ -988,13 +988,10 @@ function TourStep(props: TourStepProps) {
         mainAxis: mainAxisOffset,
         alignmentAxis: crossAxisOffset,
       }),
+      stepData.avoidCollisions && flip({ ...detectOverflowOptions }),
       stepData.avoidCollisions &&
         shift({
           mainAxis: true,
-          // Local fix: also correct the placement axis. The studio's panels
-          // are viewport-sized (ADR 0002), so `flip` alone runs out of room
-          // on either side; without this the popover clipped off-screen.
-          // limitShift keeps the popover over its target.
           crossAxis: true,
           limiter: stepData.sticky === "partial" ? limitShift() : undefined,
           ...detectOverflowOptions,
@@ -1005,7 +1002,6 @@ function TourStep(props: TourStepProps) {
           strategy: "referenceHidden",
           ...detectOverflowOptions,
         }),
-      stepData.avoidCollisions && flip({ ...detectOverflowOptions }),
     ].filter(Boolean) as Middleware[];
   }, [stepData, resolvedSideOffset, resolvedAlignOffset, arrow]);
 
@@ -1023,7 +1019,13 @@ function TourStep(props: TourStepProps) {
     placement,
     middleware,
     strategy: "fixed",
-    whileElementsMounted: autoUpdate,
+    // Local adaptation: the mobile canvas keeps settling after the step opens
+    // (Fit-to-View scale follows the animated canvas reserve), and
+    // transform-driven size changes fire no resize events an element
+    // ResizeObserver could see — reposition every frame while the step card
+    // is mounted so it tracks the moving target.
+    whileElementsMounted: (referenceEl, floatingEl, update) =>
+      autoUpdate(referenceEl, floatingEl, update, { animationFrame: true }),
     elements: {
       reference: targetElement,
     },
@@ -1057,6 +1059,26 @@ function TourStep(props: TourStepProps) {
       updateMask(store, targetElement, context.spotlightPadding);
 
       let rafId: number | null = null;
+      let watchRafId: number | null = null;
+      let lastRectKey = "";
+
+      // Local adaptation: the spotlight snapshots the target's rect once, but
+      // the mobile canvas keeps settling after mount — the Fit-to-View scale
+      // follows the animated canvas reserve, and transform-driven size
+      // changes fire no resize events. Watch the rect every frame while the
+      // step is open and re-mask on actual movement, so the hole and ring hug
+      // the settled target instead of a mid-settle snapshot.
+      function watchTargetRect() {
+        if (!targetElement) return;
+        const rect = targetElement.getBoundingClientRect();
+        const key = `${rect.left}|${rect.top}|${rect.width}|${rect.height}`;
+        if (key !== lastRectKey) {
+          lastRectKey = key;
+          updateMask(store, targetElement, context.spotlightPadding);
+        }
+        watchRafId = requestAnimationFrame(watchTargetRect);
+      }
+      watchRafId = requestAnimationFrame(watchTargetRect);
 
       function onResize() {
         if (targetElement) {
@@ -1079,6 +1101,9 @@ function TourStep(props: TourStepProps) {
       return () => {
         window.removeEventListener("resize", onResize);
         window.removeEventListener("scroll", onScroll);
+        if (watchRafId !== null) {
+          cancelAnimationFrame(watchRafId);
+        }
         if (rafId !== null) {
           cancelAnimationFrame(rafId);
         }
@@ -1570,7 +1595,7 @@ function TourClose(props: TourCloseProps) {
         type: "button",
         "aria-label": "Close tour",
         className: cn(
-          "absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+          "absolute top-4 right-4 border-none cursor-pointer rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           className,
         ),
         onClick,

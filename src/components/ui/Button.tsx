@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
+import { cva, type VariantProps } from 'class-variance-authority'
+import { clsx } from 'clsx'
 
 // Shared primitives layer: one visual language for every button in the
 // studio (Header actions, Inspector controls, app-root toolbar).
@@ -13,12 +13,10 @@ const buttonVariants = cva(
       variant: {
         primary:
           'font-semibold bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm hover:bg-neutral-800 dark:hover:bg-neutral-100',
-        success:
-          'font-semibold bg-emerald-600 text-white shadow-md shadow-emerald-600/20',
+        success: 'font-semibold bg-emerald-600 text-white shadow-md shadow-emerald-600/20',
         secondary:
           'font-medium bg-black/[0.05] dark:bg-white/[0.08] text-neutral-800 dark:text-neutral-200 hover:bg-black/[0.08] dark:hover:bg-white/[0.12]',
-        ghost:
-          'font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300',
+        ghost: 'font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300',
       },
       size: {
         sm: 'gap-1 rounded-lg px-2.5 py-1',
@@ -31,18 +29,14 @@ const buttonVariants = cva(
       variant: 'secondary',
       size: 'md',
     },
-  }
-);
+  },
+)
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants>
 
 export function Button({ className, variant, size, type = 'button', ...props }: ButtonProps) {
   return (
-    <button
-      type={type}
-      className={clsx(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
+    <button type={type} className={clsx(buttonVariants({ variant, size }), className)} {...props} />
+  )
 }

@@ -1,10 +1,10 @@
-import type { CardState } from '../types';
-import type { UiCopyKey } from '../lib/i18n';
+import type { CardState } from '../types'
+import type { UiCopyKey } from '../lib/i18n'
 
 // Shared fallbacks so the preview placeholders and the default state never
 // drift apart.
-export const FALLBACK_AUTHOR_NAME = 'Nam Pham';
-export const FALLBACK_QR_URL = 'https://github.com/nampq11';
+export const FALLBACK_AUTHOR_NAME = 'Nam Pham'
+export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 
 // Headlines are stored in sentence case; the Uppercase toggle drives the
 // casing at render time, so unchecking it has to visibly change the card.
@@ -21,14 +21,14 @@ export const DEFAULT_CARD_STATE: CardState = {
   theme: 'paper',
   headlineSize: 42,
   uppercaseHeadline: true,
-};
+}
 
 // Preset names are UI Copy (button labels) — resolved through the dictionary
 // at render time, never stored on the state.
 export interface SamplePreset {
-  id: string;
-  nameKey: UiCopyKey;
-  state: Partial<CardState>;
+  id: string
+  nameKey: UiCopyKey
+  state: Partial<CardState>
 }
 
 export const SAMPLE_PRESETS: SamplePreset[] = [
@@ -59,13 +59,14 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
     nameKey: 'preset_tech_note',
     state: {
       headline: 'Less code = less bugs',
-      sublines: 'Sự đơn giản luôn là đỉnh cao của độ tin cậy.\nĐừng vội over-engineer khi bài toán còn chưa rõ ràng.',
+      sublines:
+        'Sự đơn giản luôn là đỉnh cao của độ tin cậy.\nĐừng vội over-engineer khi bài toán còn chưa rõ ràng.',
       qrCta: 'Theo dõi để nhận thêm mẹo AI & Dev',
       theme: 'dark',
       uppercaseHeadline: true,
     },
   },
-];
+]
 
 // Style Presets (GLOSSARY.md) restyle the card without touching any Card
 // Content field: one click writes the full style quadruple as a single
@@ -74,12 +75,12 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
 export type StylePresetState = Pick<
   CardState,
   'theme' | 'ratio' | 'headlineSize' | 'uppercaseHeadline'
->;
+>
 
 export interface StylePreset {
-  id: string;
-  nameKey: UiCopyKey;
-  state: StylePresetState;
+  id: string
+  nameKey: UiCopyKey
+  state: StylePresetState
 }
 
 export const STYLE_PRESETS: StylePreset[] = [
@@ -103,4 +104,4 @@ export const STYLE_PRESETS: StylePreset[] = [
     nameKey: 'style_preset_billboard',
     state: { theme: 'dark', ratio: '16:9', headlineSize: 54, uppercaseHeadline: true },
   },
-];
+]
