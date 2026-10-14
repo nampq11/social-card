@@ -1,11 +1,14 @@
 import { Popover } from '@base-ui/react/popover'
 import { Info, Sparkles } from 'lucide-react'
+import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
 
 interface TipsPopoverProps {
   /** Restarts the first-run tour on demand (NN/g: easy to dismiss, easy to recall). */
   onReplayTour: () => void
+  /** Restarts the shot-gestures tour; offered once a Shot exists to gesture on. */
+  onReplayShotFitTour: () => void
 }
 
 /**
@@ -13,8 +16,13 @@ interface TipsPopoverProps {
  * reachable without spending viewport height — ADR 0002. Also hosts the tour
  * replay so the onboarding stays recallable after the first run.
  */
-export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
+export function TipsPopover({ onReplayTour, onReplayShotFitTour }: TipsPopoverProps) {
   const { copy } = useUiCopy()
+  // The shot-gestures replay targets a Screenshot Slot; without one the
+  // step has nothing to spotlight, so the entry stays hidden.
+  const hasShots = useCardStore(
+    (s) => s.card.cardType === 'showcase' && (s.card.showcase?.shots.length ?? 0) > 0,
+  )
 
   return (
     <Popover.Root>
@@ -45,6 +53,21 @@ export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
               }
               onClick={onReplayTour}
             />
+            {hasShots && (
+              <Popover.Close
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 -ml-1 text-blue-600 dark:text-blue-400"
+                  >
+                    <Sparkles />
+                    <span>{copy.replay_fit_tour}</span>
+                  </Button>
+                }
+                onClick={onReplayShotFitTour}
+              />
+            )}
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

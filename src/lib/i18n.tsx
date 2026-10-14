@@ -165,6 +165,13 @@ const vi = {
   tour_finish: 'Xong',
   tour_close: 'Đóng hướng dẫn',
   replay_tour: 'Xem lại hướng dẫn',
+  tour_fit_slot_title: 'Ảnh của bạn điều khiển được',
+  tour_fit_slot_body:
+    'Kéo để di chuyển, pinch hoặc Ctrl + cuộn để zoom. Nhấp đúp để phóng tại một điểm.',
+  tour_fit_override_title: 'Chọn cách hiển thị từng ảnh',
+  tour_fit_override_body:
+    'Ảnh lệch tỷ lệ tự hiển thị toàn bộ. Đổi Cover/Contain riêng cho từng ảnh trong tab Nội dung.',
+  replay_fit_tour: 'Thao tác trên ảnh',
 }
 
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
@@ -316,6 +323,13 @@ const en: typeof vi = {
   tour_finish: 'Finish',
   tour_close: 'Close tour',
   replay_tour: 'Replay the guide',
+  tour_fit_slot_title: 'Your shots are hands-on',
+  tour_fit_slot_body:
+    'Drag to pan, pinch or Ctrl+scroll to zoom. Double-click to focus on a detail.',
+  tour_fit_override_title: 'Choose how each shot renders',
+  tour_fit_override_body:
+    'Mismatched shots show whole by default. Override Cover/Contain per shot in the Content tab.',
+  replay_fit_tour: 'Shot gestures',
 }
 
 export const dictionaries: Record<Language, typeof vi> = { vi, en }

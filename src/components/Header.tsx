@@ -26,6 +26,7 @@ interface HeaderProps {
   onToggleInspector?: () => void
   onCycleRatio?: () => void
   onReplayTour?: () => void
+  onReplayShotFitTour: () => void
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleInspector,
   onCycleRatio,
   onReplayTour,
+  onReplayShotFitTour,
 }) => {
   const { language, setLanguage, copy } = useUiCopy()
   const cardRatio = useCardStore((s) => s.card.ratio)
@@ -115,7 +117,9 @@ export const Header: React.FC<HeaderProps> = ({
               <ChevronDown className="w-3.5 h-3.5 text-[#86868B] dark:text-[#A1A1A6] ml-0.5" />
             </button>
           )}
-          {onReplayTour && <TipsPopover onReplayTour={onReplayTour} />}
+          {onReplayTour && (
+            <TipsPopover onReplayTour={onReplayTour} onReplayShotFitTour={onReplayShotFitTour} />
+          )}
         </div>
       )}
 
