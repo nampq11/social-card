@@ -174,6 +174,7 @@ describe('Inspector', () => {
     expect(useCardStore.getState().card.boldSublines).toBe(true)
     expect(toggle.getAttribute('aria-checked')).toBe('true')
   })
+
   it('adjusts headline size from the slider thumb with the arrow keys', async () => {
     renderInspector('style')
     const thumb = screen.getByRole('slider', { name: /Cỡ chữ tiêu đề/i })

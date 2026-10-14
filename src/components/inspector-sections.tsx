@@ -26,6 +26,33 @@ import { Button } from './ui/Button'
 import { toast } from 'sonner'
 import { clsx } from 'clsx'
 
+// A checkbox that flips one boolean card-state field (e.g. bold sublines, grayscale avatar)
+const CardStateToggle: React.FC<{
+  id: string
+  label: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}> = ({ id, label, checked, onCheckedChange }) => (
+  <div className="flex items-center gap-1.5">
+    <Checkbox.Root
+      id={id}
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+    >
+      <Checkbox.Indicator>
+        <Check className="size-3" strokeWidth={3} />
+      </Checkbox.Indicator>
+    </Checkbox.Root>
+    <label
+      htmlFor={id}
+      className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
+    >
+      <span>{label}</span>
+    </label>
+  </div>
+)
+
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
 // Both hosts render the same sections, so a control can never drift between
@@ -325,24 +352,12 @@ export const HeadlineSection: React.FC = () => {
         />
       </Field.Root>
 
-      <div className="flex items-center gap-1.5">
-        <Checkbox.Root
-          id="inspector-bold-sublines"
-          checked={data.boldSublines}
-          onCheckedChange={(checked) => update('boldSublines', checked)}
-          className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-        >
-          <Checkbox.Indicator>
-            <Check className="size-3" strokeWidth={3} />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
-        <label
-          htmlFor="inspector-bold-sublines"
-          className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-        >
-          <span>{copy.bold_sublines_label}</span>
-        </label>
-      </div>
+      <CardStateToggle
+        id="inspector-bold-sublines"
+        label={copy.bold_sublines_label}
+        checked={data.boldSublines}
+        onCheckedChange={(checked) => update('boldSublines', checked)}
+      />
     </div>
   )
 }
@@ -431,24 +446,12 @@ export const IdentitySection: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <Checkbox.Root
-          id="inspector-grayscale-avatar"
-          checked={data.avatarGrayscale}
-          onCheckedChange={(checked) => update('avatarGrayscale', checked)}
-          className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-        >
-          <Checkbox.Indicator>
-            <Check className="size-3" strokeWidth={3} />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
-        <label
-          htmlFor="inspector-grayscale-avatar"
-          className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-        >
-          <span>{copy.grayscale_avatar_label}</span>
-        </label>
-      </div>
+      <CardStateToggle
+        id="inspector-grayscale-avatar"
+        label={copy.grayscale_avatar_label}
+        checked={data.avatarGrayscale}
+        onCheckedChange={(checked) => update('avatarGrayscale', checked)}
+      />
 
       <div className="grid grid-cols-2 gap-2">
         <Field.Root className="flex flex-col gap-1.5">

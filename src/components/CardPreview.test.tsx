@@ -2,6 +2,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { CardPreview } from './CardPreview'
+import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { UiCopyProvider } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
@@ -44,8 +45,8 @@ describe('CardPreview', () => {
 
     const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
     expect(sublinesBlock?.className).toContain('font-semibold')
-    expect(sublinesBlock?.className).toContain('text-[#101113]')
-    expect(sublinesBlock?.className).not.toContain('text-[#3D4046]')
+    expect(sublinesBlock?.className).toContain(CARD_THEME_STYLES.mist.text)
+    expect(sublinesBlock?.className).not.toContain(CARD_THEME_STYLES.mist.subtext)
   })
 
   it('renders each bio line as its own element, dropping blank lines', () => {
@@ -80,9 +81,11 @@ describe('CardPreview', () => {
 
     const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
     expect(sublinesBlock?.className).toContain('font-normal')
-    expect(sublinesBlock?.className).toContain('text-[#3D4046]')
+    expect(sublinesBlock?.className).toContain(CARD_THEME_STYLES.mist.subtext)
+    expect(sublinesBlock?.className).not.toContain(CARD_THEME_STYLES.mist.text)
     expect(sublinesBlock?.className).not.toContain('font-semibold')
   })
+
   it('renders fallback hint when headline is empty', () => {
     renderCard({ headline: '' })
     const h1 = screen.getByRole('heading', { level: 1 })
@@ -112,10 +115,6 @@ describe('CardPreview', () => {
     expect(screen.queryByText('Quét để xem mã nguồn')).not.toBeNull()
   })
 
-  it('omits QR code and CTA when qrEnabled is false', () => {
-    renderCard({ qrEnabled: false, qrCta: 'Quét để xem mã nguồn' })
-    expect(screen.queryByText('Quét để xem mã nguồn')).toBeNull()
-  })
   it('omits QR code and CTA when qrEnabled is false', () => {
     renderCard({ qrEnabled: false, qrCta: 'Quét để xem mã nguồn' })
     expect(screen.queryByText('Quét để xem mã nguồn')).toBeNull()
@@ -184,7 +183,7 @@ describe('CardPreview', () => {
   it('applies the mist palette: cool-gray card background and QR container border', () => {
     const { container } = renderCard({ qrEnabled: true, theme: 'mist' })
     const cardNode = container.querySelector('#social-card-node')
-    expect(cardNode?.className).toContain('bg-[#E8EDF0]')
+    expect(cardNode?.className).toContain(CARD_THEME_STYLES.mist.bg)
     const qrContainer = container.querySelector('#social-card-node [data-testid="qr-container"]')
     expect(qrContainer?.className).toContain('border-slate-300/60')
   })

@@ -5,6 +5,7 @@ import { RATIO_INFO } from '../constants/ratios'
 import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets'
 import { splitSublines } from '../lib/card-text'
 import { useUiCopy } from '../lib/i18n'
+import { CARD_THEME_STYLES } from '../constants/card-theme'
 
 interface CardPreviewProps {
   scale?: number
@@ -18,45 +19,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
     const data = useCardStore((s) => s.card)
     const { width, height } = RATIO_INFO[data.ratio]
 
-    // Theme styles
-    const themeStyles = {
-      white: {
-        bg: 'bg-white',
-        text: 'text-[#111111]',
-        subtext: 'text-[#555558]',
-        qrBg: 'bg-white',
-        qrFg: '#111111',
-        border: 'border-black/5',
-        avatarBorder: 'ring-1 ring-black/10',
-      },
-      paper: {
-        bg: 'bg-[#FAF9F5]',
-        text: 'text-[#1D1D1F]',
-        subtext: 'text-[#424245]',
-        qrBg: 'bg-white',
-        qrFg: '#1D1D1F',
-        border: 'border-stone-200/60',
-        avatarBorder: 'ring-1 ring-stone-300',
-      },
-      dark: {
-        bg: 'bg-[#121214]',
-        text: 'text-[#F4F4F5]',
-        subtext: 'text-[#A1A1AA]',
-        qrBg: 'bg-white',
-        qrFg: '#121214',
-        border: 'border-white/10',
-        avatarBorder: 'ring-1 ring-white/20',
-      },
-      mist: {
-        bg: 'bg-[#E8EDF0]',
-        text: 'text-[#101113]',
-        subtext: 'text-[#3D4046]',
-        qrBg: 'bg-white',
-        qrFg: '#101113',
-        border: 'border-slate-300/60',
-        avatarBorder: 'ring-1 ring-slate-400/50',
-      },
-    }[data.theme]
+    const themeStyles = CARD_THEME_STYLES[data.theme]
 
     const sublineList = splitSublines(data.sublines)
     const bioLines = splitSublines(data.authorBio)
