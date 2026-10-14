@@ -95,9 +95,10 @@ const PanHarness = () => {
   const [selected, setSelected] = useState(false)
   const pan = useShotPan(shot?.id ?? '', 'cover', selected, () => setSelected(true))
   const anchor = shotAnchorCss(shot?.focus ?? DEFAULT_SHOT_FOCUS, 'cover')
+  const { wheelElement } = pan
   return (
     <img
-      ref={pan.wheelRef}
+      ref={wheelElement}
       data-testid="pan-target"
       src={shot?.dataUrl}
       style={{
@@ -289,9 +290,10 @@ describe('ctrl+wheel zoom (ADR 0006 §4)', () => {
     function ContainHarness() {
       const shot = useCardStore((s) => s.card.showcase?.shots[0])
       const pan = useShotPan(shot?.id ?? '', 'contain', false, () => {})
+      const { wheelElement } = pan
       return (
         <img
-          ref={pan.wheelRef}
+          ref={wheelElement}
           src={shot?.dataUrl ?? ''}
           data-testid="pan-target"
           {...pan.handlers}

@@ -67,6 +67,9 @@ const ShotImage = ({
   onSelect: (shotId: string | null) => void
 }) => {
   const pan = useShotPan(shot.id, fit, selected, onSelect)
+  // Local binding: the linter's ref rule flags `pan.wheelElement` member
+  // access in the JSX, though passing a ref object to ref= is legal.
+  const { wheelElement } = pan
   const windowCard = fit === 'contain'
   // Zoom (ADR 0006 §4): scale about the focus anchor — object-position
   // percentages align content and box fractions, so the anchored content
@@ -85,7 +88,7 @@ const ShotImage = ({
       .join(' ') || undefined
   return (
     <img
-      ref={pan.wheelRef}
+      ref={wheelElement}
       src={shot.dataUrl}
       alt=""
       onPointerDown={pan.handlers.onPointerDown}
