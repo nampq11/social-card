@@ -3,7 +3,6 @@ import { createRef } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { MobileSheet } from './MobileSheet'
-import { SHEET_MIN_CHROME_PX, sheetExpandedPx } from '../lib/sheet-drag'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
@@ -93,8 +92,10 @@ describe('MobileSheet tab pill docking', () => {
     // riding the sheet's transform down to peek so it hugs below the canvas.
     expect(section.contains(nav)).toBe(true)
     // jsdom reports no layout, so the content top falls back to the chrome floor.
-    const peekOffset = sheetExpandedPx(window.innerHeight) - SHEET_MIN_CHROME_PX
-    expect(section.style.transform).toBe(`translateY(${peekOffset}px)`)
+    // Peek offset is hand-derived from the 58dvh spec (ADR 0002), not from the
+    // implementation's own helpers: a 768px viewport expands to round(768 × 0.58)
+    // = 445px, so the sheet peeks at 445 − 96px chrome floor = 349px.
+    expect(section.style.transform).toBe('translateY(349px)')
   })
 
   it('re-derives the resting peek offset on window resize even after user interactions', () => {
@@ -112,8 +113,8 @@ describe('MobileSheet tab pill docking', () => {
     window.innerHeight = 900
     fireEvent(window, new Event('resize'))
 
-    const newPeekOffset = sheetExpandedPx(900) - SHEET_MIN_CHROME_PX
-    expect(section.style.transform).toBe(`translateY(${newPeekOffset}px)`)
+    // Hand-derived again: 900px viewport → round(900 × 0.58) = 522 − 96 = 426.
+    expect(section.style.transform).toBe('translateY(426px)')
   })
 
   it('the sheet header names the sheet, not the active tab (no duplicated label)', () => {

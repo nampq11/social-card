@@ -1,22 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { EXPORT_PIXEL_RATIO, RATIO_INFO, ratioLabel } from './ratios'
+import { RATIO_INFO, ratioLabel } from './ratios'
+import type { AspectRatio } from '../types'
+import type { Language } from '../lib/i18n'
+
+// Expected labels are hand-pinned from the spec (preview px × 2.5 export
+// multiplier: 720×2.5=1800, 640×2.5=1600, 800×2.5=2000, 450×2.5=1125) —
+// NOT recomputed from RATIO_INFO, so a wrong dimension or label format in
+// the registry turns these red instead of adapting to it.
+const PINNED_LABELS: [AspectRatio, Language, string][] = [
+  ['1:1', 'vi', 'Square (1800 × 1800 px) — Threads, X, Instagram'],
+  ['1:1', 'en', 'Square (1800 × 1800 px) — Threads, X, Instagram'],
+  ['4:5', 'vi', 'Portrait (1600 × 2000 px) — Tối ưu màn hình Mobile'],
+  ['4:5', 'en', 'Portrait (1600 × 2000 px) — Optimized for mobile screens'],
+  ['16:9', 'vi', 'Landscape (2000 × 1125 px) — X Card, Facebook Post'],
+  ['16:9', 'en', 'Landscape (2000 × 1125 px) — X Card, Facebook Post'],
+]
 
 describe('ratioLabel', () => {
-  it('advertises exported pixels (preview × EXPORT_PIXEL_RATIO), not preview pixels', () => {
-    expect(ratioLabel('1:1', 'vi')).toBe('Square (1800 × 1800 px) — Threads, X, Instagram')
-    expect(ratioLabel('4:5', 'vi')).toBe('Portrait (1600 × 2000 px) — Tối ưu màn hình Mobile')
-    expect(ratioLabel('16:9', 'vi')).toBe('Landscape (2000 × 1125 px) — X Card, Facebook Post')
-    expect(ratioLabel('4:5', 'en')).toBe('Portrait (1600 × 2000 px) — Optimized for mobile screens')
+  it.each(PINNED_LABELS)('advertises exported pixels (%s, %s)', (ratio, language, expected) => {
+    expect(ratioLabel(ratio, language)).toBe(expected)
   })
 
-  it('never drifts from the RATIO_INFO dimensions', () => {
-    for (const ratio of Object.keys(RATIO_INFO) as (keyof typeof RATIO_INFO)[]) {
-      const { width, height } = RATIO_INFO[ratio]
-      for (const language of ['vi', 'en'] as const) {
-        expect(ratioLabel(ratio, language)).toContain(
-          `${width * EXPORT_PIXEL_RATIO} × ${height * EXPORT_PIXEL_RATIO} px`,
-        )
-      }
-    }
+  it('pins every ratio in the registry — a new one must get a row above', () => {
+    expect(new Set(PINNED_LABELS.map(([ratio]) => ratio))).toEqual(new Set(Object.keys(RATIO_INFO)))
   })
 })

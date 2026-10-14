@@ -166,12 +166,23 @@ describe('App', () => {
     expect(ratioBtn.textContent).toContain('Square')
   })
 
-  it('renders the floating Zoom HUD controls', () => {
+  it('drives the Zoom HUD readout through the zoom buttons', () => {
     renderApp()
 
-    expect(screen.getByRole('button', { name: /Thu nhỏ xem trước/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Phóng to xem trước/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Vừa khung xem trước/ })).toBeTruthy()
+    // jsdom reports no layout, so Fit-to-View keeps the initial scale of 1
+    // and only the zoom buttons can move the readout.
+    const readout = () => screen.getByRole('button', { name: /%$/ })
+    expect(readout().textContent).toBe('100%')
+
+    fireEvent.click(screen.getByRole('button', { name: /Thu nhỏ xem trước/ }))
+    expect(readout().textContent).toBe('90%')
+
+    fireEvent.click(screen.getByRole('button', { name: /Phóng to xem trước/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Phóng to xem trước/ }))
+    expect(readout().textContent).toBe('110%')
+
+    // The Fit button keeps its presence contract from the old render test.
+    expect(screen.getByRole('button', { name: 'Vừa khung xem trước' })).toBeTruthy()
   })
 
   it('renders mobile web version with MobileSheet and responsive chip that cycles ratio', () => {
