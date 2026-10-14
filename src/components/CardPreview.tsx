@@ -60,6 +60,33 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
 
     const sublineList = splitSublines(data.sublines)
 
+    const signatureText = (alignRight: boolean) => (
+      <div className={alignRight ? 'text-right' : ''}>
+        <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
+          {data.authorName || FALLBACK_AUTHOR_NAME}
+        </h3>
+        {data.authorBio && (
+          <p
+            className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
+          >
+            {data.authorBio}
+          </p>
+        )}
+      </div>
+    )
+
+    const signatureAvatar = data.avatarUrl ? (
+      <div
+        className={`w-14 h-14 rounded-full overflow-hidden shrink-0 shadow-sm ${themeStyles.avatarBorder}`}
+      >
+        <img
+          src={data.avatarUrl}
+          alt={data.authorName || FALLBACK_AUTHOR_NAME}
+          className="w-full h-full object-cover object-top"
+        />
+      </div>
+    ) : null
+
     return (
       <div
         style={{
@@ -119,9 +146,12 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
           </div>
 
           {/* Bottom Footer Section */}
-          <div className="flex items-center justify-between pt-6 border-t border-transparent">
+          <div
+            data-testid="card-footer"
+            className={`flex ${data.qrEnabled ? 'items-center justify-between' : 'justify-center'} pt-6 border-t border-transparent`}
+          >
             {/* Left: QR Code & Call to Action */}
-            {data.qrEnabled ? (
+            {data.qrEnabled && (
               <div className="flex items-center gap-3.5 max-w-[50%]">
                 <div
                   data-testid="qr-container"
@@ -143,37 +173,21 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   </span>
                 )}
               </div>
-            ) : (
-              <div />
             )}
 
-            {/* Right: Circular Avatar & Author Signature */}
-            <div className="flex items-center gap-3.5 shrink-0 ml-auto">
-              <div className="text-right">
-                <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
-                  {data.authorName || FALLBACK_AUTHOR_NAME}
-                </h3>
-                {data.authorBio && (
-                  <p
-                    className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
-                  >
-                    {data.authorBio}
-                  </p>
-                )}
+            {data.qrEnabled ? (
+              /* Right: Circular Avatar & Author Signature */
+              <div className="flex items-center gap-3.5 shrink-0 ml-auto">
+                {signatureText(true)}
+                {signatureAvatar}
               </div>
-
-              {data.avatarUrl && (
-                <div
-                  className={`w-14 h-14 rounded-full overflow-hidden shrink-0 shadow-sm ${themeStyles.avatarBorder}`}
-                >
-                  <img
-                    src={data.avatarUrl}
-                    alt={data.authorName || FALLBACK_AUTHOR_NAME}
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
-              )}
-            </div>
+            ) : (
+              /* Centered signature: avatar first, then name + bio */
+              <div className="flex items-center gap-3.5 shrink-0">
+                {signatureAvatar}
+                {signatureText(false)}
+              </div>
+            )}
           </div>
         </div>
       </div>
