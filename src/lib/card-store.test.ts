@@ -249,6 +249,37 @@ describe('card-store showcase content', () => {
     expect(s().past.length).toBe(stepsBefore)
   })
 
+  it('coalesces rapid typing on one annotation into a single undo step', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    s().addAnnotation({ shotId: shot.id, text: '', side: 'left' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    // A burst of keystrokes lands inside the coalesce window (decision 5).
+    s().updateAnnotation(annotation.id, { text: 'G' })
+    s().updateAnnotation(annotation.id, { text: 'Gi' })
+    s().updateAnnotation(annotation.id, { text: 'Ghi' })
+
+    s().undo()
+    expect(s().card.showcase!.annotations[0].text).toBe('')
+  })
+
+  it('a side switch after typing starts its own undo step', () => {
+    s().addShot('data:1')
+    const shot = s().card.showcase!.shots[0]
+    s().addAnnotation({ shotId: shot.id, text: '', side: 'left' })
+    const annotation = s().card.showcase!.annotations[0]
+
+    s().updateAnnotation(annotation.id, { text: 'Ghi chú' })
+    s().updateAnnotation(annotation.id, { side: 'top' })
+
+    s().undo()
+    expect(s().card.showcase!.annotations[0].side).toBe('left')
+    expect(s().card.showcase!.annotations[0].text).toBe('Ghi chú')
+    s().undo()
+    expect(s().card.showcase!.annotations[0].text).toBe('')
+  })
+
   it('removeAnnotation deletes exactly its own annotation, undoable in one step', () => {
     s().addShot('data:1')
     const shot = s().card.showcase!.shots[0]

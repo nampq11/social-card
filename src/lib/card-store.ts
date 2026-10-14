@@ -230,6 +230,10 @@ export const useCardStore = create<CardStore>((set) => ({
 
   // List-only editing per the spec (text, side, target shot, delete). A
   // retarget obeys the same one-annotation-per-shot cap as addAnnotation.
+  // Typing is a drag rhythm in disguise — keystrokes land dozens per second
+  // — so text-only patches coalesce on the shared window (one burst, one
+  // undo, ADR 0005 decision 5); side and retarget are discrete choices and
+  // always get their own step.
   updateAnnotation: (annotationId, patch) =>
     set((state) => {
       const showcase = state.card.showcase
@@ -240,8 +244,12 @@ export const useCardStore = create<CardStore>((set) => ({
         showcase.shots.some((shot) => shot.id === targetId) &&
         showcase.annotations.every((a) => a.id === annotationId || a.shotId !== targetId)
       if (!targetFree) return state
-      lastEdit = null
-      return undoStep(state, {
+      const key = 'shotId' in patch || 'side' in patch ? null : `annotationText:${annotationId}`
+      const now = Date.now()
+      const coalesce =
+        key !== null && lastEdit?.key === key && now - lastEdit.at < COALESCE_WINDOW_MS
+      lastEdit = { key, at: now }
+      const next = {
         ...state.card,
         showcase: {
           ...showcase,
@@ -249,7 +257,8 @@ export const useCardStore = create<CardStore>((set) => ({
             a.id === annotationId ? { ...a, ...patch } : a,
           ),
         },
-      })
+      }
+      return coalesce ? { card: next } : undoStep(state, next)
     }),
 
   removeAnnotation: (annotationId) =>
