@@ -201,3 +201,19 @@ describe('CardPreview', () => {
     expect(line.className).not.toContain('tracking-tight')
   })
 })
+
+describe('Showcase Card', () => {
+  it('renders a dashed hero placeholder and no Quote content when no shots exist', () => {
+    const { container } = renderCard({ cardType: 'showcase' })
+
+    const placeholder = screen
+      .getByTestId('hero-slot')
+      .querySelector('[data-testid="slot-placeholder"]')
+    expect(placeholder).not.toBeNull()
+    expect(placeholder?.className).toContain('border-dashed')
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+    expect(container.querySelector('[data-testid="sublines"]')).toBeNull()
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+  })
+})
