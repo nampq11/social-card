@@ -75,9 +75,12 @@ const previewScaleOf = (el: HTMLImageElement) => {
   return rect.width > 0 && el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1
 }
 
-const midpointOf = (a: { x: number; y: number }, b: { x: number; y: number }, rect: DOMRect) => ({
-  x: rect.width > 0 ? ((a.x + b.x) / 2 - rect.x) / rect.width : 0.5,
-  y: rect.height > 0 ? ((a.y + b.y) / 2 - rect.y) / rect.height : 0.5,
+// Where a client point sits inside a rect, as 0..1 fractions. A zero-size
+// rect (jsdom, pre-layout) answers the center — the same fallback every
+// fraction read uses.
+const fractionOf = (point: { x: number; y: number }, rect: DOMRect) => ({
+  x: rect.width > 0 ? (point.x - rect.x) / rect.width : 0.5,
+  y: rect.height > 0 ? (point.y - rect.y) / rect.height : 0.5,
 })
 
 export function useShotPan(
@@ -220,7 +223,7 @@ export function useShotPan(
       idA: event.pointerId,
       idB: [...pointers.current.keys()].find((id) => id !== event.pointerId) ?? event.pointerId,
       startDistance: Math.hypot(a.x - b.x, a.y - b.y) || 1,
-      startMidpoint: midpointOf(a, b, rect),
+      startMidpoint: fractionOf({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, rect),
       startFocus: shot?.focus ?? DEFAULT_SHOT_FOCUS,
       startScale: shot?.scale ?? 1,
     }
@@ -265,7 +268,7 @@ export function useShotPan(
       const el = event.currentTarget
       const rect = el.getBoundingClientRect()
       const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1
-      const midpoint = midpointOf(a, b, rect)
+      const midpoint = fractionOf({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, rect)
       const nextScale = clampScale(activePinch.startScale * (distance / activePinch.startDistance))
       setShotScale(shotId, nextScale)
       setShotFocus(
@@ -376,10 +379,7 @@ export function useShotPan(
       const currentScale = clampScale(getShot()?.scale ?? 1)
       const nextScale = currentScale > 1 ? 1 : DOUBLE_CLICK_SCALE
       const rect = el.getBoundingClientRect()
-      const fraction = {
-        x: rect.width > 0 ? (event.clientX - rect.x) / rect.width : 0.5,
-        y: rect.height > 0 ? (event.clientY - rect.y) / rect.height : 0.5,
-      }
+      const fraction = fractionOf({ x: event.clientX, y: event.clientY }, rect)
       if (nextScale > 1) {
         setShotScale(shotId, nextScale)
         setShotFocus(
@@ -421,10 +421,7 @@ export function useShotPan(
       // The cursor fraction doubles as start and end anchor: the content
       // point under it stays under it (focusForPinch with a zero midpoint
       // travel).
-      const anchor = {
-        x: rect.width > 0 ? (event.clientX - rect.x) / rect.width : 0.5,
-        y: rect.height > 0 ? (event.clientY - rect.y) / rect.height : 0.5,
-      }
+      const anchor = fractionOf({ x: event.clientX, y: event.clientY }, rect)
       setShotFocus(
         shotId,
         focusForPinch(

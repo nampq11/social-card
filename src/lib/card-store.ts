@@ -112,28 +112,14 @@ export const useCardStore = create<CardStore>((set) => ({
     set((state) => {
       const keys = Object.keys(patch)
       const coalesce = continuesEdit(keys.length === 1 ? keys[0] : null)
-
-      return coalesce
-        ? { card: { ...state.card, ...patch } }
-        : {
-            card: { ...state.card, ...patch },
-            past: [...state.past, state.card].slice(-HISTORY_CAP),
-            future: [],
-            canUndo: true,
-            canRedo: false,
-          }
+      const next = { ...state.card, ...patch }
+      return coalesce ? { card: next } : undoStep(state, next)
     }),
 
   resetCard: () =>
     set((state) => {
       lastEdit = null
-      return {
-        card: DEFAULT_CARD_STATE,
-        past: [...state.past, state.card].slice(-HISTORY_CAP),
-        future: [],
-        canUndo: true,
-        canRedo: false,
-      }
+      return undoStep(state, DEFAULT_CARD_STATE)
     }),
 
   undo: () =>
