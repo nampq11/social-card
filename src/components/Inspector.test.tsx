@@ -116,6 +116,17 @@ describe('Inspector', () => {
     expect(upper.getAttribute('aria-checked')).toBe('false')
   })
 
+  it('toggles grayscale avatar through the checkbox beside the avatar controls', () => {
+    renderInspector('identity')
+    const toggle = screen.getByRole('checkbox', { name: /Avatar đen trắng/i })
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(toggle)
+
+    expect(useCardStore.getState().card.avatarGrayscale).toBe(true)
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+  })
+
   it('toggles bold sublines through the checkbox next to the sublines editor', () => {
     renderInspector()
     const toggle = screen.getByRole('checkbox', { name: /Subline đậm/i })

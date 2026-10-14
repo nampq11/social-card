@@ -61,6 +61,20 @@ describe('CardPreview', () => {
     expect(first).not.toBe(second)
   })
 
+  it('renders the grayscale class on the avatar image when avatarGrayscale is on', () => {
+    renderCard({ theme: 'mist', avatarGrayscale: true })
+
+    const avatar = screen.getByAltText(FALLBACK_AUTHOR_NAME)
+    expect(avatar.className).toContain('grayscale')
+  })
+
+  it('renders the avatar in full color when avatarGrayscale is off', () => {
+    renderCard({ theme: 'mist' })
+
+    const avatar = screen.getByAltText(FALLBACK_AUTHOR_NAME)
+    expect(avatar.className).not.toContain('grayscale')
+  })
+
   it('renders normal-weight muted sublines when boldSublines is off', () => {
     renderCard({ theme: 'mist', sublines: 'lanphinh.com' })
 
