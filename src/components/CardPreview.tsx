@@ -47,6 +47,15 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         border: 'border-white/10',
         avatarBorder: 'ring-1 ring-white/20',
       },
+      mist: {
+        bg: 'bg-[#E8EDF0]',
+        text: 'text-[#101113]',
+        subtext: 'text-[#3D4046]',
+        qrBg: 'bg-white',
+        qrFg: '#101113',
+        border: 'border-slate-300/60',
+        avatarBorder: 'ring-1 ring-slate-400/50',
+      },
     }[data.theme]
 
     const sublineList = splitSublines(data.sublines)

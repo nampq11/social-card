@@ -1,6 +1,6 @@
 export type AspectRatio = '1:1' | '4:5' | '16:9'
 
-export type CardTheme = 'white' | 'paper' | 'dark'
+export type CardTheme = 'white' | 'paper' | 'dark' | 'mist'
 
 export interface CardState {
   headline: string

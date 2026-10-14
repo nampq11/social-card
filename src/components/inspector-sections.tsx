@@ -14,6 +14,7 @@ import {
   Sun,
   Scroll,
   Moon,
+  Cloud,
   QrCode,
   User,
   Upload,
@@ -207,6 +208,7 @@ export const StyleSection: React.FC = () => {
             { value: 'paper', label: copy.theme_paper, icon: <Scroll /> },
             { value: 'white', label: copy.theme_white, icon: <Sun /> },
             { value: 'dark', label: copy.theme_dark, icon: <Moon /> },
+            { value: 'mist', label: copy.theme_mist, icon: <Cloud /> },
           ]}
         />
       </div>
