@@ -8,6 +8,7 @@ import {
   CardTypeSwitcherSection,
   PresetsSection,
   ScreenshotsSection,
+  AnnotationsSection,
   StyleSection,
   HeadlineSection,
   IdentitySection,
@@ -42,7 +43,7 @@ export const INSPECTOR_TABS: InspectorTab[] = [
     // (dead in that mode) for the Screenshots section.
     sections: (cardType) =>
       cardType === 'showcase'
-        ? [CardTypeSwitcherSection, ScreenshotsSection]
+        ? [CardTypeSwitcherSection, ScreenshotsSection, AnnotationsSection]
         : [CardTypeSwitcherSection, PresetsSection, HeadlineSection],
   },
   { id: 'style', nameKey: 'tab_style', icon: <Palette />, sections: () => [StyleSection] },
