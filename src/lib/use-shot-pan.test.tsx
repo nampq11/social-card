@@ -314,4 +314,30 @@ describe('ctrl+wheel zoom (ADR 0006 §4)', () => {
     )
     expect(useCardStore.getState().card.showcase!.shots[0].scale).toBeUndefined()
   })
+
+  it('an external focus write (pill clear, undo) cancels the glide mid-flight', async () => {
+    render(<PanHarness />)
+    const el = screen.getByTestId('pan-target')
+    // A light drag with a real-clock release: focus moves without pegging,
+    // and the jsdom-stamped release velocity projects the glide onward —
+    // genuinely mid-flight when the clear lands.
+    drag(el, [
+      [150, 75, 0],
+      [180, 75, 16],
+      [185, 75, 16],
+    ])
+    await flushFrames(2)
+    const midGlide = focusOf().x
+    expect(midGlide).not.toBe(0.5)
+
+    // The pill's [Đặt lại] clears adjustments while the glide is running.
+    const shotId = useCardStore.getState().card.showcase!.shots[0].id
+    act(() => {
+      useCardStore.getState().clearShotAdjustments(shotId)
+    })
+    const afterClear = focusOf().x
+    await flushFrames(60)
+    // The settle loop must not write over the cleared state.
+    expect(focusOf().x).toBe(afterClear)
+  })
 })

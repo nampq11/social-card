@@ -89,6 +89,10 @@ export function useShotPan(
   const lastTapAt = useRef(0)
   const velocity = useRef<VelocityState | null>(null)
   const glideFrame = useRef<number | null>(null)
+  // The last focus value the settle loop wrote; a frame that reads anything
+  // else means an external write (pill clear, undo, Inspector) landed and
+  // the glide must not fight it.
+  const lastGlideWrite = useRef<ShotFocus | null>(null)
 
   const cover = fit === 'cover'
   // Touch arms through selection; desktop pans from the first press. Only
@@ -121,11 +125,21 @@ export function useShotPan(
     }
     stopGlide()
     let last = performance.now()
+    lastGlideWrite.current = shotIn()?.focus ?? DEFAULT_SHOT_FOCUS
     const step = (now: number) => {
       glideFrame.current = null
       const dtMs = Math.min(64, now - last)
       last = now
       const current = shotIn()?.focus ?? DEFAULT_SHOT_FOCUS
+      if (
+        lastGlideWrite.current &&
+        (Math.abs(current.x - lastGlideWrite.current.x) > 0.01 ||
+          Math.abs(current.y - lastGlideWrite.current.y) > 0.01)
+      ) {
+        // Someone else owns the state now — abandon the settle.
+        lastGlideWrite.current = null
+        return
+      }
       const currentOver = overdragRef.current ?? { x: 0, y: 0 }
       const next = {
         x: dampedStep(current.x, target.x, dtMs, GLIDE_RESPONSE),
@@ -142,10 +156,12 @@ export function useShotPan(
         Math.abs(nextOver.y) < 0.5
       if (settled) {
         setShotFocus(shotId, target)
+        lastGlideWrite.current = null
         applyOverdrag(null)
         return
       }
       setShotFocus(shotId, next)
+      lastGlideWrite.current = next
       applyOverdrag(nextOver)
       glideFrame.current = requestAnimationFrame(step)
     }
@@ -370,9 +386,9 @@ export function useShotPan(
   // ctrl+wheel zoom (ADR 0006 §4), anchored at the cursor. React's root
   // wheel listener is passive, so preventDefault — keeping the browser's own
   // page-zoom from firing — needs a native non-passive listener on the img.
-  const wheelRef = useRef<HTMLImageElement | null>(null)
+  const wheelElement = useRef<HTMLImageElement | null>(null)
   useEffect(() => {
-    const el = wheelRef.current
+    const el = wheelElement.current
     if (!el || !cover) return
     const onWheel = (event: WheelEvent) => {
       if (!event.ctrlKey) return
@@ -415,7 +431,7 @@ export function useShotPan(
     dragging,
     interactive,
     overdrag,
-    wheelRef,
+    wheelElement,
     handlers: {
       onPointerDown,
       onPointerMove,

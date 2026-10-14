@@ -76,6 +76,50 @@ try {
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
 
+  // Since ADR 0006 a shot's fit derives from its ratio against the slot, and
+  // this 3:1 fixture derives contain — which has no pan to smoke. Force the
+  // explicit cover override through the real pill, then dismiss the chrome
+  // so the desktop drag still asserts "no selection chrome".
+  const setupCenter = await evalJs(`(() => {
+    const r = document.querySelector('[data-testid=hero-slot] img').getBoundingClientRect()
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+  })()`)
+  const tap = async (x, y) => {
+    await send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x,
+      y,
+      button: 'left',
+      buttons: 0,
+      pointerType: 'mouse',
+    })
+    await send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x,
+      y,
+      button: 'left',
+      buttons: 0,
+      pointerType: 'mouse',
+    })
+  }
+  await tap(setupCenter.x, setupCenter.y)
+  await waitUntil('setup pill', async () =>
+    evalJs(`!!document.querySelector('[data-testid=shot-pan-overlay]')`),
+  )
+  await evalJs(
+    `[...document.querySelectorAll('[data-testid=shot-pan-overlay] button')].find(b => b.textContent.includes('Đầy khung'))?.click()`,
+  )
+  await waitUntil('cover override', async () =>
+    evalJs(`!!document.querySelector('[data-testid=hero-slot] img.object-cover')`),
+  )
+  await evalJs(
+    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Xong'))?.click()`,
+  )
+  await waitUntil(
+    'setup chrome gone',
+    async () => !(await evalJs(`!!document.querySelector('[data-testid=shot-pan-overlay]')`)),
+  )
+
   const heroImg = `document.querySelector('[data-testid=hero-slot] img.object-cover')`
   const position = () => evalJs(`${heroImg}?.style.objectPosition ?? null`)
   const claimsTouch = () => evalJs(`getComputedStyle(${heroImg}).touchAction === 'none'`)
@@ -153,9 +197,16 @@ try {
     `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Đặt lại'))?.click()`,
   )
   await sleep(300)
-  if ((await position()) !== '50% 0%')
-    throw new Error('[Đặt lại] did not restore the default focus')
-  console.log('5. [Đặt lại] restores the default focus ✓')
+  // [Đặt lại] clears the WHOLE adjustment set — fit override included — so
+  // this 3:1 fixture re-derives contain (ADR 0006 §1). Assert the reset
+  // through the sharp img: contained render, no zoom transform left.
+  const resetState = await evalJs(`(() => {
+    const sharp = document.querySelector('[data-testid=hero-slot] img.object-contain')
+    return { contain: !!sharp, blur: !!document.querySelector('[data-testid=hero-slot] img.blur-2xl'), transform: sharp?.style.transform ?? null }
+  })()`)
+  if (!resetState.contain || !resetState.blur || resetState.transform)
+    throw new Error(`[Đặt lại] did not clear the adjustment set: ${JSON.stringify(resetState)}`)
+  console.log('5. [Đặt lại] clears the whole adjustment set (re-derives contain) ✓')
 
   await evalJs(
     `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Xong'))?.click()`,
