@@ -329,7 +329,7 @@ describe('Showcase Card', () => {
   it('renders square dimensions when the store switches a 16:9 card to showcase', () => {
     const { container } = renderCard({ ratio: '16:9' })
     act(() => {
-      useCardStore.getState().switchCardType()
+      useCardStore.getState().switchCardType('showcase')
     })
 
     const cardNode = container.querySelector('#social-card-node') as HTMLElement | null

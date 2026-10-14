@@ -23,7 +23,7 @@ interface CardStore {
   resetCard: () => void
   undo: () => void
   redo: () => void
-  switchCardType: () => void
+  switchCardType: (next: CardType) => void
   addShot: (dataUrl: string) => void
   removeShot: (shotId: string) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
@@ -58,7 +58,6 @@ const undoStep = (state: { card: CardState; past: CardState[] }, card: CardState
   canRedo: false,
 })
 
-// Edit rhythm is UI-transient — module-scoped, not part of the model.
 // Edit rhythm is UI-transient — module-scoped, not part of the model.
 let lastEdit: { key: string | null; at: number } | null = null
 
@@ -218,13 +217,14 @@ export const useCardStore = create<CardStore>((set) => ({
   // The type switch is a dedicated atomic action (ADR 0004): always its own
   // undo step — never coalesced with adjacent edits — and non-destructive in
   // both directions: Quote fields and the showcase nest are left untouched.
-  switchCardType: () =>
+  switchCardType: (next: CardType) =>
     set((state) => {
+      // Requesting the current Card Type changes nothing and costs no step.
+      if (next === state.card.cardType) return state
       lastEdit = null
-      const cardType: CardType = state.card.cardType === 'showcase' ? 'quote' : 'showcase'
       // Showcase is always 1:1; leaving does not restore the pre-excursion
       // ratio — ratio is shared style, not per-type content (issue #33).
-      const ratio = cardType === 'showcase' ? '1:1' : state.card.ratio
-      return undoStep(state, { ...state.card, cardType, ratio })
+      const ratio = next === 'showcase' ? '1:1' : state.card.ratio
+      return undoStep(state, { ...state.card, cardType: next, ratio })
     }),
 }))

@@ -29,7 +29,9 @@ export interface InspectorTab {
   nameKey: UiStringKey
   icon: React.ReactNode
   // Sections resolve per Card Type (spec #33): the hosts never branch on the
-  // mode themselves — this registry is the single place the grouping changes.
+  // mode themselves. Concerns are split: this registry owns tab/section
+  // grouping per Card Type; each section owns its internal control
+  // visibility (e.g. StyleSection's quote-only controls).
   sections: (cardType: CardType) => React.FC[]
 }
 
@@ -61,8 +63,11 @@ export function useInspectorTab() {
   const active = INSPECTOR_TABS.find((t) => t.id === tab) ?? INSPECTOR_TABS[0]
   const cardType = useCardStore((s) => s.card.cardType)
   // Sections resolve through the registry, so both Shells see the same
-  // grouping for the current Card Type.
-  return { tab, setTab, active: { ...active, sections: active.sections(cardType) } }
+  // grouping for the current Card Type. The resolved list is exposed under a
+  // distinct name: `sections` on the registry entry is the per-Card-Type
+  // resolver, not the rendered list.
+  const { sections, ...tabMeta } = active
+  return { tab, setTab, active: { ...tabMeta, sectionList: sections(cardType) } }
 }
 
 /** The tab bar every Shell host renders — one rendering of the registry, so
