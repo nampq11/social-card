@@ -59,7 +59,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         }}
         className={`${
           animated ? 'transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]' : ''
-        } shadow-2xl rounded-2xl`}
+        } card-elevation rounded-[24px]`}
       >
         <div
           ref={ref}
@@ -68,7 +68,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             width: `${width}px`,
             height: `${height}px`,
           }}
-          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden rounded-2xl`}
+          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden rounded-[24px]`}
         >
           {/* Top spacer / header room */}
           <div className="h-6" />

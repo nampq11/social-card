@@ -32,12 +32,15 @@ describe('useStudioShortcuts', () => {
     expect(onRedo).toHaveBeenCalledTimes(1);
   });
 
-  it('Cmd/Ctrl+\\ fires the inspector toggle', () => {
+  it('Cmd/Ctrl+\\ and Cmd/Ctrl+B fire the inspector toggle', () => {
     const onToggleInspector = vi.fn();
     renderHook(() => useStudioShortcuts({ onUndo: vi.fn(), onRedo: vi.fn(), onToggleInspector }));
 
     fireEvent.keyDown(window, { key: '\\', metaKey: true });
     expect(onToggleInspector).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(window, { key: 'b', metaKey: true });
+    expect(onToggleInspector).toHaveBeenCalledTimes(2);
   });
 
   it('ignores shortcuts while typing in a text field', () => {

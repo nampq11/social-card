@@ -35,7 +35,7 @@ export function useStudioShortcuts({
       } else if (key === 'y' && event.ctrlKey) {
         event.preventDefault();
         onRedo();
-      } else if (key === '\\') {
+      } else if (key === '\\' || key === 'b') {
         event.preventDefault();
         onToggleInspector();
       }

@@ -35,7 +35,8 @@ export function SegmentedControl<T extends string>({
         if (next !== value) onChange(next);
       }}
       aria-labelledby={labelledBy}
-      className={`inline-flex p-1 bg-black/[0.05] dark:bg-white/[0.08] rounded-xl border border-black/[0.04] dark:border-white/[0.06] backdrop-blur-md ${className}`}
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      className={`w-full grid p-1 bg-black/[0.06] dark:bg-white/[0.08] rounded-xl border border-black/[0.04] dark:border-white/[0.06] backdrop-blur-md ${className}`}
     >
       {options.map((opt) => {
         const checked = opt.value === value;
@@ -43,10 +44,10 @@ export function SegmentedControl<T extends string>({
           <Radio.Root
             key={opt.value}
             value={opt.value}
-            className={`relative flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-[background-color,color,box-shadow] duration-150 ease-out apple-button select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 ${
+            className={`relative flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-[9px] transition-all duration-150 ease-out apple-button select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 ${
               checked
-                ? 'bg-white dark:bg-[#2C2C2E] text-black dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white shadow-[0_2px_5px_rgba(0,0,0,0.09),0_0.5px_1px_rgba(0,0,0,0.06)] font-semibold'
+                : 'text-[#6E6E73] dark:text-neutral-400 hover:text-[#1D1D1F] dark:hover:text-white'
             }`}
           >
             {/* Lucide icons default to 24px regardless of the slot; force

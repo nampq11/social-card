@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useCardStore } from './lib/card-store';
 import { RATIO_INFO, ratioLabel } from './constants/ratios';
+import type { AspectRatio } from './types';
 import { useFitScale } from './lib/use-fit-scale';
 import { useMediaQuery } from './lib/use-media-query';
 import { useStudioShortcuts } from './lib/use-studio-shortcuts';
@@ -18,7 +19,7 @@ import { useFlash } from './lib/use-flash';
 import { logDebug } from './lib/log-debug';
 import { useUiCopy } from './lib/i18n';
 import { Button } from './components/ui/Button';
-import { ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 const DESKTOP_QUERY = '(min-width: 1024px)';
@@ -28,6 +29,7 @@ export function App() {
   // The Card State lives in its store; the app root only reads it for the
   // canvas toolbar label, the export filename, and the Fit-to-View sizes.
   const cardState = useCardStore((s) => s.card);
+  const patchCard = useCardStore((s) => s.patchCard);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Desktop focus mode: collapsing the Inspector gives the card the whole
@@ -56,6 +58,12 @@ export function App() {
   const { width: cardWidth, height: cardHeight } = RATIO_INFO[cardState.ratio];
   const { scale, mode, zoomIn, zoomOut, fit } = useFitScale(canvasRef, cardWidth, cardHeight);
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
+
+  const cycleRatio = useCallback(() => {
+    const ratios: AspectRatio[] = ['1:1', '4:5', '16:9'];
+    const nextIdx = (ratios.indexOf(cardState.ratio) + 1) % ratios.length;
+    patchCard({ ratio: ratios[nextIdx] });
+  }, [cardState.ratio, patchCard]);
 
   // Shared shell for export actions: guards re-entry, then flows the action
   // through one promise-style toast (processing → success/error) — Sonner
@@ -105,91 +113,102 @@ export function App() {
       }
     );
 
-  // One-Screen Studio shell (GLOSSARY.md / ADR 0002): h-dvh + overflow-hidden,
-  // the page never scrolls — only the Inspector / sheet inside it can.
+  // Apple HIG Canvas-first Studio shell: 100vw × 100vh with seamless dot-grid canvas.
+  // The page never scrolls; floating header, floating inspector, and floating zoom HUD.
   return (
-    <div className="h-dvh overflow-hidden bg-[#F5F5F7] dark:bg-[#0B0B0C] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans transition-colors duration-200">
+    <div className="h-dvh w-screen overflow-hidden apple-canvas-bg text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans transition-colors duration-200 select-none">
       <Header
         onCopy={handleCopy}
         onDownload={handleDownload}
         isCopied={isCopied}
         isExporting={isExporting}
+        isInspectorCollapsed={isInspectorCollapsed}
+        onToggleInspector={toggleInspector}
+        onCycleRatio={cycleRatio}
+        onReplayTour={startTour}
       />
 
-      <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 pb-3 flex gap-6 items-stretch">
-        {isDesktop && !isInspectorCollapsed && <Inspector />}
+      {/* Main Workspace (Floating Inspector + Infinite Canvas) */}
+      <div className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
+        {/* Floating Left Inspector Panel */}
+        {isDesktop && !isInspectorCollapsed && (
+          <div className="z-20 absolute left-4 top-3 bottom-4 pointer-events-auto flex items-start">
+            <Inspector />
+          </div>
+        )}
 
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-          {/* Canvas Viewport Toolbar (desktop) — tips live in the popover */}
-          {isDesktop && (
-            <div className="flex items-center justify-between px-3 py-2 text-xs text-neutral-500">
-              <div className="flex items-center gap-1.5">
-                <Button
-                  size="icon"
-                  onClick={toggleInspector}
-                  title={copy.inspector_toggle_title}
-                  aria-label={copy.inspector_toggle_title}
-                >
-                  {isInspectorCollapsed ? (
-                    <PanelLeftOpen className="w-3.5 h-3.5" />
-                  ) : (
-                    <PanelLeftClose className="w-3.5 h-3.5" />
-                  )}
-                </Button>
+        {/* Center Stage: Card Preview Canvas */}
+        <main
+          ref={canvasRef}
+          className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-[padding] duration-300 ${
+            isDesktop
+              ? isInspectorCollapsed
+                ? 'p-8'
+                : 'p-8 pl-[380px]'
+              : 'p-4'
+          }`}
+        >
+          {/* Fit refits per frame while the sheet drags — only manual
+              zoom steps may animate the scale. */}
+          <CardPreview ref={cardRef} scale={scale} animated={mode === 'manual'} />
+
+          {/* Mobile overlay chips (ratio + tips) — below lg */}
+          {!isDesktop && (
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              <span className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06]">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                <span className="font-medium">{ratioLabel(cardState.ratio, language)}</span>
-                <TipsPopover onReplayTour={startTour} />
-              </div>
-
-              {/* Zoom Controls — manual override on top of Fit-to-View */}
-              <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-lg p-0.5 border border-black/[0.03]">
-                <Button size="icon" onClick={zoomOut} title={copy.zoom_out_title}>
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </Button>
-                <span className="px-1.5 font-mono text-xs">{Math.round(scale * 100)}%</span>
-                <Button size="icon" onClick={zoomIn} title={copy.zoom_in_title}>
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  onClick={fit}
-                  title={copy.zoom_fit_title}
-                  className={mode === 'fit' ? 'opacity-40' : ''}
-                >
-                  <Maximize className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+                {ratioLabel(cardState.ratio, language)}
+              </span>
+              <TipsPopover onReplayTour={startTour} />
             </div>
           )}
+        </main>
 
-          {/* Card Desk Canvas — bounded by the shell; the card fits inside it */}
-          <div
-            ref={canvasRef}
-            // On mobile the drag hook writes a static bottom reserve here
-            // (toolbar + peek height + safe area), so the card clears the
-            // peeked sheet; the expanded sheet overlays the card on purpose
-            // — the headline stays full-size while its lower third hides.
-            className={`relative w-full flex-1 min-h-0 bg-neutral-200/40 dark:bg-neutral-900/40 rounded-3xl flex items-center justify-center border border-black/[0.04] dark:border-white/[0.05] overflow-hidden shadow-inner ${
-              isDesktop ? 'p-8' : 'p-4'
-            }`}
-          >
-            {/* Fit refits per frame while the sheet drags — only manual
-                zoom steps may animate the scale. */}
-            <CardPreview ref={cardRef} scale={scale} animated={mode === 'manual'} />
-
-            {/* Mobile overlay chips (ratio + tips) — no toolbar row below lg */}
-            {!isDesktop && (
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <span className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                  {ratioLabel(cardState.ratio, language)}
-                </span>
-                <TipsPopover onReplayTour={startTour} />
-              </div>
-            )}
+        {/* Floating Bottom-Right Zoom HUD (Desktop) */}
+        {isDesktop && (
+          <div className="z-20 absolute right-4 bottom-4 rounded-full apple-glass px-2 py-1 flex items-center gap-1 text-xs font-medium text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={zoomOut}
+              title={copy.zoom_out_title}
+              aria-label={copy.zoom_out_title}
+              className="rounded-full w-7 h-7"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </Button>
+            <button
+              type="button"
+              onClick={fit}
+              title={copy.zoom_fit_title}
+              className="px-2 py-0.5 rounded-md hover:bg-black/[0.06] dark:hover:bg-white/[0.08] font-mono text-xs min-w-[48px] text-center cursor-pointer select-none"
+            >
+              {Math.round(scale * 100)}%
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={zoomIn}
+              title={copy.zoom_in_title}
+              aria-label={copy.zoom_in_title}
+              className="rounded-full w-7 h-7"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </Button>
+            <div className="h-3.5 w-[1px] bg-black/10 dark:bg-white/10 mx-0.5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={fit}
+              title={copy.zoom_fit_title}
+              aria-label={copy.zoom_fit_title}
+              className={`rounded-full w-7 h-7 ${mode === 'fit' ? 'opacity-40' : ''}`}
+            >
+              <Maximize className="w-3.5 h-3.5" />
+            </Button>
           </div>
-        </div>
-      </main>
+        )}
+      </div>
 
       {!isDesktop && <MobileSheet canvasRef={canvasRef} />}
 

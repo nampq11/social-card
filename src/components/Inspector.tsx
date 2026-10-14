@@ -21,38 +21,61 @@ export const Inspector: React.FC = () => {
   return (
     <aside
       data-tour="inspector"
-      className="w-96 shrink-0 flex flex-col gap-4 p-6 rounded-3xl glass-panel shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-y-auto min-h-0"
+      className="w-[345px] max-h-[calc(100vh-84px)] rounded-[22px] apple-glass p-4 flex flex-col justify-between shrink-0 shadow-lg"
     >
-      {/* Header & Quick Reset */}
-      <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <h2 className="text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
-            {copy.inspector_title}
-          </h2>
+      <div className="overflow-y-auto pr-0.5 space-y-4">
+        {/* Header & Quick Reset */}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
+            </span>
+            <h2 className="text-[14px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {copy.inspector_title}
+            </h2>
+          </div>
+          <Button
+            onClick={resetCard}
+            variant="ghost"
+            size="sm"
+            title={copy.reset_title}
+            className="text-[12px] font-medium text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>{copy.reset_button}</span>
+          </Button>
         </div>
-        <Button onClick={resetCard} variant="ghost" size="sm" title={copy.reset_title}>
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>{copy.reset_button}</span>
-        </Button>
+
+        {/* Segmented Control 100% full-width */}
+        <nav data-tour="inspector-tabs" aria-label={copy.inspector_title} className="w-full">
+          <SegmentedControl<InspectorTabId>
+            value={tab}
+            onChange={setTab}
+            className="w-full"
+            options={INSPECTOR_TABS.map(({ id, nameKey, icon }) => ({
+              value: id,
+              label: copy[nameKey],
+              icon,
+            }))}
+          />
+        </nav>
+
+        <div className="flex flex-col gap-4">
+          {active.sections.map((Section) => (
+            <Section key={Section.name} />
+          ))}
+        </div>
       </div>
 
-      <nav data-tour="inspector-tabs" aria-label={copy.inspector_title} className="flex justify-center">
-        <SegmentedControl<InspectorTabId>
-          value={tab}
-          onChange={setTab}
-          options={INSPECTOR_TABS.map(({ id, nameKey, icon }) => ({
-            value: id,
-            label: copy[nameKey],
-            icon,
-          }))}
-        />
-      </nav>
-
-      <div className="flex flex-col gap-5">
-        {active.sections.map((Section) => (
-          <Section key={Section.name} />
-        ))}
+      {/* Footer replacing dead white space */}
+      <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-[11px] text-[#86868B] dark:text-[#A1A1A6]">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
+          <span>Apple HIG Layout</span>
+        </div>
+        <span className="font-mono text-[10px] bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 rounded text-[#515154] dark:text-[#A1A1A6]">
+          ⌘\ Toggle Panel
+        </span>
       </div>
     </aside>
   );

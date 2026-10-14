@@ -159,4 +159,38 @@ describe('App', () => {
     fireEvent.keyDown(window, { key: '\\', ctrlKey: true });
     expect(screen.getByLabelText(/Tiêu đề chính/)).toBeTruthy();
   });
+
+  it('Ctrl+B collapses and restores the Inspector', () => {
+    renderApp();
+
+    fireEvent.keyDown(window, { key: 'b', ctrlKey: true });
+    expect(screen.queryByLabelText(/Tiêu đề chính/)).toBeNull();
+
+    fireEvent.keyDown(window, { key: 'b', ctrlKey: true });
+    expect(screen.getByLabelText(/Tiêu đề chính/)).toBeTruthy();
+  });
+
+  it('clicking the Top Bar aspect ratio pill cycles aspect ratio', () => {
+    renderApp();
+
+    const ratioBtn = screen.getByRole('button', { name: /Bấm để chuyển đổi tỷ lệ khung hình/ });
+    expect(ratioBtn.textContent).toContain('Square');
+
+    fireEvent.click(ratioBtn);
+    expect(ratioBtn.textContent).toContain('Portrait');
+
+    fireEvent.click(ratioBtn);
+    expect(ratioBtn.textContent).toContain('Landscape');
+
+    fireEvent.click(ratioBtn);
+    expect(ratioBtn.textContent).toContain('Square');
+  });
+
+  it('renders the floating Zoom HUD controls', () => {
+    renderApp();
+
+    expect(screen.getByRole('button', { name: /Thu nhỏ xem trước/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Phóng to xem trước/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Vừa khung xem trước/ })).toBeTruthy();
+  });
 });
