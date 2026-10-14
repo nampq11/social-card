@@ -21,10 +21,7 @@ A named starting point that fills several Card Content fields at once (headline,
 _Avoid_: template, sample
 
 **Card State**:
-The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase).
-_Avoid_: form data, settings
-**Card State**:
-The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase).
+The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase, bold sublines, grayscale avatar).
 _Avoid_: form data, settings
 
 **Card Export**:
