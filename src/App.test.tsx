@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { dictionaries } from './lib/i18n'
+import { useCardStore } from './lib/card-store'
 import { DEFAULT_CARD_STATE } from './constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from './test/card-studio'
 import { toastRegion } from './test/toast-region'
@@ -202,5 +203,59 @@ describe('App', () => {
     } finally {
       triggerMediaQuery('(min-width: 1024px)', true)
     }
+  })
+  it('builds a Showcase from the Inspector onto the Card, then returns to an intact Quote', () => {
+    renderApp()
+
+    // Quote content takes a non-default value first, so the round-trip below
+    // proves a Card Type switch is non-destructive.
+    fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
+      target: { value: 'Ra mắt sản phẩm:' },
+    })
+    expect(cardHeadline()).toBe('Ra mắt sản phẩm:')
+
+    // Switch to Showcase through the Inspector switcher.
+    const typeGroup = () => screen.getByRole('radiogroup', { name: 'Loại Card' })
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Giới thiệu' }))
+
+    const cardNode = () => within(document.getElementById('social-card-node')!)
+    // Showcase renders only Showcase content — no headline, no QR.
+    expect(cardNode().queryByRole('heading', { level: 1 })).toBeNull()
+    expect(cardNode().queryByTestId('qr-container')).toBeNull()
+
+    // Two Shots via the store: upload order puts the first in the Hero Slot.
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,first')
+      useCardStore.getState().addShot('data:image/jpeg;base64,second')
+    })
+    expect(cardNode().getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/jpeg;base64,first',
+    )
+    const detailSlots = cardNode().getAllByTestId('detail-slot')
+    expect(detailSlots).toHaveLength(1)
+    expect(detailSlots[0].querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/jpeg;base64,second',
+    )
+
+    // The annotation is added through the Inspector and lands in its Shot's
+    // slot margin on the Card.
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm ghi chú · Ảnh chụp màn hình 1' }))
+    fireEvent.change(screen.getByLabelText('Nội dung ghi chú'), {
+      target: { value: 'Tổng quan ý tưởng' },
+    })
+    const mark = cardNode().getByText('Tổng quan ý tưởng').closest('[data-testid="annotation"]')
+    expect(cardNode().getByTestId('hero-slot').contains(mark)).toBe(true)
+    expect(mark?.querySelector('[data-testid="annotation-curve"]')).not.toBeNull()
+
+    // The author footer sits under the collage.
+    expect(
+      within(cardNode().getByTestId('card-footer')).getByText(DEFAULT_CARD_STATE.authorName),
+    ).toBeTruthy()
+
+    // Back to Quote: the headline survived and no Showcase DOM remains.
+    fireEvent.click(within(typeGroup()).getByRole('radio', { name: 'Trích dẫn' }))
+    expect(cardHeadline()).toBe('Ra mắt sản phẩm:')
+    expect(cardNode().queryByTestId('shot-collage')).toBeNull()
+    expect(cardNode().queryByTestId('annotation')).toBeNull()
   })
 })
