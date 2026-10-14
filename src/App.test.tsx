@@ -123,6 +123,50 @@ describe('App', () => {
     expect(await within(await toastRegion()).findByText(dictionaries.en.copy_success)).toBeTruthy()
   })
 
+  it('Cmd+C copies the card via global keyboard shortcut', async () => {
+    const deferred = deferredExport<boolean>()
+    vi.mocked(copyCardToClipboard).mockReturnValueOnce(deferred.promise)
+    renderApp()
+
+    fireEvent.keyDown(window, { key: 'c', metaKey: true })
+
+    const region = await toastRegion()
+    expect(within(region).getByText(dictionaries.vi.copy_processing)).toBeTruthy()
+
+    deferred.resolve(true)
+    expect(await within(region).findByText(dictionaries.vi.copy_success)).toBeTruthy()
+  })
+
+  it('Interface Language toggle updates newly added studio chrome copy', () => {
+    renderApp()
+
+    // Initial Vietnamese chrome
+    expect(screen.getByRole('button', { name: dictionaries.vi.ratio_cycle_title })).toBeTruthy()
+    expect(screen.getByText(dictionaries.vi.inspector_footer_layout)).toBeTruthy()
+    expect(screen.getByText(dictionaries.vi.inspector_toggle_shortcut_hint)).toBeTruthy()
+    expect(screen.getByText(dictionaries.vi.presets_badge)).toBeTruthy()
+    expect(screen.getByText(dictionaries.vi.sublines_badge)).toBeTruthy()
+    expect(
+      screen.getByText(
+        new RegExp(`AA ${dictionaries.vi.uppercase_label}: ${dictionaries.vi.state_on}`),
+      ),
+    ).toBeTruthy()
+
+    // Toggle to English
+    fireEvent.click(screen.getByRole('button', { name: dictionaries.vi.language_toggle_title }))
+
+    expect(screen.getByRole('button', { name: dictionaries.en.ratio_cycle_title })).toBeTruthy()
+    expect(screen.getByText(dictionaries.en.inspector_footer_layout)).toBeTruthy()
+    expect(screen.getByText(dictionaries.en.inspector_toggle_shortcut_hint)).toBeTruthy()
+    expect(screen.getByText(dictionaries.en.presets_badge)).toBeTruthy()
+    expect(screen.getByText(dictionaries.en.sublines_badge)).toBeTruthy()
+    expect(
+      screen.getByText(
+        new RegExp(`AA ${dictionaries.en.uppercase_label}: ${dictionaries.en.state_on}`),
+      ),
+    ).toBeTruthy()
+  })
+
   it('editing enables Header undo; undoing restores the previous Card State', () => {
     renderApp()
 
@@ -210,10 +254,10 @@ describe('App', () => {
       const mobileRatioBtn = screen.getByRole('button', {
         name: /Bấm để chuyển đổi tỷ lệ khung hình/,
       })
-      expect(mobileRatioBtn.textContent).toContain('Square')
+      expect(mobileRatioBtn.textContent).toContain('1:1 Vuông')
 
       fireEvent.click(mobileRatioBtn)
-      expect(mobileRatioBtn.textContent).toContain('Portrait')
+      expect(mobileRatioBtn.textContent).toContain('4:5 Dọc')
     } finally {
       triggerMediaQuery('(min-width: 1024px)', true)
     }

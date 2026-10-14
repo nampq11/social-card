@@ -100,16 +100,8 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onCycleRatio}
-              title={
-                language === 'vi'
-                  ? 'Bấm để chuyển đổi tỷ lệ khung hình'
-                  : 'Click to cycle aspect ratio'
-              }
-              aria-label={
-                language === 'vi'
-                  ? 'Bấm để chuyển đổi tỷ lệ khung hình'
-                  : 'Click to cycle aspect ratio'
-              }
+              title={copy.ratio_cycle_title}
+              aria-label={copy.ratio_cycle_title}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.99] border border-black/[0.04] dark:border-white/[0.06] cursor-pointer transition text-xs font-medium"
             >
               <span className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_6px_#34C759] shrink-0" />

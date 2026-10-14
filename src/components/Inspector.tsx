@@ -71,10 +71,10 @@ export const Inspector: React.FC = () => {
       <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-[11px] text-[#86868B] dark:text-[#A1A1A6]">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
-          <span>Apple HIG Layout</span>
+          <span>{copy.inspector_footer_layout}</span>
         </div>
         <span className="font-mono text-[10px] bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 rounded text-[#515154] dark:text-[#A1A1A6]">
-          ⌘\ Toggle Panel
+          {copy.inspector_toggle_shortcut_hint}
         </span>
       </div>
     </aside>

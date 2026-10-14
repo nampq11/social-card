@@ -65,7 +65,9 @@ export const PresetsSection: React.FC = () => {
         <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
           {copy.presets_label}
         </label>
-        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">1-click template</span>
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {copy.presets_badge}
+        </span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {SAMPLE_PRESETS.map((p) => {
@@ -294,7 +296,7 @@ export const HeadlineSection: React.FC = () => {
             onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
             className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#0071E3]/10 text-[#0071E3] hover:bg-[#0071E3]/20 transition cursor-pointer"
           >
-            AA {copy.uppercase_label}: {data.uppercaseHeadline ? 'ON' : 'OFF'}
+            AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
           </button>
         </div>
         <Field.Control
@@ -316,7 +318,9 @@ export const HeadlineSection: React.FC = () => {
           <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
             {copy.sublines_label}
           </Field.Label>
-          <span className="text-[11px] text-[#86868B] dark:text-neutral-500">Multi-line</span>
+          <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+            {copy.sublines_badge}
+          </span>
         </div>
         <Field.Control
           id="inspector-sublines"
@@ -485,7 +489,7 @@ export const IdentitySection: React.FC = () => {
                 id="inspector-qr-cta"
                 value={data.qrCta}
                 onChange={(e) => update('qrCta', e.target.value)}
-                placeholder="Build Trợ lý AI cho riêng bạn!"
+                placeholder={copy.qr_cta_placeholder}
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </Field.Root>

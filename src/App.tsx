@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { useCardStore } from './lib/card-store'
-import { RATIO_INFO, ratioLabel } from './constants/ratios'
+import { RATIO_INFO } from './constants/ratios'
 import type { AspectRatio } from './types'
 import { useFitScale } from './lib/use-fit-scale'
 import { useMediaQuery } from './lib/use-media-query'
@@ -17,15 +17,23 @@ import { copyCardToClipboard, downloadCardImage } from './lib/export'
 import { toFilename } from './lib/card-text'
 import { useFlash } from './lib/use-flash'
 import { logDebug } from './lib/log-debug'
-import { useUiCopy } from './lib/i18n'
+import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
+/** Mobile chip shows the short localized ratio name — no px specs (the
+ * desktop header owns the full specs; HIG keeps touch labels compact). */
+const RATIO_LABEL_KEY: Record<AspectRatio, UiStringKey> = {
+  '1:1': 'ratio_square',
+  '4:5': 'ratio_portrait',
+  '16:9': 'ratio_landscape',
+}
+
 export function App() {
-  const { copy, language } = useUiCopy()
+  const { copy } = useUiCopy()
   // The Card State lives in its store; the app root only reads it for the
   // canvas toolbar label, the export filename, and the Fit-to-View sizes.
   const cardState = useCardStore((s) => s.card)
@@ -40,7 +48,6 @@ export function App() {
   const toggleInspector = useCallback(() => setIsInspectorCollapsed((collapsed) => !collapsed), [])
   const undo = useCardStore((s) => s.undo)
   const redo = useCardStore((s) => s.redo)
-  useStudioShortcuts({ onUndo: undo, onRedo: redo, onToggleInspector: toggleInspector })
 
   // Export feedback is Sonner's job (promise toasts); the only transient
   // button state left here is the copy action's "Copied!" flag on useFlash.
@@ -107,6 +114,13 @@ export function App() {
       error: copy.download_error,
     })
 
+  useStudioShortcuts({
+    onUndo: undo,
+    onRedo: redo,
+    onToggleInspector: toggleInspector,
+    onCopy: handleCopy,
+  })
+
   // Apple HIG Canvas-first Studio shell: 100vw × 100vh with seamless dot-grid canvas.
   // The page never scrolls; floating header, floating inspector, and floating zoom HUD.
   return (
@@ -143,26 +157,20 @@ export function App() {
               zoom steps may animate the scale. */}
           <CardPreview ref={cardRef} scale={scale} animated={mode === 'manual'} />
 
-          {/* Mobile overlay chips (ratio + tips) — below lg */}
+          {/* Mobile overlay chips (ratio + tips) — centered on the card's
+              axis (below lg); a left-anchored pill would skew the app's
+              vertical axis against the centered Card. */}
           {!isDesktop && (
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
               <button
                 type="button"
                 onClick={cycleRatio}
-                title={
-                  language === 'vi'
-                    ? 'Bấm để chuyển đổi tỷ lệ khung hình'
-                    : 'Click to cycle aspect ratio'
-                }
-                aria-label={
-                  language === 'vi'
-                    ? 'Bấm để chuyển đổi tỷ lệ khung hình'
-                    : 'Click to cycle aspect ratio'
-                }
+                title={copy.ratio_cycle_title}
+                aria-label={copy.ratio_cycle_title}
                 className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-                <span className="truncate">{ratioLabel(cardState.ratio, language)}</span>
+                <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
               </button>
               <TipsPopover onReplayTour={startTour} />
             </div>

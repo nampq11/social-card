@@ -11,13 +11,14 @@ import {
 
 describe('sheetExpandedPx', () => {
   it('targets 58dvh when the viewport has headroom', () => {
-    // 0.58 × 844 ≈ 490; headroom 844 − 160 − 150 = 534 does not bind.
+    // 0.58 × 844 ≈ 490; headroom 844 − 110 − 150 = 584 does not bind.
     expect(sheetExpandedPx(844)).toBe(490)
   })
 
   it('keeps a small portrait phone inside its headroom', () => {
-    // SE-class 667px: 58% would be 387, headroom 667 − 160 − 150 = 357 binds.
-    expect(sheetExpandedPx(667)).toBe(357)
+    // SE-class 667px: 58% would be 387; headroom 667 − 110 − 150 = 407 —
+    // the header-only chrome count no longer binds at this height.
+    expect(sheetExpandedPx(667)).toBe(387)
   })
 
   it('falls back to a minimum working height on landscape phones', () => {

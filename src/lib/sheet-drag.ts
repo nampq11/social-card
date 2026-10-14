@@ -4,17 +4,18 @@
 // release velocity to choose where it settles, and springs there carrying
 // that velocity.
 
-/** Fixed peek height: the toolbar plus the top of the active tab. */
+/** Floor for the peek height — sheet chrome (grabber + header + tab bar) at
+ * minimum. The live resting points are measured from the DOM in
+ * use-sheet-drag, so font metrics can never half-clip a control at rest. */
 export const SHEET_PEEK_PX = 144
 
 /** Sheet spring response (critically damped, no overshoot). */
 export const SHEET_RESPONSE_S = 0.3
 
-// Chrome the sheet shares the viewport with: Header ≈84px + tab nav ≈52px.
-// Measured mobile shell chrome above the canvas: header 94px + ratio nav
-// 60px, plus a small margin. Undercounting here lets the expanded sheet
-// swallow the header; overcounting needlessly shrinks it.
-const SHEET_CHROME_PX = 160
+// Chrome above the canvas: just the floating header (≈68px + safe-area top,
+// up to ≈47px on notched phones) plus a small margin. Undercounting lets the
+// expanded sheet swallow the header; overcounting needlessly shrinks it.
+const SHEET_CHROME_PX = 110
 // Canvas floor: an expanded sheet still leaves this much card visible.
 const SHEET_CANVAS_FLOOR_PX = 150
 // Landscape phones have no headroom; the sheet still needs working room.

@@ -89,11 +89,22 @@ describe('MobileSheet tab pill docking', () => {
     const nav = screen.getByRole('navigation', { name: /Tùy chỉnh Card/ })
     const section = document.querySelector('section') as HTMLElement
 
-    // Peeked: both carry the full pull-down offset, so the pill hugs the
-    // peeked sheet below the canvas instead of floating at the expanded
-    // position over the Card.
+    // The nav is inside the sheet plane (iOS HIG: grabber → header → tabs → content),
+    // riding the sheet's transform down to peek so it hugs below the canvas.
+    expect(section.contains(nav)).toBe(true)
     const peekOffset = sheetExpandedPx(window.innerHeight) - SHEET_PEEK_PX
     expect(section.style.transform).toBe(`translateY(${peekOffset}px)`)
-    expect(nav.style.transform).toBe(section.style.transform)
+  })
+
+  it('the sheet header names the sheet, not the active tab (no duplicated label)', () => {
+    renderSheet()
+
+    // The tab bar sits right below the header; repeating the tab name there
+    // burns vertical space and reads as a doubled label (mobile-review #2).
+    const header = document.querySelector(
+      'section .flex.items-center.justify-between',
+    ) as HTMLElement
+    expect(header.textContent).toContain('Tùy chỉnh Card')
+    expect(header.textContent).not.toContain('Nội dung')
   })
 })

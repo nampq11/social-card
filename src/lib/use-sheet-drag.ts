@@ -37,7 +37,8 @@ interface DragState {
   offset: number
   maxOffset: number
   expandedPx: number
-  navHeight: number
+  /** DOM-measured chrome height: top of the scrollable content in the sheet. */
+  contentTop: number
   velocity: number
   animating: boolean
   pointerId: number
@@ -56,24 +57,25 @@ interface DragState {
  * velocity carried over (Apple, "Designing Fluid Interfaces").
  *
  * The per-frame output is one transform written straight to the DOM — the
- * sheet and the tab pill carry it together, so the pill stays docked to the
- * sheet's live top edge instead of floating at the expanded position over
- * the card. React state is only the settled `expanded` flag the UI Copy
- * needs. The canvas reserve is static (nav + peek): the expanded sheet
- * overlays the card instead of shrinking it, so the headline the user is
- * editing stays at full size — only the card's lower third is covered.
+ * sheet is one physical plane (grabber → header → tabs → content, iOS HIG).
+ * React state is only the settled `expanded` flag the UI Copy needs. The
+ * peek resting point is measured from the DOM (top of the scrollable
+ * content), so the peeked sheet shows exactly its chrome — no control is
+ * ever half-clipped at rest. The canvas reserve is that same static chrome
+ * height: the expanded sheet overlays the card instead of shrinking it, so
+ * the headline the user is editing stays at full size.
  */
 export function useSheetDrag(
   sheetRef: RefObject<HTMLElement | null>,
-  navRef: RefObject<HTMLElement | null>,
   canvasRef: RefObject<HTMLElement | null>,
+  contentRef: RefObject<HTMLElement | null>,
 ) {
   const [expanded, setExpanded] = useState(false)
   const drag = useRef<DragState>({
     offset: Number.POSITIVE_INFINITY,
     maxOffset: 0,
     expandedPx: 0,
-    navHeight: 0,
+    contentTop: SHEET_PEEK_PX,
     velocity: 0,
     animating: false,
     pointerId: -1,
@@ -89,9 +91,7 @@ export function useSheetDrag(
     const sheet = sheetRef.current
     const transform = `translateY(${drag.offset}px)`
     if (sheet) sheet.style.transform = transform
-    const nav = navRef.current
-    if (nav) nav.style.transform = transform
-  }, [drag, navRef, sheetRef])
+  }, [drag, sheetRef])
 
   const cancelSpring = useCallback(() => {
     if (rafId.current !== null) {
@@ -101,26 +101,28 @@ export function useSheetDrag(
     drag.animating = false
   }, [drag])
 
-  /** Measures the two resting points from the live viewport, then re-clamps. */
+  /** Measures the two resting points from the live DOM, then re-clamps. */
   const measure = useCallback(() => {
     const sheet = sheetRef.current
     if (!sheet) return
     drag.expandedPx = sheetExpandedPx(window.innerHeight)
-    drag.navHeight = navRef.current?.offsetHeight ?? 0
-    drag.maxOffset = Math.max(0, drag.expandedPx - SHEET_PEEK_PX)
+    // Peek rests exactly at the top of the scrollable content: the chrome
+    // above it (grabber + header + tabs) shows in full, nothing half-clipped.
+    drag.contentTop = Math.max(SHEET_PEEK_PX, contentRef.current?.offsetTop ?? SHEET_PEEK_PX)
+    drag.maxOffset = Math.max(0, drag.expandedPx - drag.contentTop)
     sheet.style.height = `${drag.expandedPx}px`
     drag.offset = Math.min(drag.offset, drag.maxOffset)
     if (drag.offset < 0) drag.offset = 0
-    // Static reserve (nav + peek — the safe-area padding lives inside the
+    // Static reserve (the chrome at rest — the safe-area padding lives inside the
     // section height) straight to the canvas element: an inherited CSS
     // variable would have to live on an ancestor and recalculates the whole
     // document.
     const canvas = canvasRef.current
     if (canvas) {
-      canvas.style.paddingBottom = `${Math.round(drag.navHeight + SHEET_PEEK_PX)}px`
+      canvas.style.paddingBottom = `${Math.round(drag.contentTop)}px`
     }
     writePosition()
-  }, [canvasRef, drag, navRef, sheetRef, writePosition])
+  }, [canvasRef, contentRef, drag, sheetRef, writePosition])
 
   useLayoutEffect(measure, [measure])
 

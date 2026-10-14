@@ -43,10 +43,24 @@ describe('useStudioShortcuts', () => {
     expect(onToggleInspector).toHaveBeenCalledTimes(2)
   })
 
+  it('Cmd/Ctrl+C fires onCopy', () => {
+    const onCopy = vi.fn()
+    renderHook(() =>
+      useStudioShortcuts({ onUndo: vi.fn(), onRedo: vi.fn(), onToggleInspector: vi.fn(), onCopy }),
+    )
+
+    fireEvent.keyDown(window, { key: 'c', metaKey: true })
+    expect(onCopy).toHaveBeenCalledTimes(1)
+
+    fireEvent.keyDown(window, { key: 'c', ctrlKey: true })
+    expect(onCopy).toHaveBeenCalledTimes(2)
+  })
+
   it('ignores shortcuts while typing in a text field', () => {
     const onUndo = vi.fn()
     const onToggleInspector = vi.fn()
-    renderHook(() => useStudioShortcuts({ onUndo, onRedo: vi.fn(), onToggleInspector }))
+    const onCopy = vi.fn()
+    renderHook(() => useStudioShortcuts({ onUndo, onRedo: vi.fn(), onToggleInspector, onCopy }))
 
     const input = document.createElement('input')
     document.body.appendChild(input)
@@ -55,8 +69,10 @@ describe('useStudioShortcuts', () => {
     // the element so event.target is the field itself.
     fireEvent.keyDown(input, { key: 'z', metaKey: true })
     fireEvent.keyDown(input, { key: '\\', ctrlKey: true })
+    fireEvent.keyDown(input, { key: 'c', metaKey: true })
     expect(onUndo).not.toHaveBeenCalled()
     expect(onToggleInspector).not.toHaveBeenCalled()
+    expect(onCopy).not.toHaveBeenCalled()
 
     input.remove()
   })

@@ -4,6 +4,7 @@ export interface StudioShortcutsHandlers {
   onUndo: () => void
   onRedo: () => void
   onToggleInspector: () => void
+  onCopy?: () => void
 }
 
 // Global studio keyboard shortcuts, matching design-tool conventions:
@@ -16,6 +17,7 @@ export function useStudioShortcuts({
   onUndo,
   onRedo,
   onToggleInspector,
+  onCopy,
 }: StudioShortcutsHandlers): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -38,10 +40,13 @@ export function useStudioShortcuts({
       } else if (key === '\\' || key === 'b') {
         event.preventDefault()
         onToggleInspector()
+      } else if (key === 'c' && onCopy) {
+        event.preventDefault()
+        onCopy()
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onUndo, onRedo, onToggleInspector])
+  }, [onUndo, onRedo, onToggleInspector, onCopy])
 }

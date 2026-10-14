@@ -1,5 +1,5 @@
-import type { Language } from '../lib/i18n'
 import type { AspectRatio } from '../types'
+import type { Language } from '../lib/i18n'
 
 // Multiplier applied to preview dimensions when rendering the exported PNG.
 export const EXPORT_PIXEL_RATIO = 2.5
