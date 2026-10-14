@@ -27,13 +27,13 @@ export const DEFAULT_CARD_STATE: CardState = {
 
 // Preset names are UI Copy (button labels) — resolved through the dictionary
 // at render time, never stored on the state.
-export interface SamplePreset {
+export interface Preset {
   id: string
   nameKey: UiCopyKey
   state: Partial<CardState>
 }
 
-export const SAMPLE_PRESETS: SamplePreset[] = [
+export const PRESETS: Preset[] = [
   {
     id: 'original',
     nameKey: 'preset_original',
@@ -72,7 +72,7 @@ export const SAMPLE_PRESETS: SamplePreset[] = [
     id: 'quote',
     nameKey: 'preset_quote',
     // The full replica look in one click. Unlike the other presets it sets
-    // the bio: the two-line bio is part of the replica (approved in #24).
+    // the bio: the two-line bio is part of the replica look.
     state: {
       headline: 'Làm ít, làm sâu, làm thật.',
       sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',

@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import type { CardState, AspectRatio, CardTheme } from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { useCardStore } from '../lib/card-store'
-import { SAMPLE_PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
+import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
 import { Slider } from '@base-ui/react/slider'
@@ -96,7 +96,7 @@ export const PresetsSection: React.FC = () => {
         </span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {SAMPLE_PRESETS.map((p) => {
+        {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
           return (
             <Button

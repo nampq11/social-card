@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useCardStore } from '../lib/card-store'
 import { RATIO_INFO } from '../constants/ratios'
 import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets'
-import { splitSublines } from '../lib/card-text'
+import { splitLines } from '../lib/card-text'
 import { useUiCopy } from '../lib/i18n'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 
@@ -21,8 +21,8 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
 
     const themeStyles = CARD_THEME_STYLES[data.theme]
 
-    const sublineList = splitSublines(data.sublines)
-    const bioLines = splitSublines(data.authorBio)
+    const sublineList = splitLines(data.sublines)
+    const bioLines = splitLines(data.authorBio)
 
     const signatureText = (alignRight: boolean) => (
       <div className={alignRight ? 'text-right' : ''}>
@@ -31,6 +31,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         </h3>
         {bioLines.length > 0 && (
           <div
+            data-testid="author-bio"
             className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
           >
             {bioLines.map((line, idx) => (
@@ -92,6 +93,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
 
             {sublineList.length > 0 && (
               <div
+                data-testid="sublines"
                 style={{
                   fontSize: `${Math.max(16, Math.round(data.headlineSize * 0.52))}px`,
                   lineHeight: 1.55,

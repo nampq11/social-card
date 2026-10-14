@@ -41,9 +41,13 @@ describe('CardPreview', () => {
   })
 
   it('renders bold sublines with the theme main text color when boldSublines is on', () => {
-    renderCard({ theme: 'mist', boldSublines: true, sublines: 'lanphinh.com' })
+    const { container } = renderCard({
+      theme: 'mist',
+      boldSublines: true,
+      sublines: 'lanphinh.com',
+    })
 
-    const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
+    const sublinesBlock = container.querySelector('[data-testid="sublines"]')
     expect(sublinesBlock?.className).toContain('font-semibold')
     expect(sublinesBlock?.className).toContain(CARD_THEME_STYLES.mist.text)
     expect(sublinesBlock?.className).not.toContain(CARD_THEME_STYLES.mist.subtext)
@@ -61,6 +65,11 @@ describe('CardPreview', () => {
     expect(second.tagName).toBe('P')
     expect(first).not.toBe(second)
   })
+  it('keeps a blank bio hidden', () => {
+    const { container } = renderCard({ authorName: 'Nam', authorBio: '   \n  ' })
+
+    expect(container.querySelector('[data-testid="author-bio"]')).toBeNull()
+  })
 
   it('renders the grayscale class on the avatar image when avatarGrayscale is on', () => {
     renderCard({ theme: 'mist', avatarGrayscale: true })
@@ -77,9 +86,9 @@ describe('CardPreview', () => {
   })
 
   it('renders normal-weight muted sublines when boldSublines is off', () => {
-    renderCard({ theme: 'mist', sublines: 'lanphinh.com' })
+    const { container } = renderCard({ theme: 'mist', sublines: 'lanphinh.com' })
 
-    const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
+    const sublinesBlock = container.querySelector('[data-testid="sublines"]')
     expect(sublinesBlock?.className).toContain('font-normal')
     expect(sublinesBlock?.className).toContain(CARD_THEME_STYLES.mist.subtext)
     expect(sublinesBlock?.className).not.toContain(CARD_THEME_STYLES.mist.text)
@@ -136,9 +145,8 @@ describe('CardPreview', () => {
     const name = screen.getByText('Nam Pham')
     const avatar = cardNode?.querySelector('img')
     expect(avatar).not.toBeNull()
-    expect(
-      avatar?.compareDocumentPosition(name as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    const order = avatar?.compareDocumentPosition(name as Node) ?? 0
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('centers the signature without an avatar when QR is off', () => {
@@ -167,9 +175,8 @@ describe('CardPreview', () => {
 
     const name = screen.getByText('Nam Pham')
     const avatar = cardNode?.querySelector('img')
-    expect(
-      avatar?.compareDocumentPosition(name as Node) & Node.DOCUMENT_POSITION_PRECEDING,
-    ).toBeTruthy()
+    const order = avatar?.compareDocumentPosition(name as Node) ?? 0
+    expect(order & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
   })
 
   it('uses theme border on QR container without leaking ambient dark classes', () => {
@@ -185,7 +192,7 @@ describe('CardPreview', () => {
     const cardNode = container.querySelector('#social-card-node')
     expect(cardNode?.className).toContain(CARD_THEME_STYLES.mist.bg)
     const qrContainer = container.querySelector('#social-card-node [data-testid="qr-container"]')
-    expect(qrContainer?.className).toContain('border-slate-300/60')
+    expect(qrContainer?.className).toContain(CARD_THEME_STYLES.mist.border)
   })
 
   it('uses normal tracking on subline elements for optical legibility', () => {
