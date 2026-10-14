@@ -83,8 +83,13 @@ export function useShotFitTour(shotArmed: boolean, onboardingDone: boolean) {
   useEffect(() => {
     if (!shotArmed || !onboardingDone) return
     if (readShotFitTourStatus() !== 'new') return
-    writeShotFitTourStatus('done')
-    setIsTourOpen(true)
+    // Open a frame late: nothing user-visible depends on landing in the
+    // ingest commit, and the spotlight reads a settled layout.
+    const raf = requestAnimationFrame(() => {
+      writeShotFitTourStatus('done')
+      setIsTourOpen(true)
+    })
+    return () => cancelAnimationFrame(raf)
   }, [shotArmed, onboardingDone])
 
   const endTour = useCallback(() => setIsTourOpen(false), [])

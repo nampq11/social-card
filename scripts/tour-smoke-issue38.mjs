@@ -110,6 +110,7 @@ try {
   // --- 6. persistence: reload, re-arm a Shot — the tour must stay dead -----
   await app.send('Page.reload')
   await waitUntil('app reboot', () => evalJs(`!!document.querySelector('#social-card-node')`))
+  await waitUntil('inspector radios', () => evalJs(`!!document.querySelector('[role=radio]')`))
   await evalJs(
     `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
   )
