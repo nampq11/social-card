@@ -52,12 +52,23 @@ tap-to-select on touch so preview drags never hijack page scroll.
 
 - Defaults must reproduce today's render exactly; existing saved states are
   visually unchanged until the user edits fit/focus.
-- `html-to-image` export of CSS `filter: blur` is unproven in this
-  codebase — the export smoke must verify it, with dominant-color
-  extraction at ingest as the fallback backdrop.
+- `html-to-image` export of CSS `filter: blur` was unproven in this
+  codebase — the export smoke now verifies it on real pixels (quantized
+  color buckets in the window card's backdrop margin: a live blur blends
+  the fixture into ~19 buckets, a dead one leaves ~1-6). Verification
+  first: the dominant-color fallback backdrop stays unbuilt until a real
+  export environment fails that check — a fallback for a proven-non-issue
+  is dead code.
+- The Fit window card's "padding" (issue #34 decision 6) is implemented as
+  a uniform `scale-[0.92]` inset on the Shot rather than box padding: the
+  gutter stays proportional at every slot size, and the backdrop shows
+  through on all four sides identically. Deliberately chosen over fixed
+  padding, which would need per-slot-size tuning.
 - Drag-to-pan produces high-frequency updates: undo coalescing on the
   shared 600ms window is required, which also aligns the Annotation text
   action path with the Quote headline behavior.
+- Annotation text edits share that same coalescing window (one typing
+  burst, one undo); side switches and retargets stay discrete steps.
 - Touch drag must be opt-in per Shot (tap-to-select) with `touch-action`
   isolation, or it fights Bottom Sheet scroll in the Mobile Shell.
 - Zoom (`scale` beyond cover) is deliberately absent; `focus` normalization
@@ -67,13 +78,15 @@ tap-to-select on touch so preview drags never hijack page scroll.
 
 The renderer does **not** use an explicit `transform: translate(...) scale(...)`.
 Implementing it surfaced that the rejection of `object-fit` + `object-position`
-was factually wrong: `object-position` reproduces Focus natively and
-ratio-free (`0..1` → `0%..100%`, and the default `50% 0%` is literally
-`object-top`), the Fit backdrop needs no math at all (a blurred `object-cover`
-copy behind an `object-contain` image), and the transform path would have
-required natural-size plus slot-size measurement for zero user-visible gain
-while zoom stays deferred. The original transform decision remains the
-upgrade path if the deferred zoom control ever ships; nothing else in this
-ADR changes. Clamping is unaffected: the browser cannot pan past the image
-edge under `object-position`, and `clampFocus`/`shotObjectPosition`
-(src/lib/shot-fit.ts) still guarantee a normalized anchor.
+was factually wrong: `object-position` is the browser's native mechanism
+for exactly this mapping — ratio-free (`0..1` → `0%..100%`), and the
+default `50% 0%` is literally the legacy `object-top` render. The Fit
+backdrop needs no math at all (a blurred `object-cover` copy behind an
+`object-contain` image). The pan gesture still measures natural-size and
+slot-size for its drag math either way, so the transform's only real
+residual advantage is that a future zoom control would reuse its
+`scale(...)` — which is why the transform stays the documented upgrade
+path if deferred zoom ever ships. Nothing else in this ADR changes.
+Clamping is unaffected: the browser cannot pan past the image edge under
+`object-position`, and `clampFocus`/`shotAnchorCss` (src/lib/shot-fit.ts)
+still guarantee a normalized anchor.
