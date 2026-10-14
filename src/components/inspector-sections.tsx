@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import type { CardState, AspectRatio, CardTheme, CardType } from '../types'
+import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, Shot } from '../types'
 import { SegmentedControl } from './SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
@@ -207,6 +207,107 @@ export const ScreenshotsSection: React.FC = () => {
         accept="image/*"
         className="hidden"
       />
+    </div>
+  )
+}
+
+// Shots carry no name of their own; every surface names one by its upload
+// order, matching the thumbnails' alt text in ScreenshotsSection.
+const shotName = (copy: ReturnType<typeof useUiCopy>['copy'], position: number) =>
+  `${copy.shots_label} ${position}`
+
+// One Shot's line in the Annotations section: the Shot (named by upload
+// order, like the thumbnails' alt text) beside its add affordance, which
+// mirrors the store's one-annotation-per-Shot refusal by disabling.
+const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, position }) => {
+  const { copy } = useUiCopy()
+  const annotated = useCardStore(
+    (s) => s.card.showcase?.annotations.some((a) => a.shotId === shot.id) ?? false,
+  )
+  const name = `${copy.shots_label} ${position}`
+  const addAnnotation = useCardStore((s) => s.addAnnotation)
+  const displayName = shotName(copy, position)
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="truncate text-xs text-[#424245] dark:text-[#A1A1A6]">{name}</span>
+      <Button
+        onClick={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
+        disabled={annotated}
+        aria-label={`${copy.annotations_add} · ${displayName}`}
+        variant="secondary"
+        size="sm"
+      >
+        <Plus className="w-3 h-3" />
+        <span>{copy.annotations_add}</span>
+      </Button>
+    </div>
+  )
+}
+
+// The Showcase Card's handwritten Annotations (GLOSSARY.md), edited list-only
+// The Showcase Card's handwritten Annotations (GLOSSARY.md), edited list-only
+// per spec #33 — no canvas selection: each row is the annotation's text, its
+// target Shot, its side, and a delete. Adding is capped at one per Shot; the
+// store refuses the add and the per-Shot add affordance mirrors that cap.
+export const AnnotationsSection: React.FC = () => {
+  const { copy } = useUiCopy()
+  const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
+  const annotations = useCardStore((s) => s.card.showcase?.annotations) ?? []
+  const updateAnnotation = useCardStore((s) => s.updateAnnotation)
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+        {copy.annotations_label}
+      </label>
+      {annotations.map((annotation) => (
+        <div
+          key={annotation.id}
+          className="flex flex-col gap-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.1] p-2"
+        >
+          <input
+            aria-label={copy.annotations_text_label}
+            value={annotation.text}
+            onChange={(e) => updateAnnotation(annotation.id, { text: e.target.value })}
+            placeholder={copy.annotations_text_hint}
+            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+          />
+          <div className="flex gap-1.5">
+            <select
+              aria-label={copy.annotations_target_label}
+              value={annotation.shotId}
+              onChange={(e) => updateAnnotation(annotation.id, { shotId: e.target.value })}
+              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+            >
+              {shots.map((shot, index) => (
+                <option
+                  key={shot.id}
+                  value={shot.id}
+                  disabled={annotations.some((a) => a.id !== annotation.id && a.shotId === shot.id)}
+                >
+                  {shotName(copy, index + 1)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label={copy.annotations_side_label}
+              value={annotation.side}
+              onChange={(e) =>
+                updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
+              }
+              className="px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+            >
+              <option value="left">{copy.annotation_side_left}</option>
+              <option value="right">{copy.annotation_side_right}</option>
+              <option value="top">{copy.annotation_side_top}</option>
+            </select>
+          </div>
+        </div>
+      ))}
+      {shots.map((shot, index) => (
+        <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
+      ))}
     </div>
   )
 }

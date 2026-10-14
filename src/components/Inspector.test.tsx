@@ -479,6 +479,77 @@ describe('Inspector Showcase Screenshots section', () => {
   })
 })
 
+describe('Inspector Showcase Annotations section', () => {
+  const switchToShowcase = () => {
+    renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+  }
+  const shots = () => useCardStore.getState().card.showcase?.shots ?? []
+  const annotations = () => useCardStore.getState().card.showcase?.annotations ?? []
+
+  it('adds an annotation bound to its Shot from the per-Shot add control', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm ghi chú · Ảnh chụp màn hình 1' }))
+
+    expect(annotations()).toHaveLength(1)
+    expect(annotations()[0].shotId).toBe(shots()[0].id)
+    expect(annotations()[0].text).toBe('')
+    expect(screen.getByLabelText('Nội dung ghi chú')).not.toBeNull()
+  })
+
+  it('edits the annotation text through its field', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: '', side: 'left' }),
+    )
+
+    fireEvent.change(screen.getByLabelText('Nội dung ghi chú'), {
+      target: { value: 'Tổng quan ý tưởng' },
+    })
+
+    expect(annotations()[0].text).toBe('Tổng quan ý tưởng')
+  })
+
+  it('retargets an annotation to a free Shot through the target selector', () => {
+    switchToShowcase()
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+      useCardStore.getState().addShot('data:image/jpeg;base64,two')
+    })
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' }),
+    )
+
+    fireEvent.change(screen.getByLabelText('Ảnh đích'), { target: { value: shots()[1].id } })
+
+    expect(annotations()[0].shotId).toBe(shots()[1].id)
+  })
+
+  it('changes the annotation side through the side selector', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' }),
+    )
+
+    fireEvent.change(screen.getByLabelText('Vị trí'), { target: { value: 'right' } })
+
+    expect(annotations()[0].side).toBe('right')
+  })
+
+  it('joins the Screenshots section in the Showcase Content tab only', () => {
+    switchToShowcase()
+
+    expect(screen.getByText('Ghi chú')).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Trích dẫn' }))
+    expect(screen.queryByText('Ghi chú')).toBeNull()
+  })
+})
+
 describe('Inspector presets in Showcase mode', () => {
   const switchToShowcase = () => {
     renderInspector()
