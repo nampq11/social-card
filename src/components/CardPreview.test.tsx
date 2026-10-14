@@ -337,3 +337,20 @@ describe('Showcase Card', () => {
     expect(cardNode?.style.height).toBe('720px')
   })
 })
+
+describe('Showcase Annotations', () => {
+  it('renders the annotation text inside its shot slot, diacritics intact', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [
+          { id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan ý tưởng', side: 'left' },
+        ],
+      },
+    })
+
+    const text = screen.getByText('Tổng quan ý tưởng')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+  })
+})

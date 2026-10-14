@@ -1,7 +1,7 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
-import type { CardState, CardTheme, Shot } from '../types'
+import type { Annotation, CardState, CardTheme, Shot } from '../types'
 
 // One Screenshot Slot (GLOSSARY.md): holds its Shot, or shows the dashed
 // placeholder when empty — a pure preview affordance; capturing Shots is the
@@ -11,23 +11,34 @@ const Slot = ({
   testId,
   sizeClassName,
   themeStyles,
+  annotation,
 }: {
   shot?: Shot
   testId: string
   sizeClassName: string
   themeStyles: (typeof CARD_THEME_STYLES)[CardTheme]
+  annotation?: Annotation
 }) => (
   <div
     data-testid={testId}
-    className={`overflow-hidden rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
+    className={`relative rounded-2xl ring-1 ${themeStyles.avatarBorder} ${sizeClassName}`}
   >
-    {shot ? (
-      <img src={shot.dataUrl} alt="" className="h-full w-full object-cover object-top" />
-    ) : (
-      <div
-        data-testid="slot-placeholder"
-        className={`h-full w-full rounded-2xl border-2 border-dashed ${themeStyles.border}`}
-      />
+    {/* The slot clips its Shot; the annotation mark must overflow into the
+        margin, so clipping stays on the inner box (issue #33). */}
+    <div className="h-full w-full overflow-hidden rounded-2xl">
+      {shot ? (
+        <img src={shot.dataUrl} alt="" className="h-full w-full object-cover object-top" />
+      ) : (
+        <div
+          data-testid="slot-placeholder"
+          className={`h-full w-full rounded-2xl border-2 border-dashed ${themeStyles.border}`}
+        />
+      )}
+    </div>
+    {shot && annotation && (
+      <div data-testid="annotation">
+        <p>{annotation.text}</p>
+      </div>
     )}
   </div>
 )
@@ -41,6 +52,10 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
   const themeStyles = CARD_THEME_STYLES[card.theme]
   const [hero, ...details] = card.showcase?.shots ?? []
   const bioLines = splitLines(card.authorBio)
+  // Annotations bind to Shots (issue #33): the lookup is by the Shot's stable
+  // id, so an annotation renders wherever its Shot currently sits.
+  const annotationFor = (shotId: string) =>
+    card.showcase?.annotations.find((annotation) => annotation.shotId === shotId)
 
   return (
     <>
@@ -50,6 +65,7 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
           shot={hero}
           sizeClassName="min-h-0 flex-[3]"
           themeStyles={themeStyles}
+          annotation={hero ? annotationFor(hero.id) : undefined}
         />
         {details.length > 0 && (
           <div className="flex min-h-0 flex-[2] gap-4">
@@ -60,6 +76,7 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
                 shot={shot}
                 sizeClassName="min-h-0 flex-1"
                 themeStyles={themeStyles}
+                annotation={annotationFor(shot.id)}
               />
             ))}
           </div>
