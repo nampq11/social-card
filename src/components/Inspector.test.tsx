@@ -54,6 +54,43 @@ describe('Inspector style presets', () => {
   })
 })
 
+describe('Inspector Quote sample preset', () => {
+  it('assembles the whole replica look and content in one undoable step', () => {
+    renderInspector()
+
+    fireEvent.click(screen.getByRole('button', { name: /Trích dẫn/i }))
+
+    const card = useCardStore.getState().card
+    expect(card).toMatchObject({
+      theme: 'mist',
+      ratio: '1:1',
+      uppercaseHeadline: true,
+      headlineSize: 46,
+      qrEnabled: false,
+      boldSublines: true,
+      avatarGrayscale: true,
+      headline: 'Làm ít, làm sâu, làm thật.',
+      sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',
+      authorBio: 'Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư',
+      qrCta: 'Theo dõi hành trình indie!',
+    })
+
+    // The whole preset is one history step, not one per field.
+    act(() => useCardStore.getState().undo())
+    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE)
+  })
+
+  it('marks the Quote preset active while the current state matches it', () => {
+    renderInspector()
+
+    const quote = screen.getByRole('button', { name: /Trích dẫn/i })
+    expect(quote.getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.click(quote)
+    expect(quote.getAttribute('aria-pressed')).toBe('true')
+  })
+})
+
 describe('Inspector', () => {
   it('hosts the same tab groups as the Mobile Sheet, one group visible at a time', () => {
     renderInspector()
