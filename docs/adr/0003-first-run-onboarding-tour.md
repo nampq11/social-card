@@ -39,7 +39,14 @@ tuning — verified at 1440/800/390 widths.
 1. **Vendored Dice UI Tour** (`src/components/ui/tour.tsx`) is the tour
    engine. Local adaptations stay minimal for future re-syncs: our Button,
    lucide icons instead of the registry icon placeholder, our `secondary`
-   button variant, and `shift` corrects both axes (see decision 4). The one
+   button variant, and (see decision 4) `flip()` runs before the both-axes
+   `shift()` — the shift otherwise absorbs the overflow and `flip` never
+   fires on viewport-sized anchors — plus two settle-tracking adaptations:
+   the spotlight re-masks whenever the target's rect changes (per-frame rect
+   watcher while a step is open) and the step card repositions every frame
+   while mounted (`animationFrame: true`), because the mobile canvas keeps
+   settling after a step opens (Fit-to-View scale follows the animated
+   canvas reserve; transformed size changes fire no resize events). The one
    vendored English label (icon-only TourClose) is overridden at the call
    site with the i18n dictionary — visible text is the accessible name
    everywhere else.
@@ -51,15 +58,23 @@ tuning — verified at 1440/800/390 widths.
 3. **Four steps, ≤25 words each**, progress counter, Skip + Esc everywhere.
 4. **Anchors are the surfaces each step talks about**: the rendered card
    (`#social-card-node`), the Inspector panel / Bottom Sheet
-   (`data-tour="inspector"`), the shared tab bar
+   (`data-tour="inspector"` — on the Mobile Shell it sits on the sheet's
+   `<section>`, not the fixed root: the root's rect is the un-transformed
+   layout box, which at peek spans empty canvas above the translated sheet,
+   while the section's rect tracks the sheet's live transform — the surface
+   the spotlight must hug), the shared tab bar
    (`data-tour="inspector-tabs"`), and the Header export group
    (`data-tour="export"`). Each selector resolves to the same semantic
-   surface in both Shells, so one step set serves desktop and mobile.
+   surface in both Shells, so one step set serves desktop and mobile; the
+   sheet steps flip placement per Shell (side `right`/`start` on desktop,
+   `top`/`center` on mobile so the popover docks above the bottom sheet).
    Because these surfaces are viewport-sized (ADR 0002), floating-ui's
    default cross-axis-only `shift` leaves the popover clipped off-screen; the
    vendored component corrects both axes so the popover floats over the
    dimmed target (coach-mark convention) while `limitShift` keeps it
-   anchored. Verified fully in-viewport at 1440×813, 800×513, 390×757.
+   anchored. Verified fully in-viewport at 1440×813, 800×513, 390×844 and
+   375×667 (iPhone 14 / iPhone SE portrait: welcome card, all four steps,
+   sheet peeked and expanded, every popover fully inside the viewport).
 
 ## Consequences
 
@@ -67,8 +82,8 @@ tuning — verified at 1440/800/390 widths.
 - Tour copy flows through the i18n dictionary (`tour_*`, `onboarding_*` keys)
   and is translated in both Interface Languages.
 - `src/components/ui/tour.tsx` is excluded from oxlint (`ignorePatterns`) as
-  vendored third-party code; re-syncing means re-applying the five documented
-  adaptations.
+  vendored third-party code; re-syncing means re-applying the documented
+  adaptations from decision 1.
 - With both-axis shift, a popover may overlap its dimmed target when no side
   has room — accepted coach-mark behavior; `limitShift` prevents it from
   drifting off its anchor.

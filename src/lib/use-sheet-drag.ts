@@ -142,17 +142,20 @@ export function useSheetDrag(
 
   useEffect(() => {
     const content = contentRef.current
-    if (!content) return
+    const section = sheetRef.current
+    if (!content || !section) return
     // jsdom has no ResizeObserver: tests keep the mount computation only.
     if (typeof ResizeObserver === 'undefined') return
     // The chrome above the content changes height after mount (web fonts
-    // swapping in, late reflow), and a window resize never fires for that —
-    // the content is flex-1, so its box moves inversely with the chrome and
-    // its resize is exactly the "chrome height changed" signal.
+    // swapping in, late reflow, a chrome row re-rendering), and a window
+    // resize never fires for that. The content is flex-1, so its box moves
+    // inversely with the chrome; the section catches chrome changes that
+    // leave the content box untouched. Either is the "re-measure" signal.
     const observer = new ResizeObserver(() => measure())
     observer.observe(content)
+    observer.observe(section)
     return () => observer.disconnect()
-  }, [measure, contentRef])
+  }, [measure, contentRef, sheetRef])
 
   useEffect(() => {
     const onResize = () => {
