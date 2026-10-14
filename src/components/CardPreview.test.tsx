@@ -89,6 +89,62 @@ describe('CardPreview', () => {
     renderCard({ qrEnabled: false, qrCta: 'Quét để xem mã nguồn' })
     expect(screen.queryByText('Quét để xem mã nguồn')).toBeNull()
   })
+  it('omits QR code and CTA when qrEnabled is false', () => {
+    renderCard({ qrEnabled: false, qrCta: 'Quét để xem mã nguồn' })
+    expect(screen.queryByText('Quét để xem mã nguồn')).toBeNull()
+  })
+
+  it('centers the signature with avatar before name when QR is off', () => {
+    const { container } = renderCard({
+      qrEnabled: false,
+      authorName: 'Nam Pham',
+      avatarUrl: 'https://example.com/a.png',
+    })
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode).not.toBeNull()
+
+    const footer = cardNode?.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('justify-center')
+    expect(footer?.className).not.toContain('justify-between')
+
+    const name = screen.getByText('Nam Pham')
+    const avatar = cardNode?.querySelector('img')
+    expect(avatar).not.toBeNull()
+    expect(
+      avatar?.compareDocumentPosition(name as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('centers the signature without an avatar when QR is off', () => {
+    const { container } = renderCard({
+      qrEnabled: false,
+      authorName: 'Nam Pham',
+      avatarUrl: '',
+    })
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode?.querySelector('img')).toBeNull()
+    const footer = cardNode?.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('justify-center')
+    expect(screen.queryByText('Nam Pham')).not.toBeNull()
+  })
+
+  it('keeps the QR-on footer layout unchanged: name before avatar, space-between', () => {
+    const { container } = renderCard({
+      qrEnabled: true,
+      authorName: 'Nam Pham',
+      avatarUrl: 'https://example.com/a.png',
+    })
+    const cardNode = container.querySelector('#social-card-node')
+    const footer = cardNode?.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('justify-between')
+    expect(footer?.className).not.toContain('justify-center')
+
+    const name = screen.getByText('Nam Pham')
+    const avatar = cardNode?.querySelector('img')
+    expect(
+      avatar?.compareDocumentPosition(name as Node) & Node.DOCUMENT_POSITION_PRECEDING,
+    ).toBeTruthy()
+  })
 
   it('uses theme border on QR container without leaking ambient dark classes', () => {
     const { container } = renderCard({ qrEnabled: true, theme: 'white' })
