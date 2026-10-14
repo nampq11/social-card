@@ -6,9 +6,10 @@ import {
   dampedStep,
   DEFAULT_SHOT_FOCUS,
   focusForPinch,
-  projectedFocus,
-  rubberbandDelta,
+  focusFromDrag,
+  momentumFocus,
   trackVelocity,
+  type ShotGeometry,
   type VelocityState,
 } from './shot-fit'
 import { useMediaQuery } from './use-media-query'
@@ -26,8 +27,6 @@ import type { ShotFit, ShotFocus } from '../types'
 
 // Apple's settle parameters for repositioning: damping 1.0, response 0.3s.
 const GLIDE_RESPONSE = 0.3
-// Rubber-band softness (Apple's constant): resistance grows with depth.
-const RUBBERBAND_CONSTANT = 0.55
 // Double-click zoom toggle (Photos' browse ↔ detail at the point).
 const DOUBLE_CLICK_SCALE = 2
 // A release below this speed is a deliberate rest, not a flick: pixel-level
@@ -57,7 +56,22 @@ interface PinchGesture {
   startDistance: number
   startMidpoint: { x: number; y: number }
   startFocus: ShotFocus
-  startZoom: number
+  startScale: number
+}
+
+const geometryOf = (el: HTMLImageElement): ShotGeometry => ({
+  slotWidth: el.offsetWidth,
+  slotHeight: el.offsetHeight,
+  naturalWidth: el.naturalWidth,
+  naturalHeight: el.naturalHeight,
+})
+
+// The preview canvas is CSS-scaled (Fit-to-View): screen px = layout px only
+// at scale 1. Pointer input and the tracked velocity are screen px; the
+// gesture math is slot layout px — this converts at the boundary.
+const previewScaleOf = (el: HTMLImageElement) => {
+  const rect = el.getBoundingClientRect()
+  return rect.width > 0 && el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1
 }
 
 const midpointOf = (a: { x: number; y: number }, b: { x: number; y: number }, rect: DOMRect) => ({
@@ -112,7 +126,7 @@ export function useShotPan(
   }
 
   // Stable identity so the wheel effect subscribes once per cover change.
-  const shotIn = useCallback(
+  const getShot = useCallback(
     () => useCardStore.getState().card.showcase?.shots.find((s) => s.id === shotId),
     [shotId],
   )
@@ -129,12 +143,12 @@ export function useShotPan(
     }
     stopGlide()
     let last = performance.now()
-    lastGlideWrite.current = shotIn()?.focus ?? DEFAULT_SHOT_FOCUS
+    lastGlideWrite.current = getShot()?.focus ?? DEFAULT_SHOT_FOCUS
     const step = (now: number) => {
       glideFrame.current = null
       const dtMs = Math.min(64, now - last)
       last = now
-      const current = shotIn()?.focus ?? DEFAULT_SHOT_FOCUS
+      const current = getShot()?.focus ?? DEFAULT_SHOT_FOCUS
       if (
         lastGlideWrite.current &&
         (Math.abs(current.x - lastGlideWrite.current.x) > 0.01 ||
@@ -172,46 +186,18 @@ export function useShotPan(
     glideFrame.current = requestAnimationFrame(step)
   }
 
-  // Where a release with this velocity coasts to (ADR 0006 §3): the
-  // projection per axis against that axis's zoomed overflow.
-  const momentumTargets = (
-    el: HTMLImageElement,
-    velocity: VelocityState | null,
-    from: ShotFocus,
-  ): ShotFocus => {
-    const rect = el.getBoundingClientRect()
-    const scale = rect.width > 0 && el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1
-    const coverScale = Math.max(
-      el.offsetWidth / el.naturalWidth,
-      el.offsetHeight / el.naturalHeight,
-    )
-    const zoom = clampScale(shotIn()?.scale ?? 1)
-    return {
-      x: projectedFocus(
-        from.x,
-        velocity?.velocityX ?? 0,
-        el.naturalWidth * coverScale * zoom - el.offsetWidth / scale,
-      ),
-      y: projectedFocus(
-        from.y,
-        velocity?.velocityY ?? 0,
-        el.naturalHeight * coverScale * zoom - el.offsetHeight / scale,
-      ),
-    }
-  }
-
   const beginPinchIfArmed = (event: ReactPointerEvent<HTMLImageElement>) => {
     if (pinch.current !== null || pointers.current.size !== 2 || !interactive || !cover) return
     const [a, b] = [...pointers.current.values()]
     const rect = event.currentTarget.getBoundingClientRect()
-    const shot = shotIn()
+    const shot = getShot()
     pinch.current = {
       idA: event.pointerId,
       idB: [...pointers.current.keys()].find((id) => id !== event.pointerId) ?? event.pointerId,
       startDistance: Math.hypot(a.x - b.x, a.y - b.y) || 1,
       startMidpoint: midpointOf(a, b, rect),
       startFocus: shot?.focus ?? DEFAULT_SHOT_FOCUS,
-      startZoom: shot?.scale ?? 1,
+      startScale: shot?.scale ?? 1,
     }
     gesture.current = null
     setDragging(false)
@@ -226,7 +212,7 @@ export function useShotPan(
     beginPinchIfArmed(event)
     if (pinch.current) return
     if (!interactive) return
-    const shot = shotIn()
+    const shot = getShot()
     gesture.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -255,20 +241,17 @@ export function useShotPan(
       const rect = el.getBoundingClientRect()
       const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1
       const midpoint = midpointOf(a, b, rect)
-      const nextZoom = clampScale(activePinch.startZoom * (distance / activePinch.startDistance))
-      setShotScale(shotId, nextZoom)
+      const nextScale = clampScale(activePinch.startScale * (distance / activePinch.startDistance))
+      setShotScale(shotId, nextScale)
       setShotFocus(
         shotId,
         focusForPinch(
           activePinch.startFocus,
-          activePinch.startZoom,
-          nextZoom,
+          activePinch.startScale,
+          nextScale,
           activePinch.startMidpoint,
           midpoint,
-          el.offsetWidth,
-          el.offsetHeight,
-          el.naturalWidth,
-          el.naturalHeight,
+          geometryOf(el),
         ),
       )
       return
@@ -289,34 +272,21 @@ export function useShotPan(
       event.timeStamp,
     )
     const el = event.currentTarget
-    // The preview canvas is CSS-scaled (Fit-to-View); pointer px are screen
-    // px, the math wants slot px.
-    const rect = el.getBoundingClientRect()
-    const scale = rect.width > 0 && el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1
-    const coverScale = Math.max(
-      el.offsetWidth / el.naturalWidth,
-      el.offsetHeight / el.naturalHeight,
+    const previewScale = previewScaleOf(el)
+    const dx = (event.clientX - active.startX) / previewScale
+    const dy = (event.clientY - active.startY) / previewScale
+    // Pointer deltas move the content 1:1; travel past an edge rubber-bands
+    // (ADR 0006 §3) — focus pegs at the edge while the excess shows as a
+    // transient translate on the image.
+    const outcome = focusFromDrag(
+      active.startFocus,
+      dx,
+      dy,
+      geometryOf(el),
+      clampScale(getShot()?.scale ?? 1),
     )
-    const zoom = clampScale(shotIn()?.scale ?? 1)
-    const overflowX = el.naturalWidth * coverScale * zoom - el.offsetWidth
-    const overflowY = el.naturalHeight * coverScale * zoom - el.offsetHeight
-    const dx = (event.clientX - active.startX) / scale
-    const dy = (event.clientY - active.startY) / scale
-    // Pointer deltas move the content 1:1; the travel past an edge is
-    // rubber-banded (ADR 0006 §3) — focus pegs at the edge while the excess
-    // shows as a transient translate on the image.
-    const axis = (focus: number, delta: number, overflow: number, dimension: number) => {
-      if (overflow <= 0) return { focus, over: 0 }
-      const raw = focus * overflow - delta
-      if (raw < 0) return { focus: 0, over: rubberbandDelta(-raw, dimension, RUBBERBAND_CONSTANT) }
-      if (raw > overflow)
-        return { focus: 1, over: -rubberbandDelta(raw - overflow, dimension, RUBBERBAND_CONSTANT) }
-      return { focus: raw / overflow, over: 0 }
-    }
-    const nextX = axis(active.startFocus.x, dx, overflowX, el.offsetWidth)
-    const nextY = axis(active.startFocus.y, dy, overflowY, el.offsetHeight)
-    setShotFocus(shotId, { x: nextX.focus, y: nextY.focus })
-    applyOverdrag(nextX.over !== 0 || nextY.over !== 0 ? { x: nextX.over, y: nextY.over } : null)
+    setShotFocus(shotId, outcome.focus)
+    applyOverdrag(outcome.overdrag.x !== 0 || outcome.overdrag.y !== 0 ? outcome.overdrag : null)
   }
 
   const endGesture = (event: ReactPointerEvent<HTMLImageElement>) => {
@@ -338,12 +308,24 @@ export function useShotPan(
         // Momentum (ADR 0006 §3): the release velocity projects where the
         // content coasts to a stop; a rubber-band excess springs home in the
         // same settle. Reduced motion lands instantly.
-        const released = shotIn()?.focus ?? active.startFocus
+        const released = getShot()?.focus ?? active.startFocus
         const v = velocity.current
         const flick =
           Math.abs(v?.velocityX ?? 0) >= MOMENTUM_MIN_VELOCITY ||
           Math.abs(v?.velocityY ?? 0) >= MOMENTUM_MIN_VELOCITY
-        glide(flick ? momentumTargets(event.currentTarget, v, released) : released)
+        const el = event.currentTarget
+        glide(
+          flick
+            ? momentumFocus(
+                released,
+                v?.velocityX ?? 0,
+                v?.velocityY ?? 0,
+                previewScaleOf(el),
+                geometryOf(el),
+                clampScale(getShot()?.scale ?? 1),
+              )
+            : released,
+        )
         velocity.current = null
         return
       }
@@ -369,7 +351,7 @@ export function useShotPan(
       // Desktop zoom toggle (ADR 0006 §4): anchored at the click point. Touch
       // never pays the double-tap latency trap on its arming tap.
       const el = event.currentTarget
-      const currentScale = clampScale(shotIn()?.scale ?? 1)
+      const currentScale = clampScale(getShot()?.scale ?? 1)
       const nextScale = currentScale > 1 ? 1 : DOUBLE_CLICK_SCALE
       const rect = el.getBoundingClientRect()
       const fraction = {
@@ -381,15 +363,12 @@ export function useShotPan(
         setShotFocus(
           shotId,
           focusForPinch(
-            shotIn()?.focus ?? DEFAULT_SHOT_FOCUS,
+            getShot()?.focus ?? DEFAULT_SHOT_FOCUS,
             currentScale,
             nextScale,
             fraction,
             fraction,
-            el.offsetWidth,
-            el.offsetHeight,
-            el.naturalWidth,
-            el.naturalHeight,
+            geometryOf(el),
           ),
         )
       } else {
@@ -412,7 +391,7 @@ export function useShotPan(
       if (!event.ctrlKey) return
       event.preventDefault()
       const rect = el.getBoundingClientRect()
-      const shot = shotIn()
+      const shot = getShot()
       const currentScale = clampScale(shot?.scale ?? 1)
       const nextScale = clampScale(currentScale * Math.exp(-event.deltaY * WHEEL_ZOOM_FACTOR))
       setShotScale(shotId, nextScale)
@@ -432,18 +411,15 @@ export function useShotPan(
           nextScale,
           anchor,
           anchor,
-          el.offsetWidth,
-          el.offsetHeight,
-          el.naturalWidth,
-          el.naturalHeight,
+          geometryOf(el),
         ),
       )
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-    // shotIn is a per-render closure that reads fresh state at event time;
+    // getShot is a per-render closure that reads fresh state at event time;
     // listing it re-subscribes the native listener on unrelated renders.
-  }, [cover, setShotScale, setShotFocus, shotId, shotIn])
+  }, [cover, setShotScale, setShotFocus, shotId, getShot])
 
   return {
     dragging,

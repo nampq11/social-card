@@ -25,6 +25,32 @@ const sanitizeAxis = (value: number) =>
 export const clampScale = (scale: number): number =>
   Number.isFinite(scale) ? Math.min(SHOT_SCALE_MAX, Math.max(1, scale)) : 1
 
+// The measurements one gesture's math needs: the slot's layout box and the
+// image's intrinsic size, in CSS px. offsetWidth/naturalWidth on purpose —
+// neither moves under the preview's CSS transform, so every px here is a
+// slot-layout px and pointer input converts once, at the boundary.
+export interface ShotGeometry {
+  slotWidth: number
+  slotHeight: number
+  naturalWidth: number
+  naturalHeight: number
+}
+
+export const coverScaleOf = (geometry: ShotGeometry) =>
+  Math.max(geometry.slotWidth / geometry.naturalWidth, geometry.slotHeight / geometry.naturalHeight)
+
+// Cover render overflow per axis in slot layout px (ADR 0006 §4): the zoomed
+// cover render minus the slot — a pan's whole travel domain. An axis at or
+// below zero is inert (nothing to pan), which also makes zero-size
+// measurements (jsdom, pre-layout) safe no-ops.
+export const coverOverflowOf = (geometry: ShotGeometry, scale: number) => {
+  const renderScale = coverScaleOf(geometry) * clampScale(scale)
+  return {
+    x: geometry.naturalWidth * renderScale - geometry.slotWidth,
+    y: geometry.naturalHeight * renderScale - geometry.slotHeight,
+  }
+}
+
 // The default Fit when the user has not overridden one (ADR 0006 §1): derived
 // from the shot-to-slot ratio — near matches (within ~20%, compared as a log
 // ratio so wide and tall mismatch symmetrically) keep cover; anything else
@@ -61,37 +87,40 @@ export const shotAnchorCss = (focus: ShotFocus, fit: ShotFit): string => {
   return `${clamped.x * 100}% ${clamped.y * 100}%`
 }
 
-// One pan gesture's math (ADR 0005): pointer deltas in slot pixels become a
-// clamped focus, against the cover overflow of each axis. Dragging the image
-// right (dx > 0) brings the left edge into view, so focus moves AGAINST the
-// pointer. An axis without overflow is inert — nothing to pan there — which
-// also makes zero-size measurements (jsdom, pre-layout) a safe no-op.
+// One pan gesture's math (ADR 0006 §3): pointer deltas in slot layout px
+// become a clamped focus against the zoomed cover overflow, with travel past
+// an edge rubber-banded instead of hard-stopped. Dragging the image right
+// (dx > 0) brings the left edge into view, so focus moves AGAINST the
+// pointer. Cover only — a contain Shot shows whole and never arms a drag.
+export interface DragOutcome {
+  focus: ShotFocus
+  // Transient rubber-band excess per axis in px — a translate on the image,
+  // never stored focus (the store's domain stays 0..1, ADR 0005's contract).
+  overdrag: ShotFocus
+}
+
 export const focusFromDrag = (
-  focus: ShotFocus,
+  start: ShotFocus,
   dxPx: number,
   dyPx: number,
-  slotWidth: number,
-  slotHeight: number,
-  naturalWidth: number,
-  naturalHeight: number,
-  fit: ShotFit = 'cover',
-  zoom = 1,
-): ShotFocus => {
-  const start = clampFocus(focus, fit)
-  if (fit === 'contain') return start
-  const coverScale = Math.max(slotWidth / naturalWidth, slotHeight / naturalHeight)
-  // Zoom (ADR 0006 §4) multiplies the cover-rendered content, so overflow
-  // grows with it and pan stays 1:1 at every level; past 1 even the
-  // previously exact-fit axis gains overflow.
-  const zoomScale = coverScale * clampScale(zoom)
-  const overflowX = naturalWidth * zoomScale - slotWidth
-  const overflowY = naturalHeight * zoomScale - slotHeight
-  const axis = (value: number, delta: number, overflow: number) =>
-    overflow > 0 ? Math.min(1, Math.max(0, value - delta / overflow)) : value
-  return {
-    x: axis(start.x, dxPx, overflowX),
-    y: axis(start.y, dyPx, overflowY),
+  geometry: ShotGeometry,
+  scale = 1,
+  rubberbandConstant = 0.55,
+): DragOutcome => {
+  const overflow = coverOverflowOf(geometry, scale)
+  const axis = (value: number, delta: number, over: number, dimension: number) => {
+    // `!(over > 0)` on purpose: a degenerate measurement yields NaN overflow,
+    // and every NaN comparison is false — the guard must still fire.
+    if (!(over > 0)) return { value, excess: 0 }
+    const raw = value * over - delta
+    if (raw < 0) return { value: 0, excess: rubberbandDelta(-raw, dimension, rubberbandConstant) }
+    if (raw > over)
+      return { value: 1, excess: -rubberbandDelta(raw - over, dimension, rubberbandConstant) }
+    return { value: raw / over, excess: 0 }
   }
+  const x = axis(start.x, dxPx, overflow.x, geometry.slotWidth)
+  const y = axis(start.y, dyPx, overflow.y, geometry.slotHeight)
+  return { focus: { x: x.value, y: y.value }, overdrag: { x: x.excess, y: y.excess } }
 }
 
 // Rubber-banding (ADR 0006 §3, WWDC18 803): an overdrag past an edge follows
@@ -101,12 +130,33 @@ export const focusFromDrag = (
 export const rubberbandDelta = (overshootPx: number, dimensionPx: number, constant = 0.55) =>
   (overshootPx * dimensionPx * constant) / (dimensionPx + constant * Math.abs(overshootPx))
 
+export const momentumFocus = (
+  from: ShotFocus,
+  velocityXScreen: number,
+  velocityYScreen: number,
+  previewScale: number,
+  geometry: ShotGeometry,
+  scale: number,
+): ShotFocus => {
+  const overflow = coverOverflowOf(geometry, scale)
+  // Pointer velocity is tracked in screen px/s while the overflow domain is
+  // slot layout px — convert like the drag deltas do, or a CSS-scaled
+  // preview coasts the wrong distance (or finds negative overflow and
+  // coasts not at all).
+  const toLayout = previewScale > 0 ? 1 / previewScale : 1
+  return {
+    x: projectedFocus(from.x, velocityXScreen * toLayout, overflow.x),
+    y: projectedFocus(from.y, velocityYScreen * toLayout, overflow.y),
+  }
+}
+
 // Momentum projection (ADR 0006 §3): a release velocity coasts a projected
 // distance (Apple's exponential-decay form, r = 0.998 — px coast ≈ 0.499·v),
 // and the nearest valid end wins. Same sign convention as focusFromDrag:
 // focus moves against pointer px. Inert without overflow.
 export const projectedFocus = (value: number, velocityPxPerS: number, overflowPx: number) => {
-  if (overflowPx <= 0) return sanitizeAxis(value)
+  // `!(overflowPx > 0)` fires for NaN too — degenerate measurements stay inert.
+  if (!(overflowPx > 0)) return sanitizeAxis(value)
   const coastPx = (velocityPxPerS / 1000) * (0.998 / (1 - 0.998))
   return Math.min(1, Math.max(0, value - coastPx / overflowPx))
 }
@@ -158,26 +208,23 @@ export const dampedStep = (current: number, target: number, dtMs: number, respon
 // no overflow — the anchor is meaningless and keeps its old value.
 export const focusForPinch = (
   focus: ShotFocus,
-  zoomFrom: number,
-  zoomTo: number,
-  midpointFrom: ShotFocus,
-  midpointTo: ShotFocus,
-  slotWidth: number,
-  slotHeight: number,
-  naturalWidth: number,
-  naturalHeight: number,
+  scaleFrom: number,
+  scaleTo: number,
+  anchorFrom: ShotFocus,
+  anchorTo: ShotFocus,
+  geometry: ShotGeometry,
 ): ShotFocus => {
   const start = clampFocus(focus, 'cover')
-  const coverScale = Math.max(slotWidth / naturalWidth, slotHeight / naturalHeight)
+  const coverScale = coverScaleOf(geometry)
   const axisAnchor = (value: number, p0: number, p1: number, slotPx: number, naturalPx: number) => {
-    const kFrom = slotPx / (naturalPx * coverScale * clampScale(zoomFrom))
-    const kTo = slotPx / (naturalPx * coverScale * clampScale(zoomTo))
+    const kFrom = slotPx / (naturalPx * coverScale * clampScale(scaleFrom))
+    const kTo = slotPx / (naturalPx * coverScale * clampScale(scaleTo))
     if (kTo >= 1) return value
     const contentFraction = value + (p0 - value) * kFrom
     return Math.min(1, Math.max(0, (contentFraction - p1 * kTo) / (1 - kTo)))
   }
   return {
-    x: axisAnchor(start.x, midpointFrom.x, midpointTo.x, slotWidth, naturalWidth),
-    y: axisAnchor(start.y, midpointFrom.y, midpointTo.y, slotHeight, naturalHeight),
+    x: axisAnchor(start.x, anchorFrom.x, anchorTo.x, geometry.slotWidth, geometry.naturalWidth),
+    y: axisAnchor(start.y, anchorFrom.y, anchorTo.y, geometry.slotHeight, geometry.naturalHeight),
   }
 }
