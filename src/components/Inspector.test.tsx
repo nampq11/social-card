@@ -540,6 +540,90 @@ describe('Inspector Showcase Annotations section', () => {
     expect(annotations()[0].side).toBe('right')
   })
 
+  it('removes an annotation through its delete button', () => {
+    switchToShowcase()
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa ghi chú' }))
+
+    expect(annotations()).toHaveLength(0)
+  })
+
+  it('disables each Shot add affordance once that Shot carries its one annotation', () => {
+    switchToShowcase()
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+      useCardStore.getState().addShot('data:image/jpeg;base64,two')
+    })
+    const addFor = (position: number) =>
+      screen.getByRole('button', {
+        name: `Thêm ghi chú · Ảnh chụp màn hình ${position}`,
+      }) as HTMLButtonElement
+
+    expect(addFor(1).disabled).toBe(false)
+    expect(addFor(2).disabled).toBe(false)
+
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' }),
+    )
+    expect(addFor(1).disabled).toBe(true)
+    expect(addFor(2).disabled).toBe(false)
+  })
+
+  it('explains the per-Shot cap and offers no adds once every Shot is annotated', () => {
+    switchToShowcase()
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+      useCardStore.getState().addShot('data:image/jpeg;base64,two')
+    })
+    act(() => {
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' })
+      useCardStore.getState().addAnnotation({ shotId: shots()[1].id, text: 'b', side: 'left' })
+    })
+
+    expect(
+      screen
+        .queryAllByRole('button', { name: /Thêm ghi chú/ })
+        .every((button) => (button as HTMLButtonElement).disabled),
+    ).toBe(true)
+    expect(screen.getByText('Mỗi ảnh có tối đa một ghi chú.')).not.toBeNull()
+  })
+
+  it('offers only free Shots in the target selector', () => {
+    switchToShowcase()
+    act(() => {
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+      useCardStore.getState().addShot('data:image/jpeg;base64,two')
+    })
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[0].id, text: 'a', side: 'left' }),
+    )
+    act(() =>
+      useCardStore.getState().addAnnotation({ shotId: shots()[1].id, text: 'b', side: 'left' }),
+    )
+    const targetSelects = screen.getAllByLabelText('Ảnh đích') as HTMLSelectElement[]
+
+    // Annotation 1 targets Shot 1: Shot 2 is taken by annotation 2.
+    const takenOption = within(targetSelects[0]).getByRole('option', {
+      name: 'Ảnh chụp màn hình 2',
+    }) as HTMLOptionElement
+    expect(takenOption.disabled).toBe(true)
+    const ownOption = within(targetSelects[0]).getByRole('option', {
+      name: 'Ảnh chụp màn hình 1',
+    }) as HTMLOptionElement
+    expect(ownOption.disabled).toBe(false)
+  })
+
+  it('explains that a Shot is needed before any annotation can be added', () => {
+    switchToShowcase()
+
+    expect(screen.queryByRole('button', { name: /Thêm ghi chú/ })).toBeNull()
+    expect(screen.getByText('Thêm ảnh chụp màn hình trước khi ghi chú.')).not.toBeNull()
+  })
+
   it('joins the Screenshots section in the Showcase Content tab only', () => {
     switchToShowcase()
 
@@ -573,6 +657,37 @@ describe('Inspector presets in Showcase mode', () => {
   })
 })
 
+describe('Inspector Style tab in Showcase mode', () => {
+  const openShowcaseStyle = () => {
+    renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }))
+  }
+
+  it('hides the dead ratio, headline size and casing controls while the theme stays usable', async () => {
+    openShowcaseStyle()
+
+    expect(screen.queryByRole('radiogroup', { name: 'Tỉ lệ khung hình' })).toBeNull()
+    expect(screen.queryByRole('spinbutton', { name: /Cỡ chữ tiêu đề/ })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: 'In hoa' })).toBeNull()
+
+    const themeGroup = screen.getByRole('radiogroup', { name: 'Màu nền' })
+    fireEvent.click(within(themeGroup).getByRole('radio', { name: /Sương/i }))
+
+    await waitFor(() => {
+      expect(useCardStore.getState().card.theme).toBe('mist')
+    })
+  })
+
+  it('keeps the Quote Style tab unchanged', () => {
+    renderInspector('style')
+
+    expect(screen.getByRole('radiogroup', { name: 'Tỉ lệ khung hình' })).not.toBeNull()
+    expect(screen.getByRole('spinbutton', { name: /Cỡ chữ tiêu đề/ })).not.toBeNull()
+    expect(screen.getByRole('checkbox', { name: 'In hoa' })).not.toBeNull()
+  })
+})
+
 describe('Inspector Card Type labels', () => {
   it('labels the switcher in English when the Interface Language is English', () => {
     window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en')
@@ -581,5 +696,15 @@ describe('Inspector Card Type labels', () => {
     const group = screen.getByRole('radiogroup', { name: 'Card type' })
     expect(within(group).getByRole('radio', { name: 'Quote' })).not.toBeNull()
     expect(within(group).getByRole('radio', { name: 'Showcase' })).not.toBeNull()
+  })
+
+  it('labels the Annotations section and its add affordance in English', () => {
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en')
+    renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Showcase' }))
+    act(() => useCardStore.getState().addShot('data:image/jpeg;base64,one'))
+
+    expect(screen.getByText('Annotations')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Add annotation · Screenshots 1' })).not.toBeNull()
   })
 })

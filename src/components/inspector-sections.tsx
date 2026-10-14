@@ -255,6 +255,7 @@ export const AnnotationsSection: React.FC = () => {
   const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
   const annotations = useCardStore((s) => s.card.showcase?.annotations) ?? []
   const updateAnnotation = useCardStore((s) => s.updateAnnotation)
+  const removeAnnotation = useCardStore((s) => s.removeAnnotation)
 
   return (
     <div className="flex flex-col gap-2">
@@ -273,7 +274,7 @@ export const AnnotationsSection: React.FC = () => {
             placeholder={copy.annotations_text_hint}
             className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1.5">
             <select
               aria-label={copy.annotations_target_label}
               value={annotation.shotId}
@@ -302,12 +303,33 @@ export const AnnotationsSection: React.FC = () => {
               <option value="right">{copy.annotation_side_right}</option>
               <option value="top">{copy.annotation_side_top}</option>
             </select>
+            <button
+              type="button"
+              aria-label={copy.annotations_remove_title}
+              onClick={() => removeAnnotation(annotation.id)}
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+            >
+              <X className="size-3.5" />
+            </button>
           </div>
         </div>
       ))}
-      {shots.map((shot, index) => (
-        <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
-      ))}
+      {shots.length === 0 ? (
+        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+          {copy.annotations_needs_shot_hint}
+        </span>
+      ) : (
+        <>
+          {shots.map((shot, index) => (
+            <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
+          ))}
+          {shots.every((shot) => annotations.some((a) => a.shotId === shot.id)) && (
+            <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+              {copy.annotations_cap_hint}
+            </span>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -442,22 +464,30 @@ export const StyleSection: React.FC = () => {
           </div>
         </div>
       )}
-      <div className="flex flex-col gap-1.5">
-        <label id="ratio-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.ratio_label}
-        </label>
-        <SegmentedControl<AspectRatio>
-          aria-labelledby="ratio-label"
-          value={data.ratio}
-          onChange={(r) => update('ratio', r)}
-          className="w-full"
-          options={[
-            { value: '1:1', label: copy.ratio_square, icon: <Square /> },
-            { value: '4:5', label: copy.ratio_portrait, icon: <RectangleVertical /> },
-            { value: '16:9', label: copy.ratio_landscape, icon: <RectangleHorizontal /> },
-          ]}
-        />
-      </div>
+      {/* Showcase is always 1:1 and renders no headline, so the ratio and
+          headline controls would lie about what's editable; the theme stays
+          (spec #33 stories 24 and 26). */}
+      {!isShowcase && (
+        <div className="flex flex-col gap-1.5">
+          <label
+            id="ratio-label"
+            className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
+          >
+            {copy.ratio_label}
+          </label>
+          <SegmentedControl<AspectRatio>
+            aria-labelledby="ratio-label"
+            value={data.ratio}
+            onChange={(r) => update('ratio', r)}
+            className="w-full"
+            options={[
+              { value: '1:1', label: copy.ratio_square, icon: <Square /> },
+              { value: '4:5', label: copy.ratio_portrait, icon: <RectangleVertical /> },
+              { value: '16:9', label: copy.ratio_landscape, icon: <RectangleHorizontal /> },
+            ]}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <label id="theme-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
@@ -479,55 +509,59 @@ export const StyleSection: React.FC = () => {
 
       {/* One label naming TWO controls (slider + typed entry): base-ui Field
           is 1:1 label-to-control, so this row keeps aria-labelledby instead. */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex justify-between items-center text-xs">
-          <label
-            id="inspector-headline-size-label"
-            className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
-          >
-            {copy.headline_size_label}
-          </label>
-          <HeadlineSizeInput
-            value={data.headlineSize}
-            onCommit={(n) => update('headlineSize', n)}
-          />
-        </div>
-        <Slider.Root
-          value={data.headlineSize}
-          min={24}
-          max={60}
-          step={1}
-          aria-labelledby="inspector-headline-size-label"
-          onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
-          className="flex w-full cursor-pointer select-none"
-        >
-          <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
-            <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-              <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-              <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
-            </Slider.Track>
-          </Slider.Control>
-        </Slider.Root>
-      </div>
+      {!isShowcase && (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label
+                id="inspector-headline-size-label"
+                className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
+              >
+                {copy.headline_size_label}
+              </label>
+              <HeadlineSizeInput
+                value={data.headlineSize}
+                onCommit={(n) => update('headlineSize', n)}
+              />
+            </div>
+            <Slider.Root
+              value={data.headlineSize}
+              min={24}
+              max={60}
+              step={1}
+              aria-labelledby="inspector-headline-size-label"
+              onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
+              className="flex w-full cursor-pointer select-none"
+            >
+              <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
+                <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
+                  <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
+                  <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </div>
 
-      <div className="flex items-center gap-1.5">
-        <Checkbox.Root
-          id="inspector-uppercase"
-          checked={data.uppercaseHeadline}
-          onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
-          className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-        >
-          <Checkbox.Indicator>
-            <Check className="size-3" strokeWidth={3} />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
-        <label
-          htmlFor="inspector-uppercase"
-          className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-        >
-          <span>{copy.uppercase_label}</span>
-        </label>
-      </div>
+          <div className="flex items-center gap-1.5">
+            <Checkbox.Root
+              id="inspector-uppercase"
+              checked={data.uppercaseHeadline}
+              onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
+              className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+            >
+              <Checkbox.Indicator>
+                <Check className="size-3" strokeWidth={3} />
+              </Checkbox.Indicator>
+            </Checkbox.Root>
+            <label
+              htmlFor="inspector-uppercase"
+              className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
+            >
+              <span>{copy.uppercase_label}</span>
+            </label>
+          </div>
+        </>
+      )}
     </div>
   )
 }

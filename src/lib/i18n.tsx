@@ -69,6 +69,9 @@ const vi = {
   annotation_side_left: 'Trái',
   annotation_side_right: 'Phải',
   annotation_side_top: 'Trên',
+  annotations_remove_title: 'Xóa ghi chú',
+  annotations_cap_hint: 'Mỗi ảnh có tối đa một ghi chú.',
+  annotations_needs_shot_hint: 'Thêm ảnh chụp màn hình trước khi ghi chú.',
 
   inspector_title: 'Tùy chỉnh Card',
   reset_title: 'Đặt lại mặc định',
@@ -211,6 +214,9 @@ const en: typeof vi = {
   annotation_side_left: 'Left',
   annotation_side_right: 'Right',
   annotation_side_top: 'Top',
+  annotations_remove_title: 'Remove annotation',
+  annotations_cap_hint: 'One annotation per screenshot.',
+  annotations_needs_shot_hint: 'Add a screenshot before annotating it.',
 
   inspector_title: 'Customize card',
   reset_title: 'Reset to defaults',
