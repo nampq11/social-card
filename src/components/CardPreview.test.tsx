@@ -39,6 +39,23 @@ describe('CardPreview', () => {
     expect(screen.queryByText('lanphinh.io')).not.toBeNull()
   })
 
+  it('renders bold sublines with the theme main text color when boldSublines is on', () => {
+    renderCard({ theme: 'mist', boldSublines: true, sublines: 'lanphinh.com' })
+
+    const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
+    expect(sublinesBlock?.className).toContain('font-semibold')
+    expect(sublinesBlock?.className).toContain('text-[#101113]')
+    expect(sublinesBlock?.className).not.toContain('text-[#3D4046]')
+  })
+
+  it('renders normal-weight muted sublines when boldSublines is off', () => {
+    renderCard({ theme: 'mist', sublines: 'lanphinh.com' })
+
+    const sublinesBlock = screen.getByText('lanphinh.com').closest('div')
+    expect(sublinesBlock?.className).toContain('font-normal')
+    expect(sublinesBlock?.className).toContain('text-[#3D4046]')
+    expect(sublinesBlock?.className).not.toContain('font-semibold')
+  })
   it('renders fallback hint when headline is empty', () => {
     renderCard({ headline: '' })
     const h1 = screen.getByRole('heading', { level: 1 })

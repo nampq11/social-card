@@ -105,6 +105,16 @@ describe('Inspector', () => {
     expect(upper.getAttribute('aria-checked')).toBe('false')
   })
 
+  it('toggles bold sublines through the checkbox next to the sublines editor', () => {
+    renderInspector()
+    const toggle = screen.getByRole('checkbox', { name: /Subline đậm/i })
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(toggle)
+
+    expect(useCardStore.getState().card.boldSublines).toBe(true)
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+  })
   it('adjusts headline size from the slider thumb with the arrow keys', async () => {
     renderInspector('style')
     const thumb = screen.getByRole('slider', { name: /Cỡ chữ tiêu đề/i })
