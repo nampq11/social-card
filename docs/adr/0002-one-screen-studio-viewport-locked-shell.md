@@ -40,4 +40,4 @@ Fit-to-View, the card refits continuously and stays fully visible at
 every sheet position instead of hiding behind the expanded sheet.
 Expanded height stays 58dvh but is clamped to leave the canvas a visible
 floor (portrait phones); landscape falls back to a minimum working
-height, matching iOS sheets that cover content there.
+height, the card refitting into the narrow strip that remains.

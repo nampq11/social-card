@@ -60,6 +60,12 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
+          // card-elevation's transform transition (unlayered CSS — Tailwind
+          // classes can't override it) trails per-frame fit writes behind the
+          // fit target while the Mobile Sheet drags or a window resize
+          // streams. Suppressing only transform keeps its other morphs
+          // (ratio-swap width/height) animating.
+          ...(animated ? {} : { transitionProperty: 'width, height, background-color, color' }),
         }}
         className={`${
           animated ? 'transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]' : ''
