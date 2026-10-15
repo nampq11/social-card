@@ -7,13 +7,21 @@
 // margin strip at ~3 distinct stripe colors; a live blur mixes them into
 // dozens of intermediate hues.
 import { writeFileSync } from 'node:fs'
-import { exportCard, openShowcase, pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
+import {
+  clearShots,
+  exportCard,
+  openShowcase,
+  pickShot,
+  runSmoke,
+  sleep,
+} from './lib/smoke-app.mjs'
 
 await runSmoke({}, async (app) => {
   const { send, evalJs, waitUntil } = app
 
-  // --- 1. Showcase mode ----------------------------------------------------
+  // --- 1. Showcase mode, collage emptied so the fixtures own the slots ------
   await openShowcase(app)
+  await clearShots(app)
 
   // --- 1b. fixtures: two 800×450 PNGs drawn by the browser's own canvas -----
   const fixtureDataUrl = await evalJs(`(async () => {

@@ -20,7 +20,9 @@ beforeEach(() => {
 
 const renderCard = (state: Partial<CardState> = {}) => {
   act(() => {
-    useCardStore.getState().patchCard(state)
+    // The factory card is a Showcase; the Quote tests pin their card type
+    // so the default's cardType can't drift under them.
+    useCardStore.getState().patchCard({ cardType: 'quote', ...state })
   })
   return render(
     <UiCopyProvider>
@@ -206,7 +208,11 @@ describe('CardPreview', () => {
 
 describe('Showcase Card', () => {
   it('renders a dashed hero placeholder and no Quote content when no shots exist', () => {
-    const { container } = renderCard({ cardType: 'showcase' })
+    const { container } = renderCard({
+      cardType: 'showcase',
+      // The factory Showcase carries the demo Shot; "no shots" is explicit.
+      showcase: { shots: [], annotations: [] },
+    })
 
     const placeholder = screen
       .getByTestId('hero-slot')
@@ -251,7 +257,7 @@ describe('Showcase Card', () => {
   })
 
   it('renders added shots as a hero above side-by-side detail slots', () => {
-    renderCard({ cardType: 'showcase' })
+    renderCard({ cardType: 'showcase', showcase: { shots: [], annotations: [] } })
     act(() => {
       const store = useCardStore.getState()
       store.addShot('data:image/png;base64,ONE')
@@ -401,6 +407,7 @@ describe('Showcase Card', () => {
   it('centers name and bio without an avatar, with no monogram stand-in', () => {
     const { container } = renderCard({
       cardType: 'showcase',
+      showcase: { shots: [], annotations: [] },
       authorName: 'Nam Phạm',
       authorBio: 'AI Engineer',
       avatarUrl: '',
@@ -641,7 +648,7 @@ describe('shot fit v2: auto-fit, zoom, on-shot controls (issue #38)', () => {
 
   it('a near-matched slot keeps the cover render', async () => {
     withMeasuredLayout(529, 421)
-    renderCard({ cardType: 'showcase' })
+    renderCard({ cardType: 'showcase', showcase: { shots: [], annotations: [] } })
     // 4:3-ish shot against the ~1.25 hero slot is a match — no backdrop.
     vi.unstubAllGlobals()
     class MatchImage {

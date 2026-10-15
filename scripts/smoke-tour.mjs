@@ -1,14 +1,16 @@
-// Headless-Chrome smoke for the single onboarding tour: drives the real app
-// — dismiss the welcome card, switch to Showcase, ingest a screenshot through
-// the real file input — and verifies the tour contract end to end:
-//   1. nothing ever auto-opens the tour at the first Shot (no mid-task
+// Headless-Chrome smoke for the single onboarding tour. The studio's factory
+// card ships as a Showcase holding the demo Shot, so the tour's full step set
+// is live from the first run; this drives the real app — dismiss the welcome
+// card, ingest another screenshot through the real file input — and verifies
+// the tour contract end to end:
+//   1. nothing ever auto-opens the tour at a new Shot (no mid-task
 //      interruption — the welcome card and Tips replay are the only entries);
-//   2. a Tips replay opens the ONE tour: four basics steps, plus the two
-//      Showcase gesture steps while a Shot exists (6 total), and it navigates;
+//   2. a Tips replay opens the ONE tour: four basics steps plus the two
+//      Showcase gesture steps (6 total), and it navigates;
 //   3. finishing closes it and a reload never resurrects it unbidden;
 //   4. the replayed tour stays open past the popover's focus-return window.
 import { writeFileSync } from 'node:fs'
-import { openShowcase, pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
+import { pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
 
 const GESTURE_STEP_TITLE = 'Ảnh của bạn điều khiển được'
 
@@ -18,7 +20,7 @@ await runSmoke({}, async (app) => {
     if (!ok) throw new Error('assert failed: ' + label)
   }
 
-  // --- 1. clear the welcome gate (first-run onboarding done), go Showcase --
+  // --- 1. clear the welcome gate (first-run onboarding done) ---------------
   assert(
     await evalJs(
       `[...document.querySelectorAll('button')].some(b => b.textContent.includes('Bỏ qua'))`,
@@ -28,9 +30,13 @@ await runSmoke({}, async (app) => {
   await evalJs(
     `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Bỏ qua, dùng ngay'))?.click()`,
   )
-  await openShowcase(app)
+  // The factory card is a Showcase already — the demo Shot's collage is on
+  // the canvas with no mode switching.
+  await waitUntil('factory demo shot', () =>
+    evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
+  )
 
-  // --- 2. fixture + ingest one screenshot through the real file input ------
+  // --- 2. fixture + ingest one more screenshot through the real file input -
   const fixtureDataUrl = await evalJs(`(async () => {
     const c = document.createElement('canvas')
     c.width = 800
@@ -43,15 +49,15 @@ await runSmoke({}, async (app) => {
   })()`)
   writeFileSync('/tmp/smoke-shot-tour.png', Buffer.from(fixtureDataUrl.split(',')[1], 'base64'))
   await pickShot(app, '/tmp/smoke-shot-tour.png')
-  await waitUntil('hero shot', () =>
-    evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
+  await waitUntil('ingested shot joins the collage', () =>
+    evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 2`),
   )
 
-  // --- 3. no auto-interrupt: the first Shot must NOT open any tour ---------
+  // --- 3. no auto-interrupt: a new Shot must NOT open any tour -------------
   await sleep(600) // give any (wrongful) auto-fire a window to appear
   assert(
     !(await evalJs(`document.body.innerText.includes('${GESTURE_STEP_TITLE}')`)),
-    'no tour auto-opens at the first Shot',
+    'no tour auto-opens at a new Shot',
   )
 
   // --- 4. Tips replay opens the one tour, now six steps --------------------
@@ -99,13 +105,14 @@ await runSmoke({}, async (app) => {
   )
 
   // --- 6. persistence: reload, re-arm a Shot — the tour must stay dead -----
+  // The store is not persisted: the reload boots the factory Showcase again,
+  // and the ingested file re-adds the second Shot.
   await app.send('Page.reload')
   await waitUntil('app reboot', () => evalJs(`!!document.querySelector('#social-card-node')`))
   await waitUntil('inspector radios', () => evalJs(`!!document.querySelector('[role=radio]')`))
-  await openShowcase(app)
   await pickShot(app, '/tmp/smoke-shot-tour.png')
-  await waitUntil('hero shot again', () =>
-    evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
+  await waitUntil('ingested shot again', () =>
+    evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 2`),
   )
   await sleep(600) // give any (wrongful) auto-fire a window to appear
   assert(
@@ -113,5 +120,5 @@ await runSmoke({}, async (app) => {
     'tour stays dead after reload (onboarding done, shot re-armed)',
   )
 
-  console.log('SMOKE OK: one tour — no auto-fire, replay shows 6 steps with a Shot, persists')
+  console.log('SMOKE OK: one tour — no auto-fire, replay shows 6 steps, persists')
 })

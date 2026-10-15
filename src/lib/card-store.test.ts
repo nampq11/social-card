@@ -113,6 +113,17 @@ describe('card-store history', () => {
 })
 
 describe('card-store card type switch', () => {
+  // The switch contracts enter from a Quote card; the factory is a Showcase.
+  beforeEach(() => {
+    useCardStore.setState({
+      card: { ...DEFAULT_CARD_STATE, cardType: 'quote' },
+      past: [],
+      future: [],
+      canUndo: false,
+      canRedo: false,
+    })
+  })
+
   it('switchCardType switches to the requested type as exactly one undo step', () => {
     s().patchCard({ headline: 'changed' })
     const before = s().card
@@ -170,6 +181,18 @@ describe('card-store card type switch', () => {
 })
 
 describe('card-store showcase content', () => {
+  // These contracts build a collage from empty; the factory carries the
+  // demo Shot, so the nest starts cleared.
+  beforeEach(() => {
+    useCardStore.setState({
+      card: { ...DEFAULT_CARD_STATE, showcase: { shots: [], annotations: [] } },
+      past: [],
+      future: [],
+      canUndo: false,
+      canRedo: false,
+    })
+  })
+
   it('addShot caps at three shots and a refused shot costs no undo step', () => {
     for (const n of [1, 2, 3]) s().addShot(`data:${n}`)
     const stepsBefore = s().past.length

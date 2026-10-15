@@ -60,6 +60,10 @@ describe('first-run onboarding flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Khám phá 30 giây' }))
     await screen.findByText('Ảnh xem trước trực tiếp')
 
+    // The factory card ships the demo Shot, so the welcome tour walks all
+    // six steps — five "Tiếp" through the fit-override step, then "Xong".
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
     fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
@@ -85,12 +89,11 @@ describe('first-run onboarding flow', () => {
     expect(screen.getByText('Ảnh xem trước trực tiếp')).toBeTruthy()
   })
 
-  it('the first Shot never auto-opens the tour; a replay then includes the gesture steps', async () => {
+  it('uploading a Shot never auto-opens the tour; a replay then includes the gesture steps', async () => {
     renderApp()
     fireEvent.click(screen.getByRole('button', { name: 'Bỏ qua, dùng ngay' }))
 
     act(() => {
-      useCardStore.getState().switchCardType('showcase')
       useCardStore.getState().addShot('data:image/jpeg;base64,one')
     })
 

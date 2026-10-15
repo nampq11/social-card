@@ -5,6 +5,7 @@
 import { writeFileSync } from 'node:fs'
 import {
   HOVER_STUB,
+  clearShots,
   mouseEvent,
   openShowcase,
   pickShot,
@@ -16,8 +17,9 @@ import {
 await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
   const { send, evalJs, waitUntil } = app
 
-  // --- setup: showcase + one cover shot, tour dismissed --------------------
+  // --- setup: showcase, collage emptied, then one cover shot ----------------
   await openShowcase(app)
+  await clearShots(app)
   const fixture = await evalJs(`(async () => {
     const c = document.createElement('canvas'); c.width = 900; c.height = 300
     const g = c.getContext('2d')

@@ -1,14 +1,27 @@
 // @vitest-environment jsdom
 import { createRef } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MobileSheet } from './MobileSheet'
 import { SHEET_MIN_CHROME_PX, sheetExpandedPx } from '../lib/sheet-drag'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
+import type { CardState } from '../types'
 
 setupCardStudioTest()
+
+// The studio's factory card ships as a Showcase; the sheet's Quote-mode
+// contracts render from a Quote baseline (same seeding as the Inspector
+// suite).
+beforeEach(() => {
+  const quoteCard: CardState = {
+    ...DEFAULT_CARD_STATE,
+    cardType: 'quote',
+    showcase: { shots: [], annotations: [] },
+  }
+  useCardStore.setState({ card: quoteCard })
+})
 
 const renderSheet = () => renderWithUiCopy(<MobileSheet canvasRef={createRef()} />)
 

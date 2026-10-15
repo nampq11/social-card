@@ -5,6 +5,7 @@ import { App } from './App'
 import { dictionaries } from './lib/i18n'
 import { useCardStore } from './lib/card-store'
 import { DEFAULT_CARD_STATE } from './constants/presets'
+import { DEMO_SHOT_ID } from './constants/demo-shot'
 import { renderWithUiCopy, setupCardStudioTest } from './test/card-studio'
 import { toastRegion } from './test/toast-region'
 import { triggerMediaQuery } from './test/match-media'
@@ -20,6 +21,15 @@ setupCardStudioTest()
 
 const renderApp = () => renderWithUiCopy(<App />)
 
+// The factory card is a Showcase; Quote-mode suites start from an explicit
+// factory-fresh Quote card. Set directly, not switchCardType — a type
+// switch is its own atomic undo step (ADR 0004) and would pollute the
+// undo-history assertions below.
+const renderQuoteApp = () => {
+  useCardStore.setState({ card: { ...DEFAULT_CARD_STATE, cardType: 'quote' } })
+  return renderWithUiCopy(<App />)
+}
+
 // The card's headline h1 (the Header brand is an h1 too) — query within the
 // exported card node so the assertion targets what the Card renders.
 const cardHeadline = () =>
@@ -28,7 +38,7 @@ const cardHeadline = () =>
 
 describe('App', () => {
   it('shows Card Content edited in the Inspector on the Card', () => {
-    renderApp()
+    renderQuoteApp()
 
     fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
       target: { value: 'Ship ngày mai:' },
@@ -38,14 +48,16 @@ describe('App', () => {
   })
 
   it('Reset restores the default Card State on the Card', () => {
-    renderApp()
+    renderQuoteApp()
 
     fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
       target: { value: 'Tạm sửa vài chữ' },
     })
     fireEvent.click(screen.getByRole('button', { name: /Mặc định/ }))
 
-    expect(cardHeadline()).toBe(DEFAULT_CARD_STATE.headline)
+    // The factory is the Showcase holding the demo Shot — the whole card,
+    // not just a Quote-only headline, is what "default" means now.
+    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE)
   })
 
   it('both export buttons flow through the App toast region at bottom-center', async () => {
@@ -70,7 +82,7 @@ describe('App', () => {
   })
 
   it('Interface Language toggle updates newly added studio chrome copy', () => {
-    renderApp()
+    renderQuoteApp()
 
     // Initial Vietnamese chrome
     expect(screen.getByRole('button', { name: dictionaries.vi.ratio_cycle_title })).toBeTruthy()
@@ -100,7 +112,7 @@ describe('App', () => {
   })
 
   it('editing enables Header undo; undoing restores the previous Card State', () => {
-    renderApp()
+    renderQuoteApp()
 
     fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
       target: { value: 'Ship ngày mai:' },
@@ -115,7 +127,7 @@ describe('App', () => {
   })
 
   it('Cmd+Z / Cmd+Shift+Z undo and redo from the keyboard', () => {
-    renderApp()
+    renderQuoteApp()
 
     fireEvent.change(screen.getByLabelText(/Tiêu đề chính/), {
       target: { value: 'Ship ngày mai:' },
@@ -128,7 +140,7 @@ describe('App', () => {
   })
 
   it('the panel toggle (button and Ctrl+\\) collapses and restores the Inspector', () => {
-    renderApp()
+    renderQuoteApp()
     const toggleBtn = screen.getByRole('button', { name: /bảng điều khiển/ })
     expect(toggleBtn.getAttribute('aria-pressed')).toBe('true')
 
@@ -142,7 +154,7 @@ describe('App', () => {
   })
 
   it('Ctrl+B collapses and restores the Inspector', () => {
-    renderApp()
+    renderQuoteApp()
 
     fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
     expect(screen.queryByLabelText(/Tiêu đề chính/)).toBeNull()
@@ -152,7 +164,7 @@ describe('App', () => {
   })
 
   it('clicking the Top Bar aspect ratio pill cycles aspect ratio', () => {
-    renderApp()
+    renderQuoteApp()
 
     const ratioBtn = screen.getByRole('button', { name: /Bấm để chuyển đổi tỷ lệ khung hình/ })
     expect(ratioBtn.textContent).toContain('Square')
@@ -178,7 +190,7 @@ describe('App', () => {
   it('renders mobile web version with MobileSheet and responsive chip that cycles ratio', () => {
     try {
       triggerMediaQuery('(min-width: 1024px)', false)
-      renderApp()
+      renderQuoteApp()
 
       // Desktop Zoom HUD is not rendered on mobile
       expect(screen.queryByRole('button', { name: /Thu nhỏ xem trước/ })).toBeNull()
@@ -205,7 +217,7 @@ describe('App', () => {
     }
   })
   it('builds a Showcase from the Inspector onto the Card, then returns to an intact Quote', () => {
-    renderApp()
+    renderQuoteApp()
 
     // Quote content takes a non-default value first, so the round-trip below
     // proves a Card Type switch is non-destructive.
@@ -223,8 +235,10 @@ describe('App', () => {
     expect(cardNode().queryByRole('heading', { level: 1 })).toBeNull()
     expect(cardNode().queryByTestId('qr-container')).toBeNull()
 
-    // Two Shots via the store: upload order puts the first in the Hero Slot.
+    // The factory demo Shot leaves first — a user deleting it — so upload
+    // order below puts the first new Shot in the Hero Slot.
     act(() => {
+      useCardStore.getState().removeShot(DEMO_SHOT_ID)
       useCardStore.getState().addShot('data:image/jpeg;base64,first')
       useCardStore.getState().addShot('data:image/jpeg;base64,second')
     })

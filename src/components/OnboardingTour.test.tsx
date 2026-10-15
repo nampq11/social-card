@@ -9,7 +9,7 @@ setupCardStudioTest()
 
 // The tour resolves its steps via `[data-tour]` anchors on the real shell;
 // mounting stand-in anchors keeps this suite about the tour's own contract
-// (navigation, skip/finish, conditional gesture steps) without rendering
+// (navigation, skip/finish, the conditional gesture steps) without rendering
 // the whole App.
 function renderTourWithAnchors(open = true) {
   const onOpenChange = vi.fn()
@@ -26,33 +26,33 @@ function renderTourWithAnchors(open = true) {
   return { onOpenChange, ...view }
 }
 
-// Arms the gesture steps' precondition: a Shot on a Showcase card.
-const armShowcaseShot = () =>
-  act(() => {
-    useCardStore.getState().switchCardType('showcase')
-    useCardStore.getState().addShot('data:image/jpeg;base64,tour')
-  })
+// The factory card is a Showcase holding the demo Shot, so the tour's
+// default step set is the full six (basics + gesture steps).
+const walkNext = (times: number) => {
+  for (let step = 0; step < times; step++)
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }))
+}
 
 const next = () => screen.getByRole('button', { name: 'Tiếp' })
 const skip = () => screen.getByRole('button', { name: 'Bỏ qua' })
 const prev = () => screen.getByRole('button', { name: 'Lùi' })
 
 describe('OnboardingTour', () => {
-  it('starts at step 1 of 4 — the live preview — with prev disabled', async () => {
+  it('starts at step 1 of 6 — the live preview — with prev disabled', async () => {
     renderTourWithAnchors()
 
     expect(await screen.findByText('Ảnh xem trước trực tiếp')).toBeTruthy()
-    expect(screen.getByText('1 / 4')).toBeTruthy()
+    expect(screen.getByText('1 / 6')).toBeTruthy()
     expect(prev()).toHaveProperty('disabled', true)
   })
 
-  it('next walks forward through the four steps', async () => {
+  it('next walks forward through the six steps', async () => {
     renderTourWithAnchors()
     await screen.findByText('Ảnh xem trước trực tiếp')
 
     fireEvent.click(next())
     expect(await screen.findByText('Bảng điều khiển')).toBeTruthy()
-    expect(screen.getByText('2 / 4')).toBeTruthy()
+    expect(screen.getByText('2 / 6')).toBeTruthy()
     expect(prev()).toHaveProperty('disabled', false)
 
     fireEvent.click(next())
@@ -60,7 +60,14 @@ describe('OnboardingTour', () => {
 
     fireEvent.click(next())
     expect(await screen.findByText('Xuất ảnh trong 1 nhấp')).toBeTruthy()
-    expect(screen.getByText('4 / 4')).toBeTruthy()
+    expect(screen.getByText('4 / 6')).toBeTruthy()
+
+    fireEvent.click(next())
+    expect(await screen.findByText('Ảnh của bạn điều khiển được')).toBeTruthy()
+
+    fireEvent.click(next())
+    expect(await screen.findByText('Chọn cách hiển thị từng ảnh')).toBeTruthy()
+    expect(screen.getByText('6 / 6')).toBeTruthy()
   })
 
   it('prev walks back one step', async () => {
@@ -83,16 +90,12 @@ describe('OnboardingTour', () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
   })
 
-  it('finishing the last step closes the tour', async () => {
+  it('the fit-override step finishes the tour', async () => {
     const { onOpenChange } = renderTourWithAnchors()
     await screen.findByText('Ảnh xem trước trực tiếp')
 
-    fireEvent.click(next())
-    await screen.findByText('Bảng điều khiển')
-    fireEvent.click(next())
-    await screen.findByText('Đổi kiểu & định danh')
-    fireEvent.click(next())
-    await screen.findByText('Xuất ảnh trong 1 nhấp')
+    walkNext(5)
+    expect(await screen.findByText('Chọn cách hiển thị từng ảnh')).toBeTruthy()
 
     // The last step's primary action reads "Xong", not "Tiếp".
     fireEvent.click(screen.getByRole('button', { name: 'Xong' }))
@@ -107,33 +110,32 @@ describe('OnboardingTour', () => {
   })
 })
 
-describe('OnboardingTour with a Shot on a Showcase card', () => {
-  it('extends to six steps — the gesture steps join after the basics', async () => {
-    armShowcaseShot()
-    renderTourWithAnchors()
+describe('OnboardingTour without a Shot', () => {
+  // A Quote card (or a cleared collage) carries no Screenshot Slot to
+  // gesture on — the tour keeps to the four basics steps.
+  const renderWithoutShot = (open = true) => {
+    act(() => useCardStore.getState().switchCardType('quote'))
+    return renderTourWithAnchors(open)
+  }
+
+  it('walks only the four basics steps', async () => {
+    renderWithoutShot()
 
     expect(await screen.findByText('Ảnh xem trước trực tiếp')).toBeTruthy()
-    expect(screen.getByText('1 / 6')).toBeTruthy()
+    expect(screen.getByText('1 / 4')).toBeTruthy()
 
-    fireEvent.click(next())
-    fireEvent.click(next())
-    fireEvent.click(next())
-    fireEvent.click(next())
-    expect(await screen.findByText('Ảnh của bạn điều khiển được')).toBeTruthy()
-    expect(screen.getByText('5 / 6')).toBeTruthy()
-
-    fireEvent.click(next())
-    expect(await screen.findByText('Chọn cách hiển thị từng ảnh')).toBeTruthy()
-    expect(screen.getByText('6 / 6')).toBeTruthy()
+    walkNext(3)
+    expect(await screen.findByText('Xuất ảnh trong 1 nhấp')).toBeTruthy()
+    expect(screen.getByText('4 / 4')).toBeTruthy()
+    expect(screen.queryByText('Ảnh của bạn điều khiển được')).toBeNull()
   })
 
-  it('the fit-override step finishes the extended tour', async () => {
-    armShowcaseShot()
-    const { onOpenChange } = renderTourWithAnchors()
+  it('the export step finishes the four-step tour', async () => {
+    const { onOpenChange } = renderWithoutShot()
     await screen.findByText('Ảnh xem trước trực tiếp')
 
-    for (let step = 0; step < 5; step++) fireEvent.click(next())
-    expect(await screen.findByText('Chọn cách hiển thị từng ảnh')).toBeTruthy()
+    walkNext(3)
+    expect(await screen.findByText('Xuất ảnh trong 1 nhấp')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Xong' }))
 

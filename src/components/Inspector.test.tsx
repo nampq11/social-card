@@ -1,15 +1,31 @@
 // @vitest-environment jsdom
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from 'sonner'
 import { Inspector } from './Inspector'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
+import type { CardState } from '../types'
 import { toastRegion } from '../test/toast-region'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
 import { UI_LANGUAGE_STORAGE_KEY } from '../lib/i18n'
 
 setupCardStudioTest()
+
+// The studio's factory card ships as a Showcase holding the demo Shot;
+// these suites pin the per-mode Inspector contracts from a Quote baseline
+// (the App-level flow tests seed the same way). Its showcase nest is
+// emptied so the Showcase-section tests that switch over get deterministic
+// Shot counts and thumbnail ordinals.
+const freshQuoteCard = (): CardState => ({
+  ...DEFAULT_CARD_STATE,
+  cardType: 'quote',
+  showcase: { shots: [], annotations: [] },
+})
+
+beforeEach(() => {
+  useCardStore.setState({ card: freshQuoteCard() })
+})
 
 // jsdom has no canvas, so the real ingest cannot run here; the seam under
 // test is that a picked file goes through ingestScreenshot into the store.
@@ -45,9 +61,10 @@ describe('Inspector style presets', () => {
     expect(card.headlineSize).toBe(54)
     expect(card.uppercaseHeadline).toBe(true)
 
-    // The whole preset is one history step, not four.
+    // The whole preset is one history step, not four — undo returns to the
+    // baseline the step started from.
     act(() => useCardStore.getState().undo())
-    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE)
+    expect(useCardStore.getState().card).toEqual(freshQuoteCard())
   })
 
   it('marks the active style preset while its style still matches', () => {
@@ -82,9 +99,10 @@ describe('Inspector Quote sample preset', () => {
       qrCta: 'Theo dõi hành trình indie!',
     })
 
-    // The whole preset is one history step, not one per field.
+    // The whole preset is one history step, not one per field — undo
+    // returns to the baseline the step started from.
     act(() => useCardStore.getState().undo())
-    expect(useCardStore.getState().card).toEqual(DEFAULT_CARD_STATE)
+    expect(useCardStore.getState().card).toEqual(freshQuoteCard())
   })
 
   it('marks the Quote preset active while the current state matches it', () => {

@@ -11,6 +11,8 @@ Initial unreleased development line of the social-card studio — a bilingual (V
 - Added per-shot Fill/Fit modes and draggable Focus with on-canvas pan. #34
 - Added Shot fit v2: auto-fit rendering, zoom transforms, fluid physics pan (rubber-banding, momentum, critically damped spring settle with velocity handoff), pinch-anchored and double-click zoom, ctrl+wheel zoom anchored at the cursor, and an on-shot pill with a 3-state Inspector. #38
 - Added a shot-gestures onboarding tour that fires once at the first Shot and can be recalled from Tips. #38
+- Merged onboarding into one tour: the Showcase gesture steps join the four basics steps while a Shot exists, nothing auto-opens the tour mid-task, and Tips carries the single replay entry. #38
+- Shipped the factory card as a Showcase holding a bundled demo Shot, so the studio opens on a filled collage and the first-run tour always walks all six steps (ADR 0003 amendment). #38
 - Redesigned the studio UI following Apple HIG, with mobile-responsive layouts. #20
 - Added a first-run welcome card and an opt-in 4-step spotlight tour. #19
 - Built a one-screen, viewport-locked studio shell for desktop and mobile. #17
@@ -22,6 +24,8 @@ Initial unreleased development line of the social-card studio — a bilingual (V
 ### Fixes
 
 - Made one zoom gesture a single undo step, and a click without drag now selects cover shots on desktop. #38
+- Stopped the replayed tour from flash-closing to the Tips trigger's restored focus: the popover vetoes that one focus return. #38
+- Re-keyed the Tour when its step set flips, fixing steps that never rendered after late-mounted steps re-registered out of order under React StrictMode. #38
 - Re-derived natural dimensions when a slot's `dataUrl` swaps to a cached image, fixing stale shot geometry. #38
 - Cancelled the settle glide when external focus writes land, so focus edits and gestures no longer fight. #38
 - Dropped the slot's decorative ring in Showcase so contain-fit shots no longer frame as an empty box.

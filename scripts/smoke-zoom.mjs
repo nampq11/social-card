@@ -11,6 +11,7 @@
 import { writeFileSync } from 'node:fs'
 import {
   HOVER_STUB,
+  clearShots,
   exportCard,
   mouseEvent,
   openShowcase,
@@ -23,8 +24,9 @@ import {
 await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
   const { evalJs, waitUntil } = app
 
-  // --- setup: showcase mode, tour dismissed --------------------------------
+  // --- setup: showcase mode, collage emptied for ratio-controlled fixtures --
   await openShowcase(app)
+  await clearShots(app)
 
   // Slots size by flex, not a fixed ratio — measure the hero placeholder's
   // real rendered ratio and build fixtures from it: one matched (log-ratio 0

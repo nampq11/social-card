@@ -186,6 +186,25 @@ export async function openShowcase(app) {
   )
 }
 
+// The factory card ships a Showcase holding the demo Shot. Smokes that
+// drive their own hero-ratio fixtures need the collage empty first —
+// delete through the real per-thumbnail delete buttons so the flow stays
+// user-real.
+export async function clearShots(app) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const deleted = await app.evalJs(`(() => {
+      const btn = [...document.querySelectorAll('button')].find(b =>
+        (b.getAttribute('aria-label') || b.textContent).includes('Xóa ảnh'))
+      if (!btn) return false
+      btn.click()
+      return true
+    })()`)
+    if (!deleted) return
+    await sleep(250)
+  }
+  throw new Error('clearShots: the delete button never went away')
+}
+
 // Exports the card through the app's own export module (same options, same
 // html-to-image as the real Copy path) and intercepts the download anchor,
 // returning the PNG data URL.
