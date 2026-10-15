@@ -23,6 +23,41 @@ _Avoid_: template, sample
 **Card State**:
 The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase, bold sublines, grayscale avatar).
 _Avoid_: form data, settings
+**Card Type**:
+The archetype of a card — Quote or Showcase — deciding which Card Content fields exist and which layout the Card Preview renders.
+_Avoid_: layout, variant
+
+**Quote Card**:
+The original Card Type: big headline, sublines, optional QR CTA, signature footer with avatar.
+_Avoid_: default card, text card
+
+**Showcase Card**:
+The product-announcement Card Type: up to three Screenshot Slots in a hero-plus-details collage, handwritten Annotations, and a centered author footer. Always 1:1.
+_Avoid_: product card, screenshot card, collage mode
+
+**Screenshot Slot**:
+One image holder of a Showcase Card: the single full-width Hero Slot on top, or one of up to two Detail Slots side-by-side below.
+_Avoid_: image placeholder, upload box
+
+**Shot**:
+One uploaded screenshot in a Showcase Card's content, carrying a stable identity. The first Shot renders in the Hero Slot.
+_Avoid_: image, upload
+
+**Fit**:
+How a Shot meets its Screenshot Slot — Fill (cover: the slot fills, content crops) or Fit (contain: the whole Shot shows over a blurred backdrop of itself). A per-Shot choice; absent an override, derived from the shot-to-slot ratio (ADR 0006 auto-fit).
+_Avoid_: resize mode, object-fit
+
+**Focus**:
+Which part of a Shot is visible when the Shot crops inside its Slot — a normalized 0..1 anchor the user drags on the Canvas. Stored per Shot; never alters the Shot's pixels.
+_Avoid_: position (ambiguous with the Position control group), crop (crop is the outcome, Focus is the control)
+
+**Scale**:
+A Shot's zoom level (1..4) on top of Fill — how far the visible region magnifies. Stored per Shot; 1 renders exactly like no zoom. Pan range grows with Scale; Focus stays the anchor of what shows.
+_Avoid_: zoom level (Scale is the stored field), size (size is the card dimension control)
+
+**Annotation**:
+A handwritten-style callout on a Showcase Card: script text plus an arrow, anchored to one Shot from a fixed side. An Annotation follows its Shot, not the Slot the Shot currently occupies.
+_Avoid_: callout, note, comment
 
 **Card Export**:
 Rendering the current Card State to a shareable image — to the clipboard (paste-ready) or as a PNG file. One module owns the whole flow: the exported card node, the re-entry guard, the feedback toasts, and the success flash.

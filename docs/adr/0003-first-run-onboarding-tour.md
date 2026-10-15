@@ -87,3 +87,26 @@ tuning — verified at 1440/800/390 widths.
 - With both-axis shift, a popover may overlap its dimmed target when no side
   has room — accepted coach-mark behavior; `limitShift` prevents it from
   drifting off its anchor.
+
+## Amendment (2026-10-15: one tour, six steps at first run)
+
+The separate shot-gestures tour (ADR 0006 era) is folded into this one tour.
+Two decisions change:
+
+- **The tour is one step set, conditional on live state.** While a Showcase
+  card holds at least one Shot, the two gesture steps (hero-slot drag/zoom,
+  per-shot fit override) are appended after the four basics steps; without a
+  Shot the tour stays at four. The welcome card and the Tips replay remain
+  the only entries — nothing ever auto-opens the tour mid-task, including at
+  a visitor's first Shot. The tour engine is re-keyed when the step set
+  flips: mounting steps into a live tour re-registers them out of order
+  under React StrictMode's double effect run, leaving their self-indexes
+  stale (the step renders never again), so a fresh `Tour` always registers
+  its full set cleanly.
+- **Six steps at first run — accepted deviation from the ~5-step cap.** The
+  factory card now ships as a Showcase holding a bundled demo Shot
+  (`DEFAULT_CARD_STATE`, `src/constants/demo-shot.ts`), so the first-run
+  tour always has a live collage for the gesture steps to point at and opens
+  with all six. The demo Shot stays until the user deletes it. This also
+  strengthens the "blank canvas contraindicates tours" point above: the
+  studio opens with a filled collage, not an empty dashed frame.

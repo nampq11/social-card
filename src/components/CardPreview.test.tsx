@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, within } from '@testing-library/react'
+import { triggerMediaQuery } from '../test/match-media'
 import { CardPreview } from './CardPreview'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { UiCopyProvider } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
-import type { CardState } from '../types'
+import type { AnnotationSide, CardState } from '../types'
 
 afterEach(() => {
   cleanup()
@@ -18,7 +20,9 @@ beforeEach(() => {
 
 const renderCard = (state: Partial<CardState> = {}) => {
   act(() => {
-    useCardStore.getState().patchCard(state)
+    // The factory card is a Showcase; the Quote tests pin their card type
+    // so the default's cardType can't drift under them.
+    useCardStore.getState().patchCard({ cardType: 'quote', ...state })
   })
   return render(
     <UiCopyProvider>
@@ -199,5 +203,545 @@ describe('CardPreview', () => {
     renderCard({ sublines: 'Testing optical tracking' })
     const line = screen.getByText('Testing optical tracking')
     expect(line.className).not.toContain('tracking-tight')
+  })
+})
+
+describe('Showcase Card', () => {
+  it('renders a dashed hero placeholder and no Quote content when no shots exist', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      // The factory Showcase carries the demo Shot; "no shots" is explicit.
+      showcase: { shots: [], annotations: [] },
+    })
+
+    const placeholder = screen
+      .getByTestId('hero-slot')
+      .querySelector('[data-testid="slot-placeholder"]')
+    expect(placeholder).not.toBeNull()
+    expect(placeholder?.className).toContain('border-dashed')
+    expect(screen.getByTestId('hero-slot').querySelector('img')).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+    expect(container.querySelector('[data-testid="sublines"]')).toBeNull()
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+  })
+
+  it('renders the first shot as the hero alone when one shot exists', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    expect(screen.queryByTestId('detail-slot')).toBeNull()
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('renders hero plus one detail slot with two shots', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [],
+      },
+    })
+
+    expect(screen.getAllByTestId('detail-slot')).toHaveLength(1)
+  })
+
+  it('renders added shots as a hero above side-by-side detail slots', () => {
+    renderCard({ cardType: 'showcase', showcase: { shots: [], annotations: [] } })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.addShot('data:image/png;base64,TWO')
+      store.addShot('data:image/png;base64,THREE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,ONE',
+    )
+    const details = screen.getAllByTestId('detail-slot')
+    expect(details).toHaveLength(2)
+    expect(details[0].parentElement).toBe(details[1].parentElement)
+    const order = screen.getByTestId('hero-slot').compareDocumentPosition(details[0])
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(details[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(screen.queryByTestId('slot-placeholder')).toBeNull()
+  })
+
+  it('positions a cover shot by its stored focus through object-position', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFocus(useCardStore.getState().card.showcase!.shots[0].id, { x: 0.25, y: 0.75 })
+    })
+
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    expect(img.getAttribute('class')).toContain('object-cover')
+    expect(img.style.objectPosition).toBe('25% 75%')
+  })
+
+  it('renders a Fit shot contained over a blurred self backdrop as a window card', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      const store = useCardStore.getState()
+      store.addShot('data:image/png;base64,ONE')
+      store.setShotFit(useCardStore.getState().card.showcase!.shots[0].id, 'contain')
+    })
+
+    const slot = screen.getByTestId('hero-slot')
+    const imgs = slot.querySelectorAll('img')
+    expect(imgs).toHaveLength(2)
+    // Backdrop first in DOM (it must paint underneath): a copy of the same
+    // Shot, hidden from assistive tech.
+    expect(imgs[0].getAttribute('src')).toBe(imgs[1].getAttribute('src'))
+    expect(imgs[0].getAttribute('aria-hidden')).toBe('true')
+    // jsdom computes no CSS, so Fit is only observable as the object-fit
+    // tokens: cover copy behind, contained Shot in front. The backdrop's
+    // blur and the window card's rounding/shadow are styling — the export
+    // smoke asserts those on real exported pixels in a real browser.
+    expect(imgs[0].className).toContain('object-cover')
+    expect(imgs[1].className).toContain('object-contain')
+  })
+
+  it('renders a default cover shot without a backdrop layer', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => {
+      useCardStore.getState().addShot('data:image/png;base64,ONE')
+    })
+
+    expect(screen.getByTestId('hero-slot').querySelectorAll('img')).toHaveLength(1)
+  })
+
+  it('pans a cover shot by dragging on desktop without any selection step', () => {
+    triggerMediaQuery('(hover: hover)', true)
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot('data:image/png;base64,ONE'))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    // Geometry the pan math needs (jsdom lays nothing out).
+    Object.defineProperty(img, 'naturalWidth', { value: 900, configurable: true })
+    Object.defineProperty(img, 'naturalHeight', { value: 300, configurable: true })
+    Object.defineProperty(img, 'offsetWidth', { value: 300, configurable: true })
+    Object.defineProperty(img, 'offsetHeight', { value: 150, configurable: true })
+    vi.spyOn(img, 'getBoundingClientRect').mockReturnValue({
+      width: 300,
+      height: 150,
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      bottom: 150,
+      right: 300,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    fireEvent.pointerDown(img, { pointerId: 1, button: 0, clientX: 150, clientY: 75 })
+    fireEvent.pointerMove(img, { pointerId: 1, clientX: 75, clientY: 75 })
+    fireEvent.pointerUp(img, { pointerId: 1 })
+
+    // Dragging 75px left against 150px of overflow moves focus +0.5.
+    expect(useCardStore.getState().card.showcase!.shots[0].focus!.x).toBeCloseTo(1)
+    // No touch-selection chrome on the desktop path.
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+    act(() => triggerMediaQuery('(hover: hover)', false))
+  })
+
+  it('selects a shot on tap before touch-panning, with a resettable overlay', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot('data:image/png;base64,ONE'))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    // Unselected: no pan chrome, page scroll stays native (no touch-action).
+    // The touch-none token is jsdom's only observable for the arming state;
+    // the pan smoke asserts the real computed touch-action in Chrome.
+    expect(img.className).not.toContain('touch-none')
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'touch', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    expect(overlay.dataset.exportExclude).toBe('true')
+    // Now armed: the gesture surface takes over touch scrolling.
+    expect(img.className).toContain('touch-none')
+
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Đặt lại' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].focus).toBeUndefined()
+
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Xong' }))
+    expect(screen.queryByTestId('shot-pan-overlay')).toBeNull()
+    expect(img.className).not.toContain('touch-none')
+  })
+
+  it('centers the avatar above name and bio in the showcase footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      qrEnabled: true,
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer\nBuilder',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    // QR is Quote-only content, even when the flag survived a type switch
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+
+    const avatar = screen.getByAltText('Nam Phạm')
+    const name = screen.getByText('Nam Phạm')
+    expect(avatar.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    const bio = footer?.querySelector('[data-testid="author-bio"]')
+    expect(bio?.textContent).toContain('AI Engineer')
+    expect(bio?.textContent).toContain('Builder')
+  })
+
+  it('centers name and bio without an avatar, with no monogram stand-in', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      showcase: { shots: [], annotations: [] },
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: '',
+    })
+
+    expect(container.querySelector('img')).toBeNull()
+    const footer = container.querySelector('[data-testid="card-footer"]')
+    expect(footer?.className).toContain('items-center')
+    expect(screen.getByText('Nam Phạm')).not.toBeNull()
+    expect(footer?.querySelector('[data-testid="author-bio"]')?.textContent).toContain(
+      'AI Engineer',
+    )
+  })
+
+  it('reuses the theme tokens on the showcase canvas, avatar and footer', () => {
+    const { container } = renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      authorName: 'Nam Phạm',
+      authorBio: 'AI Engineer',
+      avatarUrl: 'data:image/png;base64,AV',
+    })
+
+    const cardNode = container.querySelector('#social-card-node')
+    expect(cardNode?.className).toContain(CARD_THEME_STYLES.dark.bg)
+    // Slots deliberately carry no ring — a contain Shot's letterbox area
+    // would read as an empty frame. The avatar keeps the avatarBorder token.
+    expect(container.querySelector('[data-testid="card-footer"] > div')?.className).toContain(
+      CARD_THEME_STYLES.dark.avatarBorder,
+    )
+    expect(container.querySelector('[data-testid="author-bio"]')?.className).toContain(
+      CARD_THEME_STYLES.dark.subtext,
+    )
+  })
+
+  it('renders square dimensions when the store switches a 16:9 card to showcase', () => {
+    const { container } = renderCard({ ratio: '16:9' })
+    act(() => {
+      useCardStore.getState().switchCardType('showcase')
+    })
+
+    const cardNode = container.querySelector('#social-card-node') as HTMLElement | null
+    expect(cardNode?.style.width).toBe('720px')
+    expect(cardNode?.style.height).toBe('720px')
+  })
+})
+
+describe('Showcase Annotations', () => {
+  it('renders the annotation text inside its shot slot, diacritics intact', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [
+          { id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan ý tưởng', side: 'left' },
+        ],
+      },
+    })
+
+    const text = screen.getByText('Tổng quan ý tưởng')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+  })
+})
+
+describe('Showcase Annotation sides', () => {
+  const sides = [
+    { shotId: 'shot-1', side: 'left' },
+    { shotId: 'shot-2', side: 'right' },
+    { shotId: 'shot-3', side: 'top' },
+  ] as const
+
+  const renderSides = () =>
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: sides.map((input, idx) => ({
+          id: `annotation-${idx}`,
+          text: `Note ${idx}`,
+          ...input,
+        })),
+      },
+    })
+
+  // Tailwind placement fragments: right-full = mark's right edge flush with
+  // the slot's left edge (left margin); the others mirror it per margin.
+  const marginFragment = { left: 'right-full', right: 'left-full', top: 'bottom-full' } as const
+
+  const sideCases: { side: AnnotationSide; text: string }[] = [
+    { side: 'left', text: 'Note 0' },
+    { side: 'right', text: 'Note 1' },
+    { side: 'top', text: 'Note 2' },
+  ]
+
+  it.each(sideCases)('places a $side annotation in the $side margin', ({ side, text }) => {
+    renderSides()
+
+    const mark = screen.getByText(text).closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(marginFragment[side])
+  })
+})
+
+describe('Showcase Annotation following', () => {
+  it('follows its shot into the hero slot when an earlier shot is removed', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+        ],
+        annotations: [{ id: 'annotation-2', shotId: 'shot-2', text: 'Điểm nhấn', side: 'top' }],
+      },
+    })
+
+    act(() => {
+      useCardStore.getState().removeShot('shot-1')
+    })
+
+    // shot-2 was a detail slot; removing shot-1 promotes it to hero and the
+    // annotation must ride along (binds to Shots, not slots).
+    const text = screen.getByText('Điểm nhấn')
+    expect(screen.getByTestId('hero-slot').contains(text)).toBe(true)
+    expect(screen.queryByTestId('detail-slot')?.contains(text) ?? false).toBe(false)
+  })
+})
+
+describe('Showcase Annotation curve', () => {
+  it('renders the preset curve only in the slot its annotation targets', () => {
+    renderCard({
+      cardType: 'showcase',
+      showcase: {
+        shots: [
+          { id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' },
+          { id: 'shot-2', dataUrl: 'data:image/png;base64,TWO' },
+          { id: 'shot-3', dataUrl: 'data:image/png;base64,THREE' },
+        ],
+        annotations: [{ id: 'annotation-3', shotId: 'shot-3', text: 'Chi tiết này', side: 'left' }],
+      },
+    })
+
+    const [firstDetail, secondDetail] = screen.getAllByTestId('detail-slot')
+    expect(firstDetail.querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,TWO')
+    expect(secondDetail.querySelector('img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,THREE',
+    )
+
+    expect(firstDetail.querySelector('[data-testid="annotation-curve"]')).toBeNull()
+    expect(secondDetail.querySelector('[data-testid="annotation-curve"]')).not.toBeNull()
+  })
+})
+
+describe('Showcase Annotation styling', () => {
+  it('inks the mark with the theme text token and the handwriting font', () => {
+    renderCard({
+      cardType: 'showcase',
+      theme: 'dark',
+      showcase: {
+        shots: [{ id: 'shot-1', dataUrl: 'data:image/png;base64,ONE' }],
+        annotations: [{ id: 'annotation-1', shotId: 'shot-1', text: 'Tổng quan', side: 'left' }],
+      },
+    })
+
+    const mark = screen.getByText('Tổng quan').closest('[data-testid="annotation"]')
+    expect(mark?.className).toContain(CARD_THEME_STYLES.dark.text)
+    expect(mark?.className).toContain('font-hand')
+  })
+})
+
+// ADR 0006 (issue #38): absent an override, Fit derives from shot-to-slot
+// ratio; zoom renders a transform about the anchor; selecting a Shot surfaces
+// its controls on the slot itself. jsdom has no layout or decode, so the
+// tests drive the measurement hook with a fake Image decode and a stubbed
+// slot rect.
+describe('shot fit v2: auto-fit, zoom, on-shot controls (issue #38)', () => {
+  // A distinct dataUrl per fixture: the fit hook caches decoded dimensions
+  // per URL, so shared strings would leak one test's decode into another.
+  let shotSeq = 0
+  const wideShot = () => `data:image/png;base16,WIDE-${++shotSeq}`
+
+  // 1600×900 shot decoded, hero slot measured at 529×421 (ratio mismatch).
+  const withMeasuredLayout = (slotWidth = 529, slotHeight = 421) => {
+    class FakeImage {
+      onload: (() => void) | null = null
+      naturalWidth = 0
+      naturalHeight = 0
+      set src(_value: string) {
+        this.naturalWidth = 1600
+        this.naturalHeight = 900
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', FakeImage)
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const rect = {
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        toJSON: () => ({}),
+      } as DOMRect
+      if (this.dataset.testid === 'hero-slot') {
+        rect.width = slotWidth
+        rect.height = slotHeight
+      }
+      return rect
+    })
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('a ratio-mismatched shot defaults to contain with its blur backdrop', async () => {
+    withMeasuredLayout()
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+
+    await waitFor(() => {
+      const hero = screen.getByTestId('hero-slot')
+      expect(hero.querySelector('img[aria-hidden="true"]')).not.toBeNull()
+      expect(hero.querySelector('img:not([aria-hidden])')?.className).toContain('object-contain')
+    })
+    // Derived, not stored: the state stays free of an override.
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBeUndefined()
+  })
+
+  it('a near-matched slot keeps the cover render', async () => {
+    withMeasuredLayout(529, 421)
+    renderCard({ cardType: 'showcase', showcase: { shots: [], annotations: [] } })
+    // 4:3-ish shot against the ~1.25 hero slot is a match — no backdrop.
+    vi.unstubAllGlobals()
+    class MatchImage {
+      onload: (() => void) | null = null
+      naturalWidth = 0
+      naturalHeight = 0
+      set src(_value: string) {
+        this.naturalWidth = 1000
+        this.naturalHeight = 800
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', MatchImage)
+    act(() => useCardStore.getState().addShot(wideShot()))
+
+    await waitFor(() => {
+      expect(useCardStore.getState().card.showcase!.shots[0].fit).toBeUndefined()
+    })
+    const hero = screen.getByTestId('hero-slot')
+    expect(hero.querySelector('img[aria-hidden="true"]')).toBeNull()
+    expect(hero.querySelector('img:not([aria-hidden])')?.className).toContain('object-cover')
+  })
+
+  it('an explicit fit override wins over the derived default', async () => {
+    withMeasuredLayout()
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    // eslint-disable-next-line no-console
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('hero-slot').querySelector('img[aria-hidden="true"]'),
+      ).not.toBeNull()
+    })
+
+    act(() =>
+      useCardStore
+        .getState()
+        .setShotFit(useCardStore.getState().card.showcase!.shots[0].id, 'cover'),
+    )
+    expect(screen.getByTestId('hero-slot').querySelector('img[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('zoom renders a transform about the focus anchor; unzoomed renders none', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const shotId = useCardStore.getState().card.showcase!.shots[0].id
+
+    const unzoomed = screen
+      .getByTestId('hero-slot')
+      .querySelector('img:not([aria-hidden])') as HTMLImageElement
+    expect(unzoomed.style.transform).toBe('')
+
+    act(() => useCardStore.getState().setShotScale(shotId, 2))
+    const zoomed = screen
+      .getByTestId('hero-slot')
+      .querySelector('img:not([aria-hidden])') as HTMLImageElement
+    expect(zoomed.style.transform).toBe('scale(2)')
+    expect(zoomed.style.transformOrigin).toBe('50% 0%')
+  })
+
+  it('selecting a shot surfaces the fit toggle on the slot and wires it to the store', async () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'mouse', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    // Effective fit is cover (no layout in this test) → the toggle offers contain.
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Trọn ảnh' }))
+    expect(useCardStore.getState().card.showcase!.shots[0].fit).toBe('contain')
+  })
+
+  it('Đặt lại on the pill clears the whole adjustment set', () => {
+    renderCard({ cardType: 'showcase' })
+    act(() => useCardStore.getState().addShot(wideShot()))
+    const img = screen.getByTestId('hero-slot').querySelector('img')!
+    const shotId = useCardStore.getState().card.showcase!.shots[0].id
+    act(() => {
+      useCardStore.getState().setShotFocus(shotId, { x: 0.2, y: 0.2 })
+      useCardStore.getState().setShotScale(shotId, 3)
+      useCardStore.getState().setShotFit(shotId, 'cover')
+    })
+
+    fireEvent.pointerDown(img, { pointerId: 1, pointerType: 'mouse', clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(img, { pointerId: 1, clientX: 10, clientY: 10 })
+    const overlay = screen.getByTestId('shot-pan-overlay')
+    fireEvent.click(within(overlay).getByRole('button', { name: 'Đặt lại' }))
+
+    const shot = useCardStore.getState().card.showcase!.shots[0]
+    expect(shot.fit).toBeUndefined()
+    expect(shot.focus).toBeUndefined()
+    expect(shot.scale).toBeUndefined()
   })
 })

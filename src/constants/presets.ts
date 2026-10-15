@@ -1,14 +1,20 @@
 import type { CardState } from '../types'
 import type { UiCopyKey } from '../lib/i18n'
+import { DEMO_SHOT_DATA_URL, DEMO_SHOT_ID } from './demo-shot'
 
 // Shared fallbacks so the preview placeholders and the default state never
 // drift apart.
 export const FALLBACK_AUTHOR_NAME = 'Nam Phạm'
 export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 
-// Headlines are stored in sentence case; the Uppercase toggle drives the
-// casing at render time, so unchecking it has to visibly change the card.
+// The factory card is a Showcase holding the demo Shot: the studio opens on
+// a filled collage (never an empty dashed frame), and the first-run tour's
+// gesture steps always have a live Screenshot Slot to point at. Quote
+// fields stay — they are shared content, and switching back to Quote
+// restores them untouched (ADR 0004).
 export const DEFAULT_CARD_STATE: CardState = {
+  cardType: 'showcase',
+  showcase: { shots: [{ id: DEMO_SHOT_ID, dataUrl: DEMO_SHOT_DATA_URL }], annotations: [] },
   headline: 'Em vừa được tậu đất:',
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: FALLBACK_AUTHOR_NAME,

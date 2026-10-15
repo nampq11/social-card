@@ -43,7 +43,7 @@ export const Inspector: React.FC = () => {
         <InspectorTabsNav tab={tab} onChange={setTab} className="w-full" />
 
         <div className="flex flex-col gap-4">
-          {active.sections.map((Section) => (
+          {active.sectionList.map((Section) => (
             <Section key={Section.name} />
           ))}
         </div>

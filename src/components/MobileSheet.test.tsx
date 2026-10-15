@@ -1,13 +1,26 @@
 // @vitest-environment jsdom
 import { createRef } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MobileSheet } from './MobileSheet'
 import { useCardStore } from '../lib/card-store'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
+import type { CardState } from '../types'
 
 setupCardStudioTest()
+
+// The studio's factory card ships as a Showcase; the sheet's Quote-mode
+// contracts render from a Quote baseline (same seeding as the Inspector
+// suite).
+beforeEach(() => {
+  const quoteCard: CardState = {
+    ...DEFAULT_CARD_STATE,
+    cardType: 'quote',
+    showcase: { shots: [], annotations: [] },
+  }
+  useCardStore.setState({ card: quoteCard })
+})
 
 const renderSheet = () => renderWithUiCopy(<MobileSheet canvasRef={createRef()} />)
 
@@ -36,7 +49,7 @@ describe('MobileSheet', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Định danh/ }))
 
     expect(screen.getByLabelText(/^Tên$/)).not.toBeNull()
-    expect(screen.getByRole('switch', { name: /Mã QR & Kêu gọi/ })).not.toBeNull()
+    expect(screen.getByRole('switch', { name: /Hiển thị Mã QR/ })).not.toBeNull()
   })
 
   it('the drag handle expands and collapses the sheet as a button', () => {
@@ -127,5 +140,17 @@ describe('MobileSheet tab pill docking', () => {
     ) as HTMLElement
     expect(header.textContent).toContain('Tùy chỉnh Card')
     expect(header.textContent).not.toContain('Nội dung')
+  })
+})
+
+describe('MobileSheet Showcase mode', () => {
+  it('inherits the registry swap: Screenshots replace Presets and Headline', () => {
+    renderSheet()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Giới thiệu' }))
+
+    expect(screen.getByText('Ảnh chụp màn hình')).not.toBeNull()
+    expect(screen.queryByText('Mẫu nhanh')).toBeNull()
+    expect(screen.queryByLabelText('Tiêu đề chính')).toBeNull()
   })
 })
