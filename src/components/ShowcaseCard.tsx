@@ -1,5 +1,5 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
-import { useRef, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
 import { clampScale, DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
@@ -114,7 +114,10 @@ const ShotImage = ({
 // One Screenshot Slot (GLOSSARY.md): holds its Shot, or shows the dashed
 // placeholder when empty. Rendering is the Card Preview's job; panning an
 // armed Shot is the one interaction the preview owns (ADR 0005).
-const Slot = ({
+// Memoized so a gesture's per-frame focus writes re-render only the Slot
+// being panned: the store's shot updates preserve untouched Shot identities,
+// so the sibling Slots and the footer skip those frames.
+const Slot = memo(function Slot({
   shot,
   testId,
   sizeClassName,
@@ -130,7 +133,7 @@ const Slot = ({
   annotation?: Annotation
   selected: boolean
   onSelect: (shotId: string | null) => void
-}) => {
+}) {
   const { copy } = useUiCopy()
   const clearShotAdjustments = useCardStore((s) => s.clearShotAdjustments)
   const setShotFit = useCardStore((s) => s.setShotFit)
@@ -211,7 +214,7 @@ const Slot = ({
       )}
     </div>
   )
-}
+})
 
 // The Showcase Card Type's preview body (GLOSSARY.md): Screenshot Slots in a
 // hero-plus-details collage above the centered author footer. Renders no
