@@ -13,6 +13,7 @@ import {
 import { useUiCopy } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { Button } from './ui/Button'
+import { Tooltip } from './ui/Tooltip'
 import { RATIO_INFO, EXPORT_PIXEL_RATIO } from '../constants/ratios'
 import { TipsPopover } from './TipsPopover'
 
@@ -54,21 +55,22 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2.5">
         {isDesktop && onToggleInspector && (
           <>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onToggleInspector}
-              title={copy.inspector_toggle_title}
-              aria-label={copy.inspector_toggle_title}
-              aria-pressed={!isInspectorCollapsed}
-              className={`w-8 h-8 rounded-xl transition-colors ${
-                isInspectorCollapsed
-                  ? 'text-ink-tertiary hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
-                  : 'bg-black/[0.08] dark:bg-white/[0.12] text-accent shadow-xs'
-              }`}
-            >
-              <PanelLeft className="w-4 h-4" />
-            </Button>
+            <Tooltip label={copy.inspector_toggle_title}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={onToggleInspector}
+                aria-label={copy.inspector_toggle_title}
+                aria-pressed={!isInspectorCollapsed}
+                className={`w-8 h-8 rounded-xl transition-colors ${
+                  isInspectorCollapsed
+                    ? 'text-ink-tertiary hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
+                    : 'bg-black/[0.08] dark:bg-white/[0.12] text-accent shadow-xs'
+                }`}
+              >
+                <PanelLeft className="w-4 h-4" />
+              </Button>
+            </Tooltip>
             <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden lg:block" />
           </>
         )}
@@ -123,28 +125,30 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2">
         {isDesktop && (
           <div className="hidden lg:flex items-center bg-black/[0.04] dark:bg-white/[0.06] p-0.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06]">
-            <Button
-              onClick={undo}
-              disabled={!canUndo}
-              title={copy.undo_button_title}
-              aria-label={copy.undo_button_title}
-              variant="ghost"
-              size="icon"
-              className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-            >
-              <Undo2 className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              onClick={redo}
-              disabled={!canRedo}
-              title={copy.redo_button_title}
-              aria-label={copy.redo_button_title}
-              variant="ghost"
-              size="icon"
-              className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-            >
-              <Redo2 className="w-3.5 h-3.5" />
-            </Button>
+            <Tooltip label={copy.undo_button_title}>
+              <Button
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label={copy.undo_button_title}
+                variant="ghost"
+                size="icon"
+                className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
+            <Tooltip label={copy.redo_button_title}>
+              <Button
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label={copy.redo_button_title}
+                variant="ghost"
+                size="icon"
+                className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
           </div>
         )}
 
@@ -190,16 +194,17 @@ export const Header: React.FC<HeaderProps> = ({
             v4 orders display utilities alphabetically, so `hidden` precedes
             (loses to) `inline-flex`. */}
         {isDesktop && (
-          <Button
-            onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-            title={copy.language_toggle_title}
-            aria-label={copy.language_toggle_title}
-            variant="secondary"
-            className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? 'VI' : 'EN'}</span>
-          </Button>
+          <Tooltip label={copy.language_toggle_title}>
+            <Button
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={copy.language_toggle_title}
+              variant="secondary"
+              className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>{language === 'vi' ? 'VI' : 'EN'}</span>
+            </Button>
+          </Tooltip>
         )}
       </div>
     </header>

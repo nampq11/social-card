@@ -16,6 +16,7 @@ import { CardPreview } from './components/CardPreview'
 import { useCardExport } from './lib/use-card-export'
 import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
+import { Tooltip } from './components/ui/Tooltip'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
 import { Toaster } from 'sonner'
 
@@ -150,45 +151,49 @@ export function App() {
         {/* Floating Bottom-Right Zoom HUD (Desktop) */}
         {isDesktop && (
           <div className="z-20 absolute right-4 bottom-4 rounded-full apple-glass px-2 py-1 flex items-center gap-1 text-xs font-medium text-ink shadow-sm">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={zoomOut}
-              title={copy.zoom_out_title}
-              aria-label={copy.zoom_out_title}
-              className="rounded-full w-7 h-7"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </Button>
-            <button
-              type="button"
-              onClick={fit}
-              title={copy.zoom_fit_title}
-              className="px-2 py-0.5 rounded-md hover:bg-black/[0.06] dark:hover:bg-white/[0.08] font-mono text-xs min-w-[48px] text-center cursor-pointer select-none"
-            >
-              {Math.round(scale * 100)}%
-            </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={zoomIn}
-              title={copy.zoom_in_title}
-              aria-label={copy.zoom_in_title}
-              className="rounded-full w-7 h-7"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </Button>
+            <Tooltip label={copy.zoom_out_title}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={zoomOut}
+                aria-label={copy.zoom_out_title}
+                className="rounded-full w-7 h-7"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
+            <Tooltip label={copy.zoom_fit_title}>
+              <button
+                type="button"
+                onClick={fit}
+                className="px-2 py-0.5 rounded-md hover:bg-black/[0.06] dark:hover:bg-white/[0.08] font-mono text-xs min-w-[48px] text-center cursor-pointer select-none"
+              >
+                {Math.round(scale * 100)}%
+              </button>
+            </Tooltip>
+            <Tooltip label={copy.zoom_in_title}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={zoomIn}
+                aria-label={copy.zoom_in_title}
+                className="rounded-full w-7 h-7"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
             <div className="h-3.5 w-[1px] bg-black/10 dark:bg-white/10 mx-0.5" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={fit}
-              title={copy.zoom_fit_title}
-              aria-label={copy.zoom_fit_title}
-              className={`rounded-full w-7 h-7 ${mode === 'fit' ? 'opacity-40' : ''}`}
-            >
-              <Maximize className="w-3.5 h-3.5" />
-            </Button>
+            <Tooltip label={copy.zoom_fit_title}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={fit}
+                aria-label={copy.zoom_fit_title}
+                className={`rounded-full w-7 h-7 ${mode === 'fit' ? 'opacity-40' : ''}`}
+              >
+                <Maximize className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
           </div>
         )}
       </div>
