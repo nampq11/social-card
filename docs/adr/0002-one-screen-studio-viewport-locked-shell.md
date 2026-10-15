@@ -63,7 +63,17 @@ locates the defect in the fixed-positioning path itself: the WebKit
 elements during toolbar transitions. Re-anchoring to the root's box puts
 the sheet in the one coordinate system the shell's header and canvas
 already share — if the engine mis-sizes the dynamic viewport, everything
-is wrong together instead of the sheet tearing loose on its own. The
-sheet keeps `will-change: transform`: layer promotion was only a hazard
-while riding Safari's fixed-viewport machinery, and it keeps the
-per-frame drag transform off the main thread.
+is wrong together instead of the sheet tearing loose on its own.
+
+On-device follow-up: the ghost persisted after the re-anchor — an
+on-device frame shows the expanded sheet floating mid-screen with the
+dot grid below it, a state no legal offset of the absolute-anchored DOM
+can produce. The remaining engine-sensitive construct was layer
+promotion: `will-change: transform` hands the sheet to the compositor,
+and iOS 18's compositor displaces composited layers at stale offsets
+around gestures (the sheet ghost-replayed its dragged position). The
+promotion had also stopped buying anything: every drag frame already
+does main-thread work (the per-frame canvas reserve write), so the
+transform never rode the compositor alone. The sheet is deliberately
+NOT `will-change` — it paints in document order, in sync with layout,
+on every engine.
