@@ -20,6 +20,14 @@ import { useEffect, useRef, useState } from 'react'
 
 interface Snapshot {
   time: string
+  /** Filename of the loaded app bundle — stale-cache detection at a glance. */
+  bundle: string
+  /** The desktop breakpoint's media-query verdict on this device. */
+  mq: boolean
+  /** Layout viewport width — a value far above the device width means the
+   * engine laid the page out for a different (zoomed/desktop) viewport. */
+  layW: number
+  found: boolean
   iw: number
   ih: number
   vvW: number
@@ -53,8 +61,17 @@ function readSnapshot(): Snapshot {
   const vv = window.visualViewport
   const s = sheet?.getBoundingClientRect()
   const w = wrapper?.getBoundingClientRect()
+  const bundleEntry = performance
+    .getEntriesByType('resource')
+    .map((r) => r.name)
+    .filter((n) => /assets\/index-[^/]+\.js$/.test(n))
+    .pop()
   return {
     time: new Date().toISOString().slice(11, 23),
+    bundle: bundleEntry ? bundleEntry.match(/index-[^/]+\.js$/)![0] : '?',
+    mq: window.matchMedia('(min-width: 1024px)').matches,
+    layW: document.documentElement.clientWidth,
+    found: !!sheet,
     iw: window.innerWidth,
     ih: window.innerHeight,
     vvW: Math.round(vv?.width ?? -1),
@@ -129,6 +146,10 @@ export function SheetDebugHud() {
   return (
     <div className={`${HUD_Z} font-mono text-[9px] leading-[1.35] text-white`}>
       <div className="rounded bg-black/75 px-1.5 py-1">
+        <div className="text-cyan-300">{snap.bundle}</div>
+        {row('mq1024', String(snap.mq), snap.mq)}
+        {row('layW', snap.layW, snap.layW > snap.iw + 2)}
+        {row('found', String(snap.found), !snap.found)}
         {row('ih', `${snap.ih}x${snap.iw}`)}
         {row(
           'vv',
