@@ -11,7 +11,13 @@ import type {
 import { SegmentedControl } from './SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
-import { PRESETS, STYLE_PRESETS, DEFAULT_CARD_STATE } from '../constants/presets'
+import {
+  PRESETS,
+  STYLE_PRESETS,
+  DEFAULT_CARD_STATE,
+  type StylePresetState,
+} from '../constants/presets'
+import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Switch } from '@base-ui/react/switch'
 import { Slider } from '@base-ui/react/slider'
@@ -20,10 +26,6 @@ import {
   Square,
   RectangleVertical,
   RectangleHorizontal,
-  Sun,
-  Scroll,
-  Moon,
-  Cloud,
   QrCode,
   Upload,
   Check,
@@ -33,6 +35,8 @@ import {
 import { logDebug } from '../lib/log-debug'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
+import { PresetCard } from './ui/PresetCard'
+import { SwatchPicker } from './ui/SwatchPicker'
 import { toast } from 'sonner'
 import { clsx } from 'clsx'
 
@@ -83,12 +87,6 @@ function useCardUpdate() {
 function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S): boolean {
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
-
-// Shared preset-button skin (the two preset families render it verbatim;
-// only the base class differs per family).
-const PRESET_ACTIVE_CLASS = 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-const PRESET_INACTIVE_CLASS =
-  'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
 
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
@@ -408,7 +406,9 @@ export const PresetsSection: React.FC = () => {
               size="sm"
               className={clsx(
                 'text-[12px] font-medium transition',
-                active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
+                active
+                  ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
+                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
               )}
             >
               {copy[p.nameKey]}
@@ -422,6 +422,58 @@ export const PresetsSection: React.FC = () => {
 
 const HEADLINE_SIZE_MIN = 24
 const HEADLINE_SIZE_MAX = 60
+
+// A style preset's miniature: an abstract card mock rendered from the
+// preset's own state — theme tokens paint it, the ratio sets its silhouette,
+// the headline size sets the title bars' weight. Abstract bars (never real
+// content) keep the preview about the style, which is all a style preset
+// writes.
+const PRESET_MOCK_ASPECT: Record<AspectRatio, string> = {
+  '1:1': 'aspect-square',
+  '4:5': 'aspect-[4/5]',
+  '16:9': 'aspect-video',
+}
+
+const StylePresetMock: React.FC<StylePresetState> = ({
+  theme,
+  ratio,
+  headlineSize,
+  uppercaseHeadline,
+}) => {
+  const tokens = CARD_THEME_STYLES[theme]
+  // Headline bar weight tracks the preset's headline size (34px → 3px …
+  // 54px → 5px); a caps headline reads as a wider first line.
+  const headlineBar = Math.max(3, Math.round(headlineSize / 12))
+  return (
+    <span className={clsx('flex h-16 items-center justify-center', tokens.text)}>
+      <span
+        aria-hidden
+        className={clsx(
+          'flex h-full flex-col items-start justify-center gap-1 rounded-md border p-1.5',
+          PRESET_MOCK_ASPECT[ratio],
+          tokens.bg,
+          tokens.border,
+        )}
+      >
+        <span
+          className={clsx('rounded-full bg-current', uppercaseHeadline ? 'w-[72%]' : 'w-[56%]')}
+          style={{ height: headlineBar }}
+        />
+        <span
+          className="w-[44%] rounded-full bg-current"
+          style={{ height: Math.max(2, headlineBar - 1) }}
+        />
+        {/* The wide 16:9 mock is too short for subline bars — title only. */}
+        {ratio !== '16:9' && (
+          <>
+            <span className="mt-0.5 h-[2px] w-[40%] rounded-full bg-current opacity-50" />
+            <span className="h-[2px] w-[26%] rounded-full bg-current opacity-50" />
+          </>
+        )}
+      </span>
+    </span>
+  )
+}
 
 // Direct numeric entry beside the slider (slider for exploration, typed
 // value for precision). Drafts locally and commits on blur/Enter — clamping
@@ -440,7 +492,9 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
     const clamped = Number.isNaN(parsed)
       ? value
       : Math.min(HEADLINE_SIZE_MAX, Math.max(HEADLINE_SIZE_MIN, parsed))
-    onCommit(clamped)
+    // An untouched draft (focus-then-blur, Enter without typing) must not
+    // write — a no-op patch would push a dead undo step.
+    if (clamped !== value) onCommit(clamped)
     setDraft(String(clamped))
   }
   return (
@@ -480,34 +534,16 @@ export const StyleSection: React.FC = () => {
             {copy.style_presets_label}
           </label>
           <div className="grid grid-cols-2 gap-1.5">
-            {STYLE_PRESETS.map((p) => {
-              const active = isPresetActive(data, p.state)
-              return (
-                <Button
-                  key={p.id}
-                  onClick={() => patchCard(p.state)}
-                  aria-pressed={active}
-                  variant={active ? 'primary' : 'secondary'}
-                  size="sm"
-                  className={clsx(
-                    'justify-start font-medium text-xs',
-                    active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
-                  )}
-                >
-                  {/* Theme dot — the one visual the label can't carry. */}
-                  <span
-                    aria-hidden
-                    className={clsx(
-                      'size-2.5 shrink-0 rounded-full border',
-                      p.state.theme === 'dark' && 'bg-neutral-900 border-neutral-600',
-                      p.state.theme === 'white' && 'bg-white border-neutral-300',
-                      p.state.theme === 'paper' && 'bg-[#FAF9F5] border-neutral-300',
-                    )}
-                  />
-                  {copy[p.nameKey]}
-                </Button>
-              )
-            })}
+            {STYLE_PRESETS.map((p) => (
+              <PresetCard
+                key={p.id}
+                label={copy[p.nameKey]}
+                description={copy[p.descKey]}
+                active={isPresetActive(data, p.state)}
+                onClick={() => patchCard(p.state)}
+                preview={<StylePresetMock {...p.state} />}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -536,20 +572,21 @@ export const StyleSection: React.FC = () => {
         </div>
       )}
 
+      {/* Swatches show each theme's real card color (theme tokens are the
+          fill), with the caption carrying the name a color alone can't. */}
       <div className="flex flex-col gap-1.5">
         <label id="theme-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
           {copy.theme_label}
         </label>
-        <SegmentedControl<CardTheme>
+        <SwatchPicker<CardTheme>
           aria-labelledby="theme-label"
           value={data.theme}
           onChange={(t) => update('theme', t)}
-          className="w-full"
           options={[
-            { value: 'paper', label: copy.theme_paper, icon: <Scroll /> },
-            { value: 'white', label: copy.theme_white, icon: <Sun /> },
-            { value: 'dark', label: copy.theme_dark, icon: <Moon /> },
-            { value: 'mist', label: copy.theme_mist, icon: <Cloud /> },
+            { value: 'paper', label: copy.theme_paper, swatchClass: CARD_THEME_STYLES.paper.bg },
+            { value: 'white', label: copy.theme_white, swatchClass: CARD_THEME_STYLES.white.bg },
+            { value: 'dark', label: copy.theme_dark, swatchClass: CARD_THEME_STYLES.dark.bg },
+            { value: 'mist', label: copy.theme_mist, swatchClass: CARD_THEME_STYLES.mist.bg },
           ]}
         />
       </div>
@@ -571,42 +608,46 @@ export const StyleSection: React.FC = () => {
                 onCommit={(n) => update('headlineSize', n)}
               />
             </div>
-            <Slider.Root
-              value={data.headlineSize}
-              min={24}
-              max={60}
-              step={1}
-              aria-labelledby="inspector-headline-size-label"
-              onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
-              className="flex w-full cursor-pointer select-none"
-            >
-              <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
-                <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-                  <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-                  <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
-                </Slider.Track>
-              </Slider.Control>
-            </Slider.Root>
+            {/* The A/A+ glyphs frame the slider's range at a glance — the
+                typed entry above stays the precise path. */}
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className="text-[10px] font-semibold text-[#86868B] dark:text-[#A1A1A6]"
+              >
+                A
+              </span>
+              <Slider.Root
+                value={data.headlineSize}
+                min={HEADLINE_SIZE_MIN}
+                max={HEADLINE_SIZE_MAX}
+                step={1}
+                aria-labelledby="inspector-headline-size-label"
+                onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
+                className="flex min-w-0 flex-1 cursor-pointer select-none"
+              >
+                <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
+                  <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
+                    <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
+                    <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+                  </Slider.Track>
+                </Slider.Control>
+              </Slider.Root>
+              <span
+                aria-hidden
+                className="text-[13px] font-semibold text-[#86868B] dark:text-[#A1A1A6]"
+              >
+                A
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Checkbox.Root
-              id="inspector-uppercase"
-              checked={data.uppercaseHeadline}
-              onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
-              className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-            >
-              <Checkbox.Indicator>
-                <Check className="size-3" strokeWidth={3} />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
-            <label
-              htmlFor="inspector-uppercase"
-              className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-            >
-              <span>{copy.uppercase_label}</span>
-            </label>
-          </div>
+          <CardStateToggle
+            id="inspector-uppercase"
+            label={copy.uppercase_label}
+            checked={data.uppercaseHeadline}
+            onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
+          />
         </>
       )}
     </div>

@@ -1,5 +1,5 @@
 import type { CardState } from '../types'
-import type { UiCopyKey } from '../lib/i18n'
+import type { UiCopyKey, UiStringKey } from '../lib/i18n'
 import { DEMO_SHOT_DATA_URL, DEMO_SHOT_ID } from './demo-shot'
 
 // Shared fallbacks so the preview placeholders and the default state never
@@ -106,7 +106,10 @@ export type StylePresetState = Pick<
 
 export interface StylePreset {
   id: string
-  nameKey: UiCopyKey
+  // Names/descriptions feed string props (PresetCard labels), so they must
+  // be plain-text keys, not JSX-valued ones.
+  nameKey: UiStringKey
+  descKey: UiStringKey
   state: StylePresetState
 }
 
@@ -114,21 +117,25 @@ export const STYLE_PRESETS: StylePreset[] = [
   {
     id: 'classic',
     nameKey: 'style_preset_classic',
+    descKey: 'style_preset_classic_desc',
     state: { theme: 'paper', ratio: '1:1', headlineSize: 42, uppercaseHeadline: true },
   },
   {
     id: 'midnight',
     nameKey: 'style_preset_midnight',
+    descKey: 'style_preset_midnight_desc',
     state: { theme: 'dark', ratio: '4:5', headlineSize: 46, uppercaseHeadline: true },
   },
   {
     id: 'minimal',
     nameKey: 'style_preset_minimal',
+    descKey: 'style_preset_minimal_desc',
     state: { theme: 'white', ratio: '1:1', headlineSize: 34, uppercaseHeadline: false },
   },
   {
     id: 'billboard',
     nameKey: 'style_preset_billboard',
+    descKey: 'style_preset_billboard_desc',
     state: { theme: 'dark', ratio: '16:9', headlineSize: 54, uppercaseHeadline: true },
   },
 ]

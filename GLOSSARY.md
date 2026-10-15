@@ -20,6 +20,10 @@ _Avoid_: locale, i18n language
 A named starting point that fills several Card Content fields and style toggles at once (headline, sublines, theme, CTA, plus style choices such as bold sublines or grayscale avatar).
 _Avoid_: template, sample
 
+**Style Preset**:
+A named starting point that writes only the style choices (ratio, theme, headline size, uppercase) in one undoable step — never Card Content.
+_Avoid_: theme preset, look
+
 **Card State**:
 The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase, bold sublines, grayscale avatar).
 _Avoid_: form data, settings
