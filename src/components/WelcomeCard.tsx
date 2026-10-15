@@ -22,7 +22,7 @@ export function WelcomeCard({ open, onStartTour, onSkip }: WelcomeCardProps) {
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Popup
-          className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-sheet backdrop-blur border border-black/[0.08] dark:border-white/[0.1] shadow-2xl p-7 flex flex-col items-center text-center gap-4"
+          className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,380px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-sheet backdrop-blur border border-hairline shadow-2xl p-7 flex flex-col items-center text-center gap-4"
           aria-describedby={undefined}
         >
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-from to-brand-to flex items-center justify-center text-white shadow-lg shadow-blue-500/20">

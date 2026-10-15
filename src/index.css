@@ -32,6 +32,15 @@
   /* Brand mark gradient — one pair for Header logo and Welcome icon. */
   --color-brand-from: #4f75ff;
   --color-brand-to: #2554e8;
+  /* Hairline — the chrome border on fields, popups, and groups (formerly
+     eight copies of the border-black/[0.08] dark:border-white/[0.1] pair;
+     tour-chrome's stronger dark variant stays literal, ADR 0007 §5). */
+  --color-hairline: rgb(0 0 0 / 8%);
+  /* Infinite-canvas surface and its Freeform dot texture (apple-canvas-bg). */
+  --color-canvas: #f2f2f7;
+  --color-canvas-dot: #c7c7cc;
+  /* Glass vibrancy fill (apple-glass) — translucent so blur reads through. */
+  --color-glass: rgb(255 255 255 / 85%);
 
   /* ── Card themes — static by contract ────────────────────────────────
      A card theme paints the exported image; it must render identically in
@@ -70,6 +79,10 @@
     --color-sheet: rgb(28 28 30 / 95%);
     --color-accent: #2997ff;
     --color-link: #6cb2ff;
+    --color-hairline: rgb(255 255 255 / 10%);
+    --color-canvas: #0b0b0c;
+    --color-canvas-dot: rgb(255 255 255 / 12%);
+    --color-glass: rgb(26 26 30 / 85%);
   }
 }
 
@@ -136,29 +149,20 @@
   }
 }
 
-/* Infinite Canvas Background (Apple Freeform) */
+/* Infinite Canvas Background (Apple Freeform) — colors live in the
+   token vocabulary, so this needs no dark block of its own. */
 .apple-canvas-bg {
-  background-color: #f2f2f7;
-  background-image: radial-gradient(#c7c7cc 1px, transparent 1px);
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(var(--color-canvas-dot) 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: center center;
 }
 
-/* Dark variants keyed to the OS color scheme (same media query the dark:
-   utilities use) — a .dark class is never applied anywhere in the app. */
-@media (prefers-color-scheme: dark) {
-  .apple-canvas-bg {
-    background-color: #0b0b0c;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-    background-size: 22px 22px;
-    background-position: center center;
-  }
-}
-
-/* Apple Glass Vibrancy (macOS Sequoia) */
+/* Apple Glass Vibrancy (macOS Sequoia) — the fill is a token; only the
+   mode-specific border and shadow stacks stay in the dark block. */
 .apple-glass,
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--color-glass);
   backdrop-filter: saturate(190%) blur(28px);
   -webkit-backdrop-filter: saturate(190%) blur(28px);
   border: 1px solid rgba(0, 0, 0, 0.07);
@@ -171,9 +175,6 @@
 @media (prefers-color-scheme: dark) {
   .apple-glass,
   .glass-panel {
-    background: rgba(26, 26, 30, 0.85);
-    backdrop-filter: saturate(190%) blur(28px);
-    -webkit-backdrop-filter: saturate(190%) blur(28px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
       0 10px 30px -5px rgba(0, 0, 0, 0.3),

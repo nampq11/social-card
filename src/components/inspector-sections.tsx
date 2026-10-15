@@ -145,7 +145,7 @@ export const ScreenshotsSection: React.FC = () => {
             <div
               key={shot.id}
               onClick={() => setSelectedShotId((current) => (current === shot.id ? null : shot.id))}
-              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1] ${
+              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-hairline ${
                 selectedShotId === shot.id ? 'ring-2 ring-accent' : ''
               }`}
             >
@@ -273,7 +273,7 @@ export const AnnotationsSection: React.FC = () => {
       {annotations.map((annotation) => (
         <div
           key={annotation.id}
-          className="flex flex-col gap-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.1] p-2"
+          className="flex flex-col gap-1.5 rounded-lg border border-hairline p-2"
         >
           <input
             aria-label={copy.annotations_text_label}
@@ -473,7 +473,7 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
         onKeyDown={(e) => {
           if (e.key === 'Enter') commit()
         }}
-        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-hairline focus:outline-none focus:ring-2 focus:ring-accent/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>px</span>
     </span>
@@ -679,7 +679,7 @@ const GROUP_CARD_CLASS =
 // Shared skin for the headline and sublines textareas — the one roomy
 // writing field (distinct from the compact px-2 fieldSurfaceClass skin).
 const TEXTAREA_FIELD_CLASS =
-  'w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400'
+  'w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-hairline focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400'
 
 const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 

@@ -22,7 +22,7 @@ export function Tooltip({ label, children }: TooltipProps) {
       <BaseTooltip.Trigger render={children} />
       <BaseTooltip.Portal>
         <BaseTooltip.Positioner sideOffset={6}>
-          <BaseTooltip.Popup className="z-50 rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] px-2 py-1 text-xs text-ink shadow-md">
+          <BaseTooltip.Popup className="z-50 rounded-lg bg-surface border border-hairline px-2 py-1 text-xs text-ink shadow-md">
             {label}
           </BaseTooltip.Popup>
         </BaseTooltip.Positioner>

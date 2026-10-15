@@ -33,7 +33,9 @@ the app shipped before this ADR; the only unifications are true duplicates:
 
 **Adaptive chrome — override-flipping** (light value in `@theme`, dark value in the
 override block below): `ink`, `ink-secondary`, `ink-tertiary`, `ink-muted`, `ink-faint`,
-`surface`, `surface-raised`, `sheet`, `accent`, `link`.
+`surface`, `surface-raised`, `sheet`, `accent`, `link`, `hairline` (the chrome border on
+fields, popups, and groups), `canvas` + `canvas-dot` (the Freeform dot-texture surface),
+`glass` (the vibrancy fill behind the Header and zoom HUD).
 
 **Adaptive chrome — mode-constant** (defined in `@theme` only; they had no dark variant
 before this ADR and codification kept it that way): `accent-hover`, `green`,
@@ -91,6 +93,14 @@ These are deliberate, inventoried, not oversights:
   (inspector-sections.tsx) — the inversion _is_ the affordance; no token pair exists.
 - Mixed `dark:text-neutral-500/400` pairs on caption badges — intentional hierarchy
   that predates ink tiers; migrating to ink-muted changes rendered colors.
+- Tour card border `dark:border-white/[0.12]` (tour-chrome.tsx) — the one hairline
+  variant that deliberately reads stronger on dark glass than the shared
+  `hairline` token (10%); unifying would soften the tour card's edge.
+- Control-chrome neutral pairs in the primitives (`bg-neutral-300
+  dark:bg-neutral-600` Switch track and Checkbox border, `bg-neutral-200
+  dark:bg-neutral-700` Slider track, Checkbox label `text-neutral-600
+  dark:text-neutral-400`) — codified as-shipped; each value has one or two
+  consumers, too few for a token to earn its indirection.
 - `bg-emerald-500` chip dot (App.tsx mobile) vs `bg-green` elsewhere — the mobile dot
   is decorative; unifying changes pixels for no contract.
 - Gradient glow shadows `shadow-blue-500/25`, `shadow-blue-500/20` — brand-glow effect
