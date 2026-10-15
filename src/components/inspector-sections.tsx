@@ -18,7 +18,7 @@ import {
   type StylePresetState,
 } from '../constants/presets'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
-import { Slider } from '@base-ui/react/slider'
+import { Slider } from './ui/Slider'
 import { Field } from '@base-ui/react/field'
 import {
   Square,
@@ -574,22 +574,13 @@ export const StyleSection: React.FC = () => {
               <span aria-hidden className="text-[10px] font-semibold text-ink-tertiary">
                 A
               </span>
-              <Slider.Root
+              <Slider
                 value={data.headlineSize}
                 min={HEADLINE_SIZE_MIN}
                 max={HEADLINE_SIZE_MAX}
-                step={1}
                 aria-labelledby="inspector-headline-size-label"
-                onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
-                className="flex min-w-0 flex-1 cursor-pointer select-none"
-              >
-                <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
-                  <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-                    <Slider.Indicator className="absolute h-full rounded-full bg-accent" />
-                    <Slider.Thumb className="size-4 rounded-full border-2 border-accent bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40" />
-                  </Slider.Track>
-                </Slider.Control>
-              </Slider.Root>
+                onValueChange={(n) => update('headlineSize', n)}
+              />
               <span aria-hidden className="text-[13px] font-semibold text-ink-tertiary">
                 A
               </span>
