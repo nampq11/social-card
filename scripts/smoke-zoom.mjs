@@ -85,10 +85,10 @@ await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
   console.log('1a. hero shot matching the slot ratio keeps cover ✓')
 
   // --- 1c. desktop click (no drag) on a COVER shot surfaces the pill -------
-  // Regression for the review finding: a hover-capable press used to arm the
-  // drag gesture and return before onSelect, leaving the pill unreachable on
-  // desktop cover shots (contain shots and touch worked — which is exactly
-  // what the old step below accidentally tested).
+  // A hover-capable press that stays within the click slop falls through to
+  // the tap branch, so select stays reachable on desktop cover shots
+  // (contain shots and touch select through this branch too — this step
+  // pins the cover case).
   const heroCenter = await evalJs(`(() => {
     const r = document.querySelector('[data-testid=hero-slot]').getBoundingClientRect()
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
@@ -176,9 +176,7 @@ await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
   console.log('3. pill fit toggle forces cover over the derived default ✓')
 
   // --- 3b. double-click zoom toggles 1 ↔ 2 on the now-cover hero (§4) ------
-  // Regression for the review finding: the toggle lived behind
-  // interactive=false, which a hover-capable cover press can never reach —
-  // dead code. Two CDP click pairs inside the 350ms window.
+  // Two CDP click pairs inside the 350ms window.
   const dblclick = async () => {
     for (const clickCount of [1, 2]) {
       await mouse('mousePressed', heroCenter.x, heroCenter.y, clickCount)
