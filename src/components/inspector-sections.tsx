@@ -88,12 +88,6 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
 
-// Shared preset-button skin (the two preset families render it verbatim;
-// only the base class differs per family).
-const PRESET_ACTIVE_CLASS = 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-const PRESET_INACTIVE_CLASS =
-  'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]'
-
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
 // dedicated atomic switch action; the checked segment mirrors the Card Type.
@@ -412,7 +406,9 @@ export const PresetsSection: React.FC = () => {
               size="sm"
               className={clsx(
                 'text-[12px] font-medium transition',
-                active ? PRESET_ACTIVE_CLASS : PRESET_INACTIVE_CLASS,
+                active
+                  ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
+                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
               )}
             >
               {copy[p.nameKey]}
@@ -496,7 +492,9 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
     const clamped = Number.isNaN(parsed)
       ? value
       : Math.min(HEADLINE_SIZE_MAX, Math.max(HEADLINE_SIZE_MIN, parsed))
-    onCommit(clamped)
+    // An untouched draft (focus-then-blur, Enter without typing) must not
+    // write — a no-op patch would push a dead undo step.
+    if (clamped !== value) onCommit(clamped)
     setDraft(String(clamped))
   }
   return (
@@ -621,8 +619,8 @@ export const StyleSection: React.FC = () => {
               </span>
               <Slider.Root
                 value={data.headlineSize}
-                min={24}
-                max={60}
+                min={HEADLINE_SIZE_MIN}
+                max={HEADLINE_SIZE_MAX}
                 step={1}
                 aria-labelledby="inspector-headline-size-label"
                 onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
@@ -644,24 +642,12 @@ export const StyleSection: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Checkbox.Root
-              id="inspector-uppercase"
-              checked={data.uppercaseHeadline}
-              onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
-              className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-            >
-              <Checkbox.Indicator>
-                <Check className="size-3" strokeWidth={3} />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
-            <label
-              htmlFor="inspector-uppercase"
-              className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-            >
-              <span>{copy.uppercase_label}</span>
-            </label>
-          </div>
+          <CardStateToggle
+            id="inspector-uppercase"
+            label={copy.uppercase_label}
+            checked={data.uppercaseHeadline}
+            onCheckedChange={(checked) => update('uppercaseHeadline', checked)}
+          />
         </>
       )}
     </div>
