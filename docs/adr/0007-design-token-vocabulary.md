@@ -31,9 +31,14 @@ the app shipped before this ADR; the only unifications are true duplicates:
 - the sheet pair `#1C1C1E` / `#1E1E22` → one `--color-sheet` (tour card and welcome
   popup now share it)
 
-**Adaptive chrome** (follows OS, flips via the override block below): `ink`,
-`ink-secondary`, `ink-tertiary`, `ink-muted`, `ink-faint`, `surface`, `surface-raised`,
-`sheet`, `accent`, `accent-hover`, `link`, `green`, `brand-from`, `brand-to`.
+**Adaptive chrome — override-flipping** (light value in `@theme`, dark value in the
+override block below): `ink`, `ink-secondary`, `ink-tertiary`, `ink-muted`, `ink-faint`,
+`surface`, `surface-raised`, `sheet`, `accent`, `link`.
+
+**Adaptive chrome — mode-constant** (defined in `@theme` only; they had no dark variant
+before this ADR and codification kept it that way): `accent-hover`, `green`,
+`brand-from`, `brand-to`. Adding a dark value to one of these is a design change, not
+a token chore — do it deliberately, not while "completing" the override block.
 
 **Card-static** (never in the override block, see §3): `card-white-ink`,
 `card-white-muted`, `card-paper`, `card-paper-ink`, `card-paper-muted`, `card-dark`,
@@ -74,8 +79,9 @@ FieldLabel, SegmentedControl — base-ui for behavior, cva/clsx + tokens for ski
 Notable choices: **Select is native** (tiny option lists; the OS menu beats a rebuild
 for keyboard/touch/SR) and exports `fieldSurfaceClass` so the annotation input shares
 the exact field chrome; **Tooltip** composes the existing child as trigger via
-base-ui's render prop, replacing `title=` on all chrome icon buttons (aria-labels
-stay).
+base-ui's render prop, replacing `title=` on the Header and canvas-zoom icon buttons
+(aria-labels stay). Still on native `title=`: the Tips popover trigger (a nested
+base-ui Popover trigger) and the touch-first MobileSheet buttons.
 
 ### 5. Sanctioned residual literals (do not "fix" without a design pass)
 

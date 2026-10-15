@@ -622,7 +622,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.headline}
               onChange={(e) => update('headline', e.target.value)}
               placeholder={copy.empty_headline_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className={TEXTAREA_FIELD_CLASS}
             />
           }
         />
@@ -647,7 +647,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.sublines}
               onChange={(e) => update('sublines', e.target.value)}
               placeholder={copy.sublines_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className={`${TEXTAREA_FIELD_CLASS} font-mono`}
             />
           }
         />
@@ -675,6 +675,11 @@ const SECTION_LABEL_CLASS =
 
 const GROUP_CARD_CLASS =
   'overflow-hidden rounded-2xl bg-surface border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:border-white/[0.08]'
+
+// Shared skin for the headline and sublines textareas — the one roomy
+// writing field (distinct from the compact px-2 fieldSurfaceClass skin).
+const TEXTAREA_FIELD_CLASS =
+  'w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400'
 
 const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 

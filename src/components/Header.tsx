@@ -126,28 +126,34 @@ export const Header: React.FC<HeaderProps> = ({
         {isDesktop && (
           <div className="hidden lg:flex items-center bg-black/[0.04] dark:bg-white/[0.06] p-0.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06]">
             <Tooltip label={copy.undo_button_title}>
-              <Button
-                onClick={undo}
-                disabled={!canUndo}
-                aria-label={copy.undo_button_title}
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-              >
-                <Undo2 className="w-3.5 h-3.5" />
-              </Button>
+              {/* Browsers suppress pointer events on disabled buttons —
+                  this span keeps the tooltip hoverable when Undo is off */}
+              <span className="inline-flex">
+                <Button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label={copy.undo_button_title}
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                </Button>
+              </span>
             </Tooltip>
             <Tooltip label={copy.redo_button_title}>
-              <Button
-                onClick={redo}
-                disabled={!canRedo}
-                aria-label={copy.redo_button_title}
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-              >
-                <Redo2 className="w-3.5 h-3.5" />
-              </Button>
+              <span className="inline-flex">
+                <Button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label={copy.redo_button_title}
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+                >
+                  <Redo2 className="w-3.5 h-3.5" />
+                </Button>
+              </span>
             </Tooltip>
           </div>
         )}
