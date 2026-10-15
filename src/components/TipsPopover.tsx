@@ -35,7 +35,7 @@ export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
       <Popover.Portal>
         <Popover.Positioner align="start" sideOffset={8}>
           <Popover.Popup
-            className="max-w-xs p-4 rounded-2xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed"
+            className="max-w-xs p-4 rounded-2xl bg-surface border border-black/[0.08] dark:border-white/[0.1] shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed"
             finalFocus={() => {
               if (replayInitiatedClose.current) {
                 replayInitiatedClose.current = false

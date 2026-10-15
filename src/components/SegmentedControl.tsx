@@ -46,7 +46,7 @@ export function SegmentedControl<T extends string>({
             value={opt.value}
             className={`relative flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-[9px] transition-all duration-150 ease-out apple-button select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 [@media(pointer:coarse)]:min-h-11 ${
               checked
-                ? 'bg-white dark:bg-[#2C2C2E] text-ink dark:text-white shadow-[0_2px_5px_rgba(0,0,0,0.09),0_0.5px_1px_rgba(0,0,0,0.06)] font-semibold'
+                ? 'bg-surface-raised text-ink dark:text-white shadow-[0_2px_5px_rgba(0,0,0,0.09),0_0.5px_1px_rgba(0,0,0,0.06)] font-semibold'
                 : 'text-ink-muted dark:text-neutral-400 hover:text-ink dark:hover:text-white'
             }`}
           >

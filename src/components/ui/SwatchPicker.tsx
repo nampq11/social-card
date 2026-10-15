@@ -58,7 +58,7 @@ export function SwatchPicker<T extends string>({
                 'size-7 rounded-full border border-black/10 transition-shadow duration-150 ease-out dark:border-white/20',
                 opt.swatchClass,
                 checked &&
-                  'ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-blue-500 dark:ring-offset-[#1E1E22]',
+                  'ring-2 ring-blue-600 ring-offset-2 ring-offset-surface dark:ring-blue-500',
               )}
             />
             <span

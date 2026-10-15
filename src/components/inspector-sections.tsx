@@ -52,7 +52,7 @@ const CardStateToggle: React.FC<{
       id={id}
       checked={checked}
       onCheckedChange={onCheckedChange}
-      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-surface text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
     >
       <Checkbox.Indicator>
         <Check className="size-3" strokeWidth={3} />
@@ -310,14 +310,14 @@ export const AnnotationsSection: React.FC = () => {
             value={annotation.text}
             onChange={(e) => updateAnnotation(annotation.id, { text: e.target.value })}
             placeholder={copy.annotations_text_hint}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <div className="flex items-center gap-1.5">
             <select
               aria-label={copy.annotations_target_label}
               value={annotation.shotId}
               onChange={(e) => updateAnnotation(annotation.id, { shotId: e.target.value })}
-              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
             >
               {shots.map((shot, index) => (
                 <option
@@ -335,7 +335,7 @@ export const AnnotationsSection: React.FC = () => {
               onChange={(e) =>
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
-              className="px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              className="px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
             >
               <option value="left">{copy.annotation_side_left}</option>
               <option value="right">{copy.annotation_side_right}</option>
@@ -501,7 +501,7 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
         onKeyDown={(e) => {
           if (e.key === 'Enter') commit()
         }}
-        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>px</span>
     </span>
@@ -664,7 +664,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.headline}
               onChange={(e) => update('headline', e.target.value)}
               placeholder={copy.empty_headline_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
             />
           }
         />
@@ -687,7 +687,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.sublines}
               onChange={(e) => update('sublines', e.target.value)}
               placeholder={copy.sublines_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-ink rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
             />
           }
         />
@@ -714,7 +714,7 @@ const SECTION_LABEL_CLASS =
   'text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-tertiary'
 
 const GROUP_CARD_CLASS =
-  'overflow-hidden rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:bg-[#1E1E22] dark:border-white/[0.08]'
+  'overflow-hidden rounded-2xl bg-surface border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:border-white/[0.08]'
 
 const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 
