@@ -41,11 +41,9 @@ export function PresetCard({
       )}
     >
       {preview}
-      <span className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">{label}</span>
+      <span className="text-xs font-semibold text-ink">{label}</span>
       {description && (
-        <span className="text-[11px] leading-tight text-[#86868B] dark:text-[#A1A1A6]">
-          {description}
-        </span>
+        <span className="text-[11px] leading-tight text-ink-tertiary">{description}</span>
       )}
     </button>
   )

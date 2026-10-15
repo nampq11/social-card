@@ -88,7 +88,7 @@ export function App() {
   // Apple HIG Canvas-first Studio shell: 100vw × 100vh with seamless dot-grid canvas.
   // The page never scrolls; floating header, floating inspector, and floating zoom HUD.
   return (
-    <div className="h-dvh w-screen overflow-hidden apple-canvas-bg text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans transition-colors duration-200 select-none">
+    <div className="h-dvh w-screen overflow-hidden apple-canvas-bg text-ink flex flex-col font-sans transition-colors duration-200 select-none">
       <Header
         onCopy={copyCard}
         onDownload={downloadCard}
@@ -149,7 +149,7 @@ export function App() {
 
         {/* Floating Bottom-Right Zoom HUD (Desktop) */}
         {isDesktop && (
-          <div className="z-20 absolute right-4 bottom-4 rounded-full apple-glass px-2 py-1 flex items-center gap-1 text-xs font-medium text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm">
+          <div className="z-20 absolute right-4 bottom-4 rounded-full apple-glass px-2 py-1 flex items-center gap-1 text-xs font-medium text-ink shadow-sm">
             <Button
               variant="ghost"
               size="icon"

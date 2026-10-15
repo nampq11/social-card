@@ -64,9 +64,7 @@ export function SwatchPicker<T extends string>({
             <span
               className={clsx(
                 'text-[11px] leading-tight transition-colors duration-150 ease-out',
-                checked
-                  ? 'font-medium text-[#1D1D1F] dark:text-[#F5F5F7]'
-                  : 'text-[#86868B] dark:text-[#A1A1A6]',
+                checked ? 'font-medium text-ink' : 'text-ink-tertiary',
               )}
             >
               {opt.label}

@@ -63,7 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-pressed={!isInspectorCollapsed}
               className={`w-8 h-8 rounded-xl transition-colors ${
                 isInspectorCollapsed
-                  ? 'text-[#86868B] dark:text-[#A1A1A6] hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
+                  ? 'text-ink-tertiary hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
                   : 'bg-black/[0.08] dark:bg-white/[0.12] text-[#0071E3] dark:text-[#2997FF] shadow-xs'
               }`}
             >
@@ -79,14 +79,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-[13px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7] leading-none whitespace-nowrap">
+              <h1 className="text-[13px] font-semibold tracking-tight text-ink leading-none whitespace-nowrap">
                 Social Card
               </h1>
-              <span className="hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6]">
+              <span className="hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-ink-muted">
                 HIG Studio
               </span>
             </div>
-            <p className="text-[11px] text-[#86868B] dark:text-[#A1A1A6] mt-0.5 hidden sm:block">
+            <p className="text-[11px] text-ink-tertiary mt-0.5 hidden sm:block">
               {copy.header_tagline}
             </p>
           </div>
@@ -105,14 +105,14 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.99] border border-black/[0.04] dark:border-white/[0.06] cursor-pointer transition text-xs font-medium"
             >
               <span className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_6px_#34C759] shrink-0" />
-              <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
+              <span className="font-medium text-ink">
                 {ratioData.name} ({ratioData.width * EXPORT_PIXEL_RATIO} ×{' '}
                 {ratioData.height * EXPORT_PIXEL_RATIO} px)
               </span>
-              <span className="text-[#86868B] dark:text-[#A1A1A6] hidden xl:inline">
+              <span className="text-ink-tertiary hidden xl:inline">
                 — {ratioData.platform[language]}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#86868B] dark:text-[#A1A1A6] ml-0.5" />
+              <ChevronDown className="w-3.5 h-3.5 text-ink-tertiary ml-0.5" />
             </button>
           )}
           {onReplayTour && <TipsPopover onReplayTour={onReplayTour} />}
