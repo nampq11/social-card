@@ -8,7 +8,7 @@ import type {
   Shot,
   ShotFit,
 } from '../types'
-import { SegmentedControl } from './SegmentedControl'
+import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
 import {
@@ -20,6 +20,7 @@ import {
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Slider } from './ui/Slider'
 import { Select, fieldSurfaceClass } from './ui/Select'
+import { FieldLabel } from './ui/FieldLabel'
 import { Field } from '@base-ui/react/field'
 import {
   Square,
@@ -71,9 +72,7 @@ export const CardTypeSwitcherSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label id="card-type-label" className="text-xs font-medium text-ink-secondary">
-        {copy.card_type_label}
-      </label>
+      <FieldLabel id="card-type-label">{copy.card_type_label}</FieldLabel>
       <SegmentedControl<CardType>
         aria-labelledby="card-type-label"
         value={cardType}
@@ -130,12 +129,15 @@ export const ScreenshotsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-ink-secondary">{copy.shots_label}</label>
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {shots.length}/{MAX_SHOTS}
-        </span>
-      </div>
+      <FieldLabel
+        aside={
+          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+            {shots.length}/{MAX_SHOTS}
+          </span>
+        }
+      >
+        {copy.shots_label}
+      </FieldLabel>
 
       {shots.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
@@ -175,12 +177,7 @@ export const ScreenshotsSection: React.FC = () => {
 
       {selectedShot && (
         <div className="flex flex-col gap-1.5">
-          <label
-            id={`shot-fit-label-${selectedShot.id}`}
-            className="text-xs font-medium text-ink-secondary"
-          >
-            {copy.shot_fit_label}
-          </label>
+          <FieldLabel id={`shot-fit-label-${selectedShot.id}`}>{copy.shot_fit_label}</FieldLabel>
           {/* Tự động = no override: the derived default (ADR 0006 §1). */}
           <SegmentedControl<'auto' | ShotFit>
             aria-labelledby={`shot-fit-label-${selectedShot.id}`}
@@ -272,7 +269,7 @@ export const AnnotationsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-ink-secondary">{copy.annotations_label}</label>
+      <FieldLabel>{copy.annotations_label}</FieldLabel>
       {annotations.map((annotation) => (
         <div
           key={annotation.id}
@@ -351,12 +348,15 @@ export const PresetsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-ink-secondary">{copy.presets_label}</label>
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {copy.presets_badge}
-        </span>
-      </div>
+      <FieldLabel
+        aside={
+          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+            {copy.presets_badge}
+          </span>
+        }
+      >
+        {copy.presets_label}
+      </FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
@@ -493,9 +493,7 @@ export const StyleSection: React.FC = () => {
           in Showcase mode; the theme below stays (spec #33 story 26). */}
       {!isShowcase && (
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-ink-secondary">
-            {copy.style_presets_label}
-          </label>
+          <FieldLabel>{copy.style_presets_label}</FieldLabel>
           <div className="grid grid-cols-2 gap-1.5">
             {STYLE_PRESETS.map((p) => (
               <PresetCard
@@ -515,9 +513,7 @@ export const StyleSection: React.FC = () => {
           (spec #33 stories 24 and 26). */}
       {!isShowcase && (
         <div className="flex flex-col gap-1.5">
-          <label id="ratio-label" className="text-xs font-medium text-ink-secondary">
-            {copy.ratio_label}
-          </label>
+          <FieldLabel id="ratio-label">{copy.ratio_label}</FieldLabel>
           <SegmentedControl<AspectRatio>
             aria-labelledby="ratio-label"
             value={data.ratio}
@@ -535,9 +531,7 @@ export const StyleSection: React.FC = () => {
       {/* Swatches show each theme's real card color (theme tokens are the
           fill), with the caption carrying the name a color alone can't. */}
       <div className="flex flex-col gap-1.5">
-        <label id="theme-label" className="text-xs font-medium text-ink-secondary">
-          {copy.theme_label}
-        </label>
+        <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
         <SwatchPicker<CardTheme>
           aria-labelledby="theme-label"
           value={data.theme}
@@ -556,18 +550,17 @@ export const StyleSection: React.FC = () => {
       {!isShowcase && (
         <>
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between items-center text-xs">
-              <label
-                id="inspector-headline-size-label"
-                className="text-xs font-medium text-ink-secondary"
-              >
-                {copy.headline_size_label}
-              </label>
-              <HeadlineSizeInput
-                value={data.headlineSize}
-                onCommit={(n) => update('headlineSize', n)}
-              />
-            </div>
+            <FieldLabel
+              id="inspector-headline-size-label"
+              aside={
+                <HeadlineSizeInput
+                  value={data.headlineSize}
+                  onCommit={(n) => update('headlineSize', n)}
+                />
+              }
+            >
+              {copy.headline_size_label}
+            </FieldLabel>
             {/* The A/A+ glyphs frame the slider's range at a glance — the
                 typed entry above stays the precise path. */}
             <div className="flex items-center gap-2">
@@ -607,18 +600,20 @@ export const HeadlineSection: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <Field.Root className="flex flex-col gap-1.5">
-        <div className="flex justify-between items-center">
-          <Field.Label className="text-xs font-medium text-ink-secondary">
-            {copy.headline_label}
-          </Field.Label>
-          <button
-            type="button"
-            onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
-            className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition cursor-pointer"
-          >
-            AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
-          </button>
-        </div>
+        <FieldLabel
+          htmlFor="inspector-headline"
+          aside={
+            <button
+              type="button"
+              onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition cursor-pointer"
+            >
+              AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
+            </button>
+          }
+        >
+          {copy.headline_label}
+        </FieldLabel>
         <Field.Control
           id="inspector-headline"
           render={
@@ -634,14 +629,16 @@ export const HeadlineSection: React.FC = () => {
       </Field.Root>
 
       <Field.Root className="flex flex-col gap-1.5">
-        <div className="flex justify-between items-center">
-          <Field.Label className="text-xs font-medium text-ink-secondary">
-            {copy.sublines_label}
-          </Field.Label>
-          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-            {copy.sublines_badge}
-          </span>
-        </div>
+        <FieldLabel
+          htmlFor="inspector-sublines"
+          aside={
+            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+              {copy.sublines_badge}
+            </span>
+          }
+        >
+          {copy.sublines_label}
+        </FieldLabel>
         <Field.Control
           id="inspector-sublines"
           render={

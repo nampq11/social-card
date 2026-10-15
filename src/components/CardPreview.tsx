@@ -63,7 +63,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
         }}
         className={`${
           animated ? 'transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]' : ''
-        } card-elevation rounded-[24px]`}
+        } card-elevation rounded-3xl`}
       >
         <div
           ref={ref}
@@ -72,7 +72,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
             width: `${width}px`,
             height: `${height}px`,
           }}
-          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden rounded-[24px]`}
+          className={`${themeStyles.bg} ${themeStyles.text} relative flex flex-col justify-between p-14 select-none shrink-0 overflow-hidden rounded-3xl`}
         >
           {data.cardType === 'showcase' ? (
             <ShowcaseCard card={data} />
@@ -86,10 +86,8 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                 <h1
                   style={{
                     fontSize: `${data.headlineSize}px`,
-                    letterSpacing: '-0.025em',
-                    lineHeight: 1.25,
                   }}
-                  className={`font-extrabold max-w-xl break-words ${
+                  className={`font-extrabold max-w-xl break-words tracking-tight leading-tight ${
                     data.uppercaseHeadline ? 'uppercase' : ''
                   }`}
                 >

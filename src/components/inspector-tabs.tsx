@@ -3,7 +3,7 @@ import { Type, Palette, UserRound } from 'lucide-react'
 import { useUiCopy, type UiStringKey } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import type { CardType } from '../types'
-import { SegmentedControl } from './SegmentedControl'
+import { SegmentedControl } from './ui/SegmentedControl'
 import {
   CardTypeSwitcherSection,
   PresetsSection,
