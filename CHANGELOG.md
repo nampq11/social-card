@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-Initial unreleased development line of the social-card studio — a bilingual (VI/EN) card designer with export. No tagged release exists yet, so everything below covers work since the first commit.
+## 0.1.0 (2026-10-15)
+
+First tagged release of the social-card studio — a bilingual (VI/EN) card designer with export. Everything below covers work since the first commit.
 
 ### Features
 
@@ -20,6 +22,7 @@ Initial unreleased development line of the social-card studio — a bilingual (V
 - Added full bilingual VI/EN UI copy: a copy dictionary routed through every component, per-language platform descriptions, and a persisted Interface Language toggle in the header. #2 #3 #5
 - Added card export as a `useCardExport` module with real-device mobile UI fixes. #21
 - Made the quote card a 1:1 replica of the reference design (spec #24). #31
+- Replaced the Vite-scaffold favicon with the product's real card-glyph logo and cache-busted its URL so returning visitors drop the old bolt. #36 #37
 
 ### Fixes
 
