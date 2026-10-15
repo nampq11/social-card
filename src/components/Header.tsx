@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-b from-[#4F75FF] to-[#2554E8] flex items-center justify-center shadow-sm shadow-blue-500/25 text-white shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-b from-brand-from to-brand-to flex items-center justify-center shadow-sm shadow-blue-500/25 text-white shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div>
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={copy.ratio_cycle_title}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.99] border border-black/[0.04] dark:border-white/[0.06] cursor-pointer transition text-xs font-medium"
             >
-              <span className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_6px_#34C759] shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-green shadow-[0_0_6px_var(--color-green)] shrink-0" />
               <span className="font-medium text-ink">
                 {ratioData.name} ({ratioData.width * EXPORT_PIXEL_RATIO} ×{' '}
                 {ratioData.height * EXPORT_PIXEL_RATIO} px)
