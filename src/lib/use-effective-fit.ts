@@ -5,11 +5,30 @@ import type { Shot, ShotFit } from '../types'
 
 // Decoded natural dimensions of a data URL, cached per URL — a Shot's pixels
 // never change while its identity is stable, so one decode serves every
-// render for the app's lifetime.
+// render. Bounded: a key pins its full data URL in memory, and picks far
+// exceed the three on-card Shots, so without a cap every image ever picked
+// (or undone back in) stays resident for the app's lifetime.
+const NATURAL_CACHE_MAX = 24
 const naturalCache = new Map<string, { width: number; height: number }>()
 
+// FIFO: insertion order evicts the oldest decode — the least likely to still
+// be on the card. An evicted URL simply re-probes if it returns.
+const rememberNatural = (dataUrl: string, dims: { width: number; height: number }) => {
+  if (naturalCache.size >= NATURAL_CACHE_MAX) {
+    const oldest = naturalCache.keys().next().value
+    if (oldest !== undefined) naturalCache.delete(oldest)
+  }
+  naturalCache.set(dataUrl, dims)
+}
+
 const useNaturalDimensions = (dataUrl: string) => {
-  const [natural, setNatural] = useState(naturalCache.get(dataUrl) ?? null)
+  // Probe state carries the URL it decoded; the cache is read during render
+  // (a pure lookup), so a dataUrl swap re-derives synchronously — including
+  // from the cache — instead of keeping the previous shot's dimensions.
+  const [probed, setProbed] = useState<{
+    url: string
+    dims: { width: number; height: number }
+  } | null>(null)
   useEffect(() => {
     if (!dataUrl || naturalCache.has(dataUrl)) return
     let cancelled = false
@@ -17,15 +36,16 @@ const useNaturalDimensions = (dataUrl: string) => {
     probe.onload = () => {
       if (cancelled) return
       const dims = { width: probe.naturalWidth, height: probe.naturalHeight }
-      naturalCache.set(dataUrl, dims)
-      setNatural(dims)
+      rememberNatural(dataUrl, dims)
+      setProbed({ url: dataUrl, dims })
     }
     probe.src = dataUrl
     return () => {
       cancelled = true
     }
   }, [dataUrl])
-  return natural
+  if (probed?.url === dataUrl) return probed.dims
+  return dataUrl ? (naturalCache.get(dataUrl) ?? null) : null
 }
 
 // The Shot's effective Fit (ADR 0006 §1): an explicit override wins; absent
