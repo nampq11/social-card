@@ -18,8 +18,6 @@ import {
   type StylePresetState,
 } from '../constants/presets'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
-import { Checkbox } from '@base-ui/react/checkbox'
-import { Switch } from '@base-ui/react/switch'
 import { Slider } from '@base-ui/react/slider'
 import { Field } from '@base-ui/react/field'
 import {
@@ -28,44 +26,18 @@ import {
   RectangleHorizontal,
   QrCode,
   Upload,
-  Check,
   Plus,
   X,
 } from 'lucide-react'
 import { logDebug } from '../lib/log-debug'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
+import { Checkbox } from './ui/Checkbox'
+import { Switch } from './ui/Switch'
 import { PresetCard } from './ui/PresetCard'
 import { SwatchPicker } from './ui/SwatchPicker'
 import { toast } from 'sonner'
 import { clsx } from 'clsx'
-
-// A checkbox that flips one boolean card-state field (e.g. bold sublines, grayscale avatar)
-const CardStateToggle: React.FC<{
-  id: string
-  label: string
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-}> = ({ id, label, checked, onCheckedChange }) => (
-  <div className="flex items-center gap-1.5">
-    <Checkbox.Root
-      id={id}
-      checked={checked}
-      onCheckedChange={onCheckedChange}
-      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-surface text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-accent data-[checked]:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 cursor-pointer"
-    >
-      <Checkbox.Indicator>
-        <Check className="size-3" strokeWidth={3} />
-      </Checkbox.Indicator>
-    </Checkbox.Root>
-    <label
-      htmlFor={id}
-      className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-    >
-      <span>{label}</span>
-    </label>
-  </div>
-)
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
@@ -624,7 +596,7 @@ export const StyleSection: React.FC = () => {
             </div>
           </div>
 
-          <CardStateToggle
+          <Checkbox
             id="inspector-uppercase"
             label={copy.uppercase_label}
             checked={data.uppercaseHeadline}
@@ -693,7 +665,7 @@ export const HeadlineSection: React.FC = () => {
         />
       </Field.Root>
 
-      <CardStateToggle
+      <Checkbox
         id="inspector-bold-sublines"
         label={copy.bold_sublines_label}
         checked={data.boldSublines}
@@ -721,25 +693,6 @@ const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 // Inset hairline (iOS): starts past the 40px leading icon + row padding, so
 // dividers align with the row titles instead of cutting across the icons.
 const IDENTITY_DIVIDER_CLASS = 'ml-[66px] h-px bg-black/[0.06] dark:bg-white/[0.08]'
-
-// One iOS switch skin for both boolean identity controls (QR visibility,
-// grayscale avatar) — green when on, per the iOS Settings idiom.
-const IosSwitch: React.FC<{
-  id: string
-  label: string
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-}> = ({ id, label, checked, onCheckedChange }) => (
-  <Switch.Root
-    id={id}
-    aria-label={label}
-    checked={checked}
-    onCheckedChange={onCheckedChange}
-    className="relative inline-flex h-[22px] w-[38px] shrink-0 cursor-pointer items-center rounded-full bg-neutral-300 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 data-[checked]:bg-green dark:bg-neutral-600"
-  >
-    <Switch.Thumb className="absolute left-[2px] top-[2px] size-[18px] rounded-full bg-white shadow transition-transform duration-200 ease-out data-[checked]:translate-x-4" />
-  </Switch.Root>
-)
 
 // The QR row's tinted icon box: same 40px geometry as the avatar preview, so
 // the two groups' leading edges read as one table.
@@ -884,7 +837,7 @@ export const IdentitySection: React.FC = () => {
           >
             {copy.grayscale_avatar_label}
           </label>
-          <IosSwitch
+          <Switch
             id="inspector-grayscale-avatar"
             label={copy.grayscale_avatar_label}
             checked={data.avatarGrayscale}
@@ -940,7 +893,7 @@ export const IdentitySection: React.FC = () => {
           <p className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-ink">
             {copy.qr_toggle_title}
           </p>
-          <IosSwitch
+          <Switch
             id="inspector-qr-toggle"
             label={copy.qr_toggle_title}
             checked={data.qrEnabled}
