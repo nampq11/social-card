@@ -31,6 +31,7 @@ interface CardStore {
   setShotFit: (shotId: string, fit: ShotFit) => void
   setShotFocus: (shotId: string, focus: ShotFocus) => void
   setShotScale: (shotId: string, scale: number) => void
+  setShotZoom: (shotId: string, scale: number, focus: ShotFocus) => void
   clearShotFit: (shotId: string) => void
   clearShotAdjustments: (shotId: string) => void
   addAnnotation: (input: { shotId: string; text: string; side: AnnotationSide }) => void
@@ -235,6 +236,21 @@ export const useCardStore = create<CardStore>((set) => ({
       }))
       if (!next) return state
       return continuesEdit(`shotScale:${shotId}`) ? { card: next } : undoStep(state, next)
+    }),
+  // A zoom gesture (pinch, ctrl+wheel, double-click) moves Scale and Focus
+  // together as ONE edit. Split into setShotScale + setShotFocus calls, the
+  // two writes would alternate coalesce keys and stack two undo steps per
+  // event — a half-second pinch would flood the history cap. Same Shot,
+  // shared window: one gesture, one undo.
+  setShotZoom: (shotId, scale, focus) =>
+    set((state) => {
+      const next = withShot(state.card, shotId, (shot) => ({
+        ...shot,
+        scale: clampScale(scale),
+        focus: clampFocus(focus, shotFit(shot)),
+      }))
+      if (!next) return state
+      return continuesEdit(`shotZoom:${shotId}`) ? { card: next } : undoStep(state, next)
     }),
   // [Đặt lại] on the on-shot controls: back to the absent-field defaults —
   // auto Fit, no Focus, no Scale (ADR 0006 §2). One Shot's whole adjustment

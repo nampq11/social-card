@@ -376,3 +376,75 @@ describe('ctrl+wheel zoom (ADR 0006 §4)', () => {
     })
   })
 })
+
+describe('two-finger pinch (ADR 0006 §4)', () => {
+  it('a pinch writes scale and focus as one undoable gesture', () => {
+    const { getByTestId } = render(<PanHarness />)
+    const el = getByTestId('pan-target')
+    const stepsBefore = useCardStore.getState().past.length
+
+    fireEvent.pointerDown(el, { pointerId: 1, pointerType: 'touch', clientX: 140, clientY: 75 })
+    fireEvent.pointerDown(el, { pointerId: 2, pointerType: 'touch', clientX: 160, clientY: 75 })
+    // Spread 20px → 200px: a 10× ask the domain clamps to 4.
+    for (const [xa, xb] of [
+      [145, 155],
+      [120, 180],
+      [50, 250],
+    ]) {
+      fireEvent.pointerMove(el, { pointerId: 1, pointerType: 'touch', clientX: xa, clientY: 75 })
+      fireEvent.pointerMove(el, { pointerId: 2, pointerType: 'touch', clientX: xb, clientY: 75 })
+    }
+    fireEvent.pointerUp(el, { pointerId: 1, clientX: 50, clientY: 75 })
+    fireEvent.pointerUp(el, { pointerId: 2, clientX: 250, clientY: 75 })
+
+    const shot = useCardStore.getState().card.showcase!.shots[0]
+    expect(shot.scale).toBe(4)
+    // One gesture, one undo step — not two per pinch event.
+    expect(useCardStore.getState().past.length).toBe(stepsBefore + 1)
+  })
+
+  it('a pinch taking over mid-drag drops the rubber-band excess immediately', () => {
+    const { getByTestId } = render(<PanHarness />)
+    const el = getByTestId('pan-target')
+    fireEvent.pointerDown(el, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: 150,
+      clientY: 75,
+      timeStamp: 0,
+    })
+    fireEvent.pointerMove(el, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: -150,
+      clientY: 75,
+      timeStamp: 300,
+    })
+    expect(el.style.transform).toContain('translate')
+    // Second finger lands: the pinch owns the surface, and the transient
+    // excess must not outlive the drag it interrupted.
+    fireEvent.pointerDown(el, { pointerId: 2, pointerType: 'touch', clientX: 160, clientY: 75 })
+    expect(el.style.transform).toBe('')
+  })
+
+  it('a secondary-button press never arms the pan gesture', () => {
+    const { getByTestId } = render(<PanHarness />)
+    const el = getByTestId('pan-target')
+    fireEvent.pointerDown(el, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      button: 2,
+      clientX: 150,
+      clientY: 75,
+    })
+    fireEvent.pointerMove(el, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      button: 2,
+      clientX: 30,
+      clientY: 75,
+    })
+    fireEvent.pointerUp(el, { pointerId: 1, button: 2, clientX: 30, clientY: 75 })
+    expect(focusOf().x).toBe(0.5)
+  })
+})

@@ -447,6 +447,41 @@ describe('card-store shot Scale + adjustments reset (issue #38)', () => {
     }
   })
 
+  it('setShotZoom coalesces a pinch-sized burst into one undo step', () => {
+    vi.useFakeTimers()
+    try {
+      const shot = withOneShot()
+      const stepsBefore = s().past.length
+
+      // A pinch fires dozens of scale+focus writes per second; one gesture
+      // must cost one step, not two per event.
+      for (let i = 0; i < 30; i++) s().setShotZoom(shot.id, 1 + i * 0.1, { x: 0.1, y: 0.2 })
+      expect(s().past.length).toBe(stepsBefore + 1)
+      expect(s().card.showcase!.shots[0].scale).toBeCloseTo(3.9, 5)
+
+      s().undo()
+      const restored = s().card.showcase!.shots[0]
+      expect(restored.scale).toBeUndefined()
+      expect(restored.focus).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a zoom gesture after a focus drag starts its own undo step', () => {
+    vi.useFakeTimers()
+    try {
+      const shot = withOneShot()
+      s().setShotFocus(shot.id, { x: 0.4, y: 0.5 })
+      const afterDrag = s().past.length
+
+      s().setShotZoom(shot.id, 2, { x: 0.4, y: 0.5 })
+      expect(s().past.length).toBe(afterDrag + 1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('clearShotAdjustments wipes fit override, focus and scale in one atomic undo', () => {
     const shot = withOneShot()
     // Focus first: with cover still effective the anchor is stored as-is.

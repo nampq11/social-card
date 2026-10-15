@@ -67,12 +67,19 @@ const geometryOf = (el: HTMLImageElement): ShotGeometry => ({
   naturalHeight: el.naturalHeight,
 })
 
-// The preview canvas is CSS-scaled (Fit-to-View): screen px = layout px only
-// at scale 1. Pointer input and the tracked velocity are screen px; the
-// gesture math is slot layout px — this converts at the boundary.
-const previewScaleOf = (el: HTMLImageElement) => {
-  const rect = el.getBoundingClientRect()
-  return rect.width > 0 && el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1
+// The screen↔layout boundary for one gesture surface. The preview canvas is
+// CSS-scaled (Fit-to-View) — screen px = layout px only at scale 1 — and the
+// img itself carries the zoom/overdrag transform, so its own rect is the
+// magnified visual box, not the slot. The clipping parent is untransformed:
+// its rect IS the slot's layout box in screen coordinates, for both the
+// scale conversion and the anchor fractions the pinch math expects.
+const slotBoxOf = (el: HTMLImageElement) => {
+  const box = el.parentElement ?? el
+  const rect = box.getBoundingClientRect()
+  return {
+    rect,
+    previewScale: rect.width > 0 && box.offsetWidth > 0 ? rect.width / box.offsetWidth : 1,
+  }
 }
 
 // Where a client point sits inside a rect, as 0..1 fractions. A zero-size
@@ -91,6 +98,7 @@ export function useShotPan(
 ) {
   const setShotFocus = useCardStore((s) => s.setShotFocus)
   const setShotScale = useCardStore((s) => s.setShotScale)
+  const setShotZoom = useCardStore((s) => s.setShotZoom)
   const hoverCapable = useMediaQuery('(hover: hover)')
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const [dragging, setDragging] = useState(false)
@@ -217,7 +225,7 @@ export function useShotPan(
   const beginPinchIfArmed = (event: ReactPointerEvent<HTMLImageElement>) => {
     if (pinch.current !== null || pointers.current.size !== 2 || !interactive || !cover) return
     const [a, b] = [...pointers.current.values()]
-    const rect = event.currentTarget.getBoundingClientRect()
+    const { rect } = slotBoxOf(event.currentTarget)
     const shot = getShot()
     pinch.current = {
       idA: event.pointerId,
@@ -229,9 +237,18 @@ export function useShotPan(
     }
     gesture.current = null
     setDragging(false)
+    // Taking over mid-drag ends the rubber-band: the excess is transient by
+    // contract, and no later pinch path settles it — left in place it would
+    // offset the image until some future drag happens to glide.
+    applyOverdrag(null)
   }
 
   const onPointerDown = (event: ReactPointerEvent<HTMLImageElement>) => {
+    // Secondary buttons never arm gestures — the context menu and
+    // middle-click autoscroll keep their native behavior. Every active touch
+    // pointerdown carries button 0 (primary or not), so a pinch's second
+    // finger still registers.
+    if (event.button !== 0) return
     tapStart.current = { x: event.clientX, y: event.clientY }
     // A new touch interrupts whatever the image was doing (ADR 0006 §3 — the
     // gesture and the thought happen in parallel): any settle is grabbable.
@@ -266,13 +283,13 @@ export function useShotPan(
     ) {
       const [a, b] = [...pointers.current.values()]
       const el = event.currentTarget
-      const rect = el.getBoundingClientRect()
+      const { rect } = slotBoxOf(el)
       const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1
       const midpoint = fractionOf({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, rect)
       const nextScale = clampScale(activePinch.startScale * (distance / activePinch.startDistance))
-      setShotScale(shotId, nextScale)
-      setShotFocus(
+      setShotZoom(
         shotId,
+        nextScale,
         focusForPinch(
           activePinch.startFocus,
           activePinch.startScale,
@@ -300,7 +317,7 @@ export function useShotPan(
       event.timeStamp,
     )
     const el = event.currentTarget
-    const previewScale = previewScaleOf(el)
+    const { previewScale } = slotBoxOf(el)
     const dx = (event.clientX - active.startX) / previewScale
     const dy = (event.clientY - active.startY) / previewScale
     // Pointer deltas move the content 1:1; travel past an edge rubber-bands
@@ -346,7 +363,7 @@ export function useShotPan(
           released,
           v?.velocityX ?? 0,
           v?.velocityY ?? 0,
-          previewScaleOf(el),
+          slotBoxOf(el).previewScale,
           geometryOf(el),
           clampScale(getShot()?.scale ?? 1),
         )
@@ -378,12 +395,12 @@ export function useShotPan(
       const el = event.currentTarget
       const currentScale = clampScale(getShot()?.scale ?? 1)
       const nextScale = currentScale > 1 ? 1 : DOUBLE_CLICK_SCALE
-      const rect = el.getBoundingClientRect()
+      const { rect } = slotBoxOf(el)
       const fraction = fractionOf({ x: event.clientX, y: event.clientY }, rect)
       if (nextScale > 1) {
-        setShotScale(shotId, nextScale)
-        setShotFocus(
+        setShotZoom(
           shotId,
+          nextScale,
           focusForPinch(
             getShot()?.focus ?? DEFAULT_SHOT_FOCUS,
             currentScale,
@@ -412,18 +429,18 @@ export function useShotPan(
     const onWheel = (event: WheelEvent) => {
       if (!event.ctrlKey) return
       event.preventDefault()
-      const rect = el.getBoundingClientRect()
+      const { rect } = slotBoxOf(el)
       const shot = getShot()
       const currentScale = clampScale(shot?.scale ?? 1)
       const nextScale = clampScale(currentScale * Math.exp(-event.deltaY * WHEEL_ZOOM_FACTOR))
-      setShotScale(shotId, nextScale)
       if (nextScale === currentScale) return
       // The cursor fraction doubles as start and end anchor: the content
       // point under it stays under it (focusForPinch with a zero midpoint
       // travel).
       const anchor = fractionOf({ x: event.clientX, y: event.clientY }, rect)
-      setShotFocus(
+      setShotZoom(
         shotId,
+        nextScale,
         focusForPinch(
           shot?.focus ?? DEFAULT_SHOT_FOCUS,
           currentScale,
@@ -438,7 +455,7 @@ export function useShotPan(
     return () => el.removeEventListener('wheel', onWheel)
     // getShot is a per-render closure that reads fresh state at event time;
     // listing it re-subscribes the native listener on unrelated renders.
-  }, [cover, setShotScale, setShotFocus, shotId, getShot])
+  }, [cover, setShotZoom, shotId, getShot])
 
   return {
     dragging,
