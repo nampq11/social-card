@@ -211,6 +211,18 @@
     color 0.25s ease;
 }
 
+/* Fit-to-View refits ride the width/height transitions above (fired by
+   the sheet hook's rest-time reserve write); under reduced motion the
+   refit lands instantly — same contract as .apple-button above: colors
+   still crossfade, movement drops. */
+@media (prefers-reduced-motion: reduce) {
+  .card-elevation {
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .card-elevation {
     box-shadow:
