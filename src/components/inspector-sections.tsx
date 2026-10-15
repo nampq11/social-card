@@ -8,7 +8,7 @@ import type {
   Shot,
   ShotFit,
 } from '../types'
-import { SegmentedControl } from './SegmentedControl'
+import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
 import {
@@ -18,9 +18,9 @@ import {
   type StylePresetState,
 } from '../constants/presets'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
-import { Checkbox } from '@base-ui/react/checkbox'
-import { Switch } from '@base-ui/react/switch'
-import { Slider } from '@base-ui/react/slider'
+import { Slider } from './ui/Slider'
+import { Select, fieldSurfaceClass } from './ui/Select'
+import { FieldLabel } from './ui/FieldLabel'
 import { Field } from '@base-ui/react/field'
 import {
   Square,
@@ -28,44 +28,18 @@ import {
   RectangleHorizontal,
   QrCode,
   Upload,
-  Check,
   Plus,
   X,
 } from 'lucide-react'
 import { logDebug } from '../lib/log-debug'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
+import { Checkbox } from './ui/Checkbox'
+import { Switch } from './ui/Switch'
 import { PresetCard } from './ui/PresetCard'
 import { SwatchPicker } from './ui/SwatchPicker'
 import { toast } from 'sonner'
 import { clsx } from 'clsx'
-
-// A checkbox that flips one boolean card-state field (e.g. bold sublines, grayscale avatar)
-const CardStateToggle: React.FC<{
-  id: string
-  label: string
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-}> = ({ id, label, checked, onCheckedChange }) => (
-  <div className="flex items-center gap-1.5">
-    <Checkbox.Root
-      id={id}
-      checked={checked}
-      onCheckedChange={onCheckedChange}
-      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#1E1E22] text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-    >
-      <Checkbox.Indicator>
-        <Check className="size-3" strokeWidth={3} />
-      </Checkbox.Indicator>
-    </Checkbox.Root>
-    <label
-      htmlFor={id}
-      className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none"
-    >
-      <span>{label}</span>
-    </label>
-  </div>
-)
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
 // the Inspector hosts every group; the Mobile Sheet re-hosts them by tab).
@@ -98,12 +72,7 @@ export const CardTypeSwitcherSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label
-        id="card-type-label"
-        className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
-      >
-        {copy.card_type_label}
-      </label>
+      <FieldLabel id="card-type-label">{copy.card_type_label}</FieldLabel>
       <SegmentedControl<CardType>
         aria-labelledby="card-type-label"
         value={cardType}
@@ -160,14 +129,15 @@ export const ScreenshotsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.shots_label}
-        </label>
-        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
-          {shots.length}/{MAX_SHOTS}
-        </span>
-      </div>
+      <FieldLabel
+        aside={
+          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+            {shots.length}/{MAX_SHOTS}
+          </span>
+        }
+      >
+        {copy.shots_label}
+      </FieldLabel>
 
       {shots.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
@@ -175,8 +145,8 @@ export const ScreenshotsSection: React.FC = () => {
             <div
               key={shot.id}
               onClick={() => setSelectedShotId((current) => (current === shot.id ? null : shot.id))}
-              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1] ${
-                selectedShotId === shot.id ? 'ring-2 ring-blue-600 dark:ring-blue-500' : ''
+              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-hairline ${
+                selectedShotId === shot.id ? 'ring-2 ring-accent' : ''
               }`}
             >
               {/* Named alt so identical thumbnails stay distinguishable to
@@ -207,12 +177,7 @@ export const ScreenshotsSection: React.FC = () => {
 
       {selectedShot && (
         <div className="flex flex-col gap-1.5">
-          <label
-            id={`shot-fit-label-${selectedShot.id}`}
-            className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
-          >
-            {copy.shot_fit_label}
-          </label>
+          <FieldLabel id={`shot-fit-label-${selectedShot.id}`}>{copy.shot_fit_label}</FieldLabel>
           {/* Tự động = no override: the derived default (ADR 0006 §1). */}
           <SegmentedControl<'auto' | ShotFit>
             aria-labelledby={`shot-fit-label-${selectedShot.id}`}
@@ -243,7 +208,7 @@ export const ScreenshotsSection: React.FC = () => {
         <span>{copy.shots_add}</span>
       </Button>
       {atCap && (
-        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
           {copy.shots_cap_hint}
         </span>
       )}
@@ -276,7 +241,7 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="truncate text-xs text-[#424245] dark:text-[#A1A1A6]">{name}</span>
+      <span className="truncate text-xs text-ink-secondary">{name}</span>
       <Button
         onClick={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
         disabled={annotated}
@@ -304,27 +269,25 @@ export const AnnotationsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-        {copy.annotations_label}
-      </label>
+      <FieldLabel>{copy.annotations_label}</FieldLabel>
       {annotations.map((annotation) => (
         <div
           key={annotation.id}
-          className="flex flex-col gap-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.1] p-2"
+          className="flex flex-col gap-1.5 rounded-lg border border-hairline p-2"
         >
           <input
             aria-label={copy.annotations_text_label}
             value={annotation.text}
             onChange={(e) => updateAnnotation(annotation.id, { text: e.target.value })}
             placeholder={copy.annotations_text_hint}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className={`w-full ${fieldSurfaceClass}`}
           />
           <div className="flex items-center gap-1.5">
-            <select
+            <Select
               aria-label={copy.annotations_target_label}
               value={annotation.shotId}
               onChange={(e) => updateAnnotation(annotation.id, { shotId: e.target.value })}
-              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              className="min-w-0 flex-1"
             >
               {shots.map((shot, index) => (
                 <option
@@ -335,19 +298,18 @@ export const AnnotationsSection: React.FC = () => {
                   {shotName(copy, index + 1)}
                 </option>
               ))}
-            </select>
-            <select
+            </Select>
+            <Select
               aria-label={copy.annotations_side_label}
               value={annotation.side}
               onChange={(e) =>
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
-              className="px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
             >
               <option value="left">{copy.annotation_side_left}</option>
               <option value="right">{copy.annotation_side_right}</option>
               <option value="top">{copy.annotation_side_top}</option>
-            </select>
+            </Select>
             <button
               type="button"
               aria-label={copy.annotations_remove_title}
@@ -360,7 +322,7 @@ export const AnnotationsSection: React.FC = () => {
         </div>
       ))}
       {shots.length === 0 ? (
-        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
           {copy.annotations_needs_shot_hint}
         </span>
       ) : (
@@ -369,7 +331,7 @@ export const AnnotationsSection: React.FC = () => {
             <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
           ))}
           {shots.every((shot) => annotations.some((a) => a.shotId === shot.id)) && (
-            <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
+            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
               {copy.annotations_cap_hint}
             </span>
           )}
@@ -386,14 +348,15 @@ export const PresetsSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.presets_label}
-        </label>
-        <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
-          {copy.presets_badge}
-        </span>
-      </div>
+      <FieldLabel
+        aside={
+          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+            {copy.presets_badge}
+          </span>
+        }
+      >
+        {copy.presets_label}
+      </FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
@@ -408,7 +371,7 @@ export const PresetsSection: React.FC = () => {
                 'text-[12px] font-medium transition',
                 active
                   ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                  : 'bg-black/[0.05] text-[#424245] hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
+                  : 'bg-black/[0.05] text-ink-secondary hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
               )}
             >
               {copy[p.nameKey]}
@@ -510,7 +473,7 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
         onKeyDown={(e) => {
           if (e.key === 'Enter') commit()
         }}
-        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-hairline focus:outline-none focus:ring-2 focus:ring-accent/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>px</span>
     </span>
@@ -530,9 +493,7 @@ export const StyleSection: React.FC = () => {
           in Showcase mode; the theme below stays (spec #33 story 26). */}
       {!isShowcase && (
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-            {copy.style_presets_label}
-          </label>
+          <FieldLabel>{copy.style_presets_label}</FieldLabel>
           <div className="grid grid-cols-2 gap-1.5">
             {STYLE_PRESETS.map((p) => (
               <PresetCard
@@ -552,12 +513,7 @@ export const StyleSection: React.FC = () => {
           (spec #33 stories 24 and 26). */}
       {!isShowcase && (
         <div className="flex flex-col gap-1.5">
-          <label
-            id="ratio-label"
-            className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
-          >
-            {copy.ratio_label}
-          </label>
+          <FieldLabel id="ratio-label">{copy.ratio_label}</FieldLabel>
           <SegmentedControl<AspectRatio>
             aria-labelledby="ratio-label"
             value={data.ratio}
@@ -575,9 +531,7 @@ export const StyleSection: React.FC = () => {
       {/* Swatches show each theme's real card color (theme tokens are the
           fill), with the caption carrying the name a color alone can't. */}
       <div className="flex flex-col gap-1.5">
-        <label id="theme-label" className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.theme_label}
-        </label>
+        <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
         <SwatchPicker<CardTheme>
           aria-labelledby="theme-label"
           value={data.theme}
@@ -596,53 +550,37 @@ export const StyleSection: React.FC = () => {
       {!isShowcase && (
         <>
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between items-center text-xs">
-              <label
-                id="inspector-headline-size-label"
-                className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]"
-              >
-                {copy.headline_size_label}
-              </label>
-              <HeadlineSizeInput
-                value={data.headlineSize}
-                onCommit={(n) => update('headlineSize', n)}
-              />
-            </div>
+            <FieldLabel
+              id="inspector-headline-size-label"
+              aside={
+                <HeadlineSizeInput
+                  value={data.headlineSize}
+                  onCommit={(n) => update('headlineSize', n)}
+                />
+              }
+            >
+              {copy.headline_size_label}
+            </FieldLabel>
             {/* The A/A+ glyphs frame the slider's range at a glance — the
                 typed entry above stays the precise path. */}
             <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="text-[10px] font-semibold text-[#86868B] dark:text-[#A1A1A6]"
-              >
+              <span aria-hidden className="text-[10px] font-semibold text-ink-tertiary">
                 A
               </span>
-              <Slider.Root
+              <Slider
                 value={data.headlineSize}
                 min={HEADLINE_SIZE_MIN}
                 max={HEADLINE_SIZE_MAX}
-                step={1}
                 aria-labelledby="inspector-headline-size-label"
-                onValueChange={(v) => update('headlineSize', Array.isArray(v) ? v[0] : v)}
-                className="flex min-w-0 flex-1 cursor-pointer select-none"
-              >
-                <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
-                  <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-                    <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-                    <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
-                  </Slider.Track>
-                </Slider.Control>
-              </Slider.Root>
-              <span
-                aria-hidden
-                className="text-[13px] font-semibold text-[#86868B] dark:text-[#A1A1A6]"
-              >
+                onValueChange={(n) => update('headlineSize', n)}
+              />
+              <span aria-hidden className="text-[13px] font-semibold text-ink-tertiary">
                 A
               </span>
             </div>
           </div>
 
-          <CardStateToggle
+          <Checkbox
             id="inspector-uppercase"
             label={copy.uppercase_label}
             checked={data.uppercaseHeadline}
@@ -662,18 +600,20 @@ export const HeadlineSection: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <Field.Root className="flex flex-col gap-1.5">
-        <div className="flex justify-between items-center">
-          <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-            {copy.headline_label}
-          </Field.Label>
-          <button
-            type="button"
-            onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
-            className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#0071E3]/10 text-[#0071E3] hover:bg-[#0071E3]/20 transition cursor-pointer"
-          >
-            AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
-          </button>
-        </div>
+        <FieldLabel
+          htmlFor="inspector-headline"
+          aside={
+            <button
+              type="button"
+              onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition cursor-pointer"
+            >
+              AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
+            </button>
+          }
+        >
+          {copy.headline_label}
+        </FieldLabel>
         <Field.Control
           id="inspector-headline"
           render={
@@ -682,21 +622,23 @@ export const HeadlineSection: React.FC = () => {
               value={data.headline}
               onChange={(e) => update('headline', e.target.value)}
               placeholder={copy.empty_headline_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-[#1D1D1F] dark:text-[#F5F5F7] rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className={TEXTAREA_FIELD_CLASS}
             />
           }
         />
       </Field.Root>
 
       <Field.Root className="flex flex-col gap-1.5">
-        <div className="flex justify-between items-center">
-          <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-            {copy.sublines_label}
-          </Field.Label>
-          <span className="text-[11px] text-[#86868B] dark:text-neutral-500">
-            {copy.sublines_badge}
-          </span>
-        </div>
+        <FieldLabel
+          htmlFor="inspector-sublines"
+          aside={
+            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+              {copy.sublines_badge}
+            </span>
+          }
+        >
+          {copy.sublines_label}
+        </FieldLabel>
         <Field.Control
           id="inspector-sublines"
           render={
@@ -705,13 +647,13 @@ export const HeadlineSection: React.FC = () => {
               value={data.sublines}
               onChange={(e) => update('sublines', e.target.value)}
               placeholder={copy.sublines_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-[#1D1D1F] dark:text-[#F5F5F7] rounded-xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className={`${TEXTAREA_FIELD_CLASS} font-mono`}
             />
           }
         />
       </Field.Root>
 
-      <CardStateToggle
+      <Checkbox
         id="inspector-bold-sublines"
         label={copy.bold_sublines_label}
         checked={data.boldSublines}
@@ -729,10 +671,15 @@ export const HeadlineSection: React.FC = () => {
 // sits next to what it changes).
 
 const SECTION_LABEL_CLASS =
-  'text-[11px] font-semibold uppercase tracking-[0.08em] text-[#86868B] dark:text-[#A1A1A6]'
+  'text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-tertiary'
 
 const GROUP_CARD_CLASS =
-  'overflow-hidden rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:bg-[#1E1E22] dark:border-white/[0.08]'
+  'overflow-hidden rounded-2xl bg-surface border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:border-white/[0.08]'
+
+// Shared skin for the headline and sublines textareas — the one roomy
+// writing field (distinct from the compact px-2 fieldSurfaceClass skin).
+const TEXTAREA_FIELD_CLASS =
+  'w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-hairline focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400'
 
 const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 
@@ -740,30 +687,11 @@ const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
 // dividers align with the row titles instead of cutting across the icons.
 const IDENTITY_DIVIDER_CLASS = 'ml-[66px] h-px bg-black/[0.06] dark:bg-white/[0.08]'
 
-// One iOS switch skin for both boolean identity controls (QR visibility,
-// grayscale avatar) — green when on, per the iOS Settings idiom.
-const IosSwitch: React.FC<{
-  id: string
-  label: string
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-}> = ({ id, label, checked, onCheckedChange }) => (
-  <Switch.Root
-    id={id}
-    aria-label={label}
-    checked={checked}
-    onCheckedChange={onCheckedChange}
-    className="relative inline-flex h-[22px] w-[38px] shrink-0 cursor-pointer items-center rounded-full bg-neutral-300 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 data-[checked]:bg-[#34C759] dark:bg-neutral-600"
-  >
-    <Switch.Thumb className="absolute left-[2px] top-[2px] size-[18px] rounded-full bg-white shadow transition-transform duration-200 ease-out data-[checked]:translate-x-4" />
-  </Switch.Root>
-)
-
 // The QR row's tinted icon box: same 40px geometry as the avatar preview, so
 // the two groups' leading edges read as one table.
 const QrIconBox = () => (
   <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-black/[0.04] dark:bg-white/[0.06]">
-    <QrCode className="size-5 text-[#1D1D1F] dark:text-[#F5F5F7]" strokeWidth={1.75} />
+    <QrCode className="size-5 text-ink" strokeWidth={1.75} />
   </div>
 )
 
@@ -778,9 +706,7 @@ const LabeledValueRow: React.FC<{
   valueClass: string
 }> = ({ id, label, value, onChange, placeholder, valueClass }) => (
   <Field.Root className="flex flex-col gap-0.5 px-3.5 py-2.5">
-    <Field.Label className="text-[11px] font-medium text-[#86868B] dark:text-[#A1A1A6]">
-      {label}
-    </Field.Label>
+    <Field.Label className="text-[11px] font-medium text-ink-tertiary">{label}</Field.Label>
     <Field.Control
       id={id}
       value={value}
@@ -864,10 +790,10 @@ export const IdentitySection: React.FC = () => {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold leading-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+            <p className="text-[13px] font-semibold leading-tight text-ink">
               {copy.avatar_row_title}
             </p>
-            <p className="mt-0.5 text-[11px] leading-tight text-[#86868B] dark:text-[#A1A1A6]">
+            <p className="mt-0.5 text-[11px] leading-tight text-ink-tertiary">
               {copy.avatar_row_subtitle}
             </p>
           </div>
@@ -900,11 +826,11 @@ export const IdentitySection: React.FC = () => {
         <div className={IDENTITY_ROW_CLASS}>
           <label
             htmlFor="inspector-grayscale-avatar"
-            className="flex-1 cursor-pointer select-none text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7]"
+            className="flex-1 cursor-pointer select-none text-[13px] text-ink"
           >
             {copy.grayscale_avatar_label}
           </label>
-          <IosSwitch
+          <Switch
             id="inspector-grayscale-avatar"
             label={copy.grayscale_avatar_label}
             checked={data.avatarGrayscale}
@@ -916,14 +842,14 @@ export const IdentitySection: React.FC = () => {
 
         {/* Name: label left, editable value right — the iOS settings row */}
         <Field.Root className={IDENTITY_ROW_CLASS}>
-          <Field.Label className="shrink-0 text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <Field.Label className="shrink-0 text-[13px] text-ink">
             {copy.author_name_label}
           </Field.Label>
           <Field.Control
             id="inspector-author-name"
             value={data.authorName}
             onChange={(e) => update('authorName', e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-right text-[13px] font-semibold text-[#1D1D1F] focus:outline-none placeholder:text-neutral-400 dark:text-[#F5F5F7]"
+            className="min-w-0 flex-1 bg-transparent text-right text-[13px] font-semibold text-ink focus:outline-none placeholder:text-neutral-400"
           />
         </Field.Root>
 
@@ -933,7 +859,7 @@ export const IdentitySection: React.FC = () => {
         <Field.Root className="flex items-start gap-3 px-3.5 py-2.5">
           {/* Same line-height as the textarea so the first lines share one
               baseline — the label rides the value's first line, iOS-style. */}
-          <Field.Label className="shrink-0 text-[13px] leading-snug text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <Field.Label className="shrink-0 text-[13px] leading-snug text-ink">
             {copy.author_bio_label}
           </Field.Label>
           <Field.Control
@@ -944,7 +870,7 @@ export const IdentitySection: React.FC = () => {
                 rows={2}
                 value={data.authorBio}
                 onChange={(e) => update('authorBio', e.target.value)}
-                className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-[#1D1D1F] focus:outline-none placeholder:text-neutral-400 dark:text-[#F5F5F7]"
+                className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-ink focus:outline-none placeholder:text-neutral-400"
               />
             }
           />
@@ -957,10 +883,10 @@ export const IdentitySection: React.FC = () => {
       <div className={GROUP_CARD_CLASS}>
         <div className={IDENTITY_ROW_CLASS}>
           <QrIconBox />
-          <p className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <p className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-ink">
             {copy.qr_toggle_title}
           </p>
-          <IosSwitch
+          <Switch
             id="inspector-qr-toggle"
             label={copy.qr_toggle_title}
             checked={data.qrEnabled}
@@ -978,7 +904,7 @@ export const IdentitySection: React.FC = () => {
               value={data.qrUrl}
               onChange={(value) => update('qrUrl', value)}
               placeholder="https://github.com/nampq11"
-              valueClass="font-medium text-[#0071E3] placeholder:text-[#0071E3]/40 dark:text-[#6CB2FF] dark:placeholder:text-[#6CB2FF]/40"
+              valueClass="font-medium text-link placeholder:text-link/40"
             />
 
             <div className={IDENTITY_DIVIDER_CLASS} />
@@ -989,7 +915,7 @@ export const IdentitySection: React.FC = () => {
               value={data.qrCta}
               onChange={(value) => update('qrCta', value)}
               placeholder={copy.qr_cta_placeholder}
-              valueClass="text-[#1D1D1F] placeholder:text-neutral-400 dark:text-[#F5F5F7]"
+              valueClass="text-ink placeholder:text-neutral-400"
             />
           </>
         )}

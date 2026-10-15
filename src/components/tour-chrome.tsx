@@ -18,7 +18,7 @@ import { useUiCopy } from '../lib/i18n'
 // max-w keeps the fixed w-80 card inside 320px-wide viewports (Fold cover,
 // old SE) — 100vw minus the tour's 12px collision padding on each side.
 export const TOUR_STEP_CARD_CLASS =
-  'relative z-50 w-[320px] max-w-[calc(100vw-28px)] rounded-2xl bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-xl ' +
+  'relative z-50 w-[320px] max-w-[calc(100vw-28px)] rounded-2xl bg-sheet backdrop-blur-xl ' +
   'border border-black/[0.08] dark:border-white/[0.12] shadow-[0_20px_48px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.06)] p-4 sm:p-5 gap-3.5'
 
 const STEP_TITLE_CLASS =
@@ -39,7 +39,7 @@ export function StepContent({
 }) {
   return (
     <>
-      <TourArrow className="fill-white/95 dark:fill-[#1C1C1E]/95" />
+      <TourArrow className="fill-sheet" />
       <TourClose
         aria-label={copy.tour_close}
         className="w-7 h-7 rounded-full border-none bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.16] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 flex items-center justify-center transition cursor-pointer top-3.5 right-3.5"
@@ -68,7 +68,7 @@ export function StepContent({
           <TourNext
             variant="primary"
             size="sm"
-            className="h-7 px-3.5 text-xs font-medium rounded-lg bg-[#0071E3] hover:bg-[#0077ED] active:scale-95 text-white shadow-xs transition"
+            className="h-7 px-3.5 text-xs font-medium rounded-lg bg-accent hover:bg-accent-hover active:scale-95 text-white shadow-xs transition"
           >
             {lastLabel ?? copy.tour_next}
           </TourNext>

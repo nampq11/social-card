@@ -28,14 +28,14 @@ export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
       <Popover.Trigger
         render={
           <Button size="icon" variant="ghost" title={copy.tips_title} aria-label={copy.tips_title}>
-            <Info className="w-4 h-4 text-blue-500" />
+            <Info className="w-4 h-4 text-accent" />
           </Button>
         }
       />
       <Popover.Portal>
         <Popover.Positioner align="start" sideOffset={8}>
           <Popover.Popup
-            className="max-w-xs p-4 rounded-2xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed"
+            className="max-w-xs p-4 rounded-2xl bg-surface border border-hairline shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed"
             finalFocus={() => {
               if (replayInitiatedClose.current) {
                 replayInitiatedClose.current = false
@@ -50,11 +50,7 @@ export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
             <Popover.Description>{copy.posting_tips}</Popover.Description>
             <Popover.Close
               render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 -ml-1 text-blue-600 dark:text-blue-400"
-                >
+                <Button variant="ghost" size="sm" className="mt-2 -ml-1 text-accent">
                   <Sparkles />
                   <span>{copy.replay_tour}</span>
                 </Button>

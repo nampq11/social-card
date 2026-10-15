@@ -7,7 +7,7 @@ import { clsx } from 'clsx'
 // focus-visible ring: the one keyboard affordance every studio button shares.
 const buttonVariants = cva(
   'inline-flex items-center justify-center text-xs apple-button cursor-pointer [&_svg]:size-3.5 [&_svg]:shrink-0 ' +
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
   {
     variants: {
       variant: {

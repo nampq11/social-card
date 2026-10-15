@@ -13,6 +13,7 @@ import {
 import { useUiCopy } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
 import { Button } from './ui/Button'
+import { Tooltip } from './ui/Tooltip'
 import { RATIO_INFO, EXPORT_PIXEL_RATIO } from '../constants/ratios'
 import { TipsPopover } from './TipsPopover'
 
@@ -54,39 +55,40 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2.5">
         {isDesktop && onToggleInspector && (
           <>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onToggleInspector}
-              title={copy.inspector_toggle_title}
-              aria-label={copy.inspector_toggle_title}
-              aria-pressed={!isInspectorCollapsed}
-              className={`w-8 h-8 rounded-xl transition-colors ${
-                isInspectorCollapsed
-                  ? 'text-[#86868B] dark:text-[#A1A1A6] hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
-                  : 'bg-black/[0.08] dark:bg-white/[0.12] text-[#0071E3] dark:text-[#2997FF] shadow-xs'
-              }`}
-            >
-              <PanelLeft className="w-4 h-4" />
-            </Button>
+            <Tooltip label={copy.inspector_toggle_title}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={onToggleInspector}
+                aria-label={copy.inspector_toggle_title}
+                aria-pressed={!isInspectorCollapsed}
+                className={`w-8 h-8 rounded-xl transition-colors ${
+                  isInspectorCollapsed
+                    ? 'text-ink-tertiary hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
+                    : 'bg-black/[0.08] dark:bg-white/[0.12] text-accent shadow-xs'
+                }`}
+              >
+                <PanelLeft className="w-4 h-4" />
+              </Button>
+            </Tooltip>
             <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden lg:block" />
           </>
         )}
 
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-b from-[#4F75FF] to-[#2554E8] flex items-center justify-center shadow-sm shadow-blue-500/25 text-white shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-b from-brand-from to-brand-to flex items-center justify-center shadow-sm shadow-blue-500/25 text-white shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-[13px] font-semibold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7] leading-none whitespace-nowrap">
+              <h1 className="text-[13px] font-semibold tracking-tight text-ink leading-none whitespace-nowrap">
                 Social Card
               </h1>
-              <span className="hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6]">
+              <span className="hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-ink-muted">
                 HIG Studio
               </span>
             </div>
-            <p className="text-[11px] text-[#86868B] dark:text-[#A1A1A6] mt-0.5 hidden sm:block">
+            <p className="text-[11px] text-ink-tertiary mt-0.5 hidden sm:block">
               {copy.header_tagline}
             </p>
           </div>
@@ -104,15 +106,15 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={copy.ratio_cycle_title}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.99] border border-black/[0.04] dark:border-white/[0.06] cursor-pointer transition text-xs font-medium"
             >
-              <span className="w-2 h-2 rounded-full bg-[#34C759] shadow-[0_0_6px_#34C759] shrink-0" />
-              <span className="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">
+              <span className="w-2 h-2 rounded-full bg-green shadow-[0_0_6px_var(--color-green)] shrink-0" />
+              <span className="font-medium text-ink">
                 {ratioData.name} ({ratioData.width * EXPORT_PIXEL_RATIO} ×{' '}
                 {ratioData.height * EXPORT_PIXEL_RATIO} px)
               </span>
-              <span className="text-[#86868B] dark:text-[#A1A1A6] hidden xl:inline">
+              <span className="text-ink-tertiary hidden xl:inline">
                 — {ratioData.platform[language]}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#86868B] dark:text-[#A1A1A6] ml-0.5" />
+              <ChevronDown className="w-3.5 h-3.5 text-ink-tertiary ml-0.5" />
             </button>
           )}
           {onReplayTour && <TipsPopover onReplayTour={onReplayTour} />}
@@ -123,28 +125,36 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2">
         {isDesktop && (
           <div className="hidden lg:flex items-center bg-black/[0.04] dark:bg-white/[0.06] p-0.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06]">
-            <Button
-              onClick={undo}
-              disabled={!canUndo}
-              title={copy.undo_button_title}
-              aria-label={copy.undo_button_title}
-              variant="ghost"
-              size="icon"
-              className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-            >
-              <Undo2 className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              onClick={redo}
-              disabled={!canRedo}
-              title={copy.redo_button_title}
-              aria-label={copy.redo_button_title}
-              variant="ghost"
-              size="icon"
-              className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-            >
-              <Redo2 className="w-3.5 h-3.5" />
-            </Button>
+            <Tooltip label={copy.undo_button_title}>
+              {/* Browsers suppress pointer events on disabled buttons —
+                  this span keeps the tooltip hoverable when Undo is off */}
+              <span className="inline-flex">
+                <Button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label={copy.undo_button_title}
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                </Button>
+              </span>
+            </Tooltip>
+            <Tooltip label={copy.redo_button_title}>
+              <span className="inline-flex">
+                <Button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label={copy.redo_button_title}
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+                >
+                  <Redo2 className="w-3.5 h-3.5" />
+                </Button>
+              </span>
+            </Tooltip>
           </div>
         )}
 
@@ -190,16 +200,17 @@ export const Header: React.FC<HeaderProps> = ({
             v4 orders display utilities alphabetically, so `hidden` precedes
             (loses to) `inline-flex`. */}
         {isDesktop && (
-          <Button
-            onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-            title={copy.language_toggle_title}
-            aria-label={copy.language_toggle_title}
-            variant="secondary"
-            className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? 'VI' : 'EN'}</span>
-          </Button>
+          <Tooltip label={copy.language_toggle_title}>
+            <Button
+              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+              aria-label={copy.language_toggle_title}
+              variant="secondary"
+              className="h-8 px-2.5 rounded-xl text-[11px] font-semibold"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>{language === 'vi' ? 'VI' : 'EN'}</span>
+            </Button>
+          </Tooltip>
         )}
       </div>
     </header>

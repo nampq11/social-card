@@ -48,7 +48,7 @@ export function SwatchPicker<T extends string>({
           <Radio.Root
             key={opt.value}
             value={opt.value}
-            className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 [@media(pointer:coarse)]:min-h-11"
+            className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 [@media(pointer:coarse)]:min-h-11"
           >
             {/* ring-offset against the glass panel approximates with its
                 dominant tone; the hairline keeps near-white swatches visible. */}
@@ -57,16 +57,13 @@ export function SwatchPicker<T extends string>({
               className={clsx(
                 'size-7 rounded-full border border-black/10 transition-shadow duration-150 ease-out dark:border-white/20',
                 opt.swatchClass,
-                checked &&
-                  'ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-blue-500 dark:ring-offset-[#1E1E22]',
+                checked && 'ring-2 ring-accent ring-offset-2 ring-offset-surface',
               )}
             />
             <span
               className={clsx(
                 'text-[11px] leading-tight transition-colors duration-150 ease-out',
-                checked
-                  ? 'font-medium text-[#1D1D1F] dark:text-[#F5F5F7]'
-                  : 'text-[#86868B] dark:text-[#A1A1A6]',
+                checked ? 'font-medium text-ink' : 'text-ink-tertiary',
               )}
             >
               {opt.label}
