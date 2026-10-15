@@ -19,6 +19,7 @@ import {
 } from '../constants/presets'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Slider } from './ui/Slider'
+import { Select, fieldSurfaceClass } from './ui/Select'
 import { Field } from '@base-ui/react/field'
 import {
   Square,
@@ -282,14 +283,14 @@ export const AnnotationsSection: React.FC = () => {
             value={annotation.text}
             onChange={(e) => updateAnnotation(annotation.id, { text: e.target.value })}
             placeholder={copy.annotations_text_hint}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className={`w-full ${fieldSurfaceClass}`}
           />
           <div className="flex items-center gap-1.5">
-            <select
+            <Select
               aria-label={copy.annotations_target_label}
               value={annotation.shotId}
               onChange={(e) => updateAnnotation(annotation.id, { shotId: e.target.value })}
-              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
+              className="min-w-0 flex-1"
             >
               {shots.map((shot, index) => (
                 <option
@@ -300,19 +301,18 @@ export const AnnotationsSection: React.FC = () => {
                   {shotName(copy, index + 1)}
                 </option>
               ))}
-            </select>
-            <select
+            </Select>
+            <Select
               aria-label={copy.annotations_side_label}
               value={annotation.side}
               onChange={(e) =>
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
-              className="px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
             >
               <option value="left">{copy.annotation_side_left}</option>
               <option value="right">{copy.annotation_side_right}</option>
               <option value="top">{copy.annotation_side_top}</option>
-            </select>
+            </Select>
             <button
               type="button"
               aria-label={copy.annotations_remove_title}
