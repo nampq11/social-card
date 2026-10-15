@@ -78,19 +78,9 @@ await runSmoke({}, async (app) => {
     await evalJs(
       `[...document.querySelectorAll('button')].find(b => b.textContent === 'Tiếp')?.click()`,
     )
-    try {
-      await waitUntil(`step ${step} of 6`, () =>
-        evalJs(`document.body.innerText.includes('${step} / 6')`),
-      )
-    } catch {
-      console.log(
-        'DEBUG STATE:',
-        await evalJs(
-          `JSON.stringify({ debug: window.__TOUR_DEBUG__ ?? null, stepsLog: window.__TOUR_STEPS__ ?? [], heroSlot: !!document.querySelector('[data-testid="hero-slot"]'), popups: document.querySelectorAll('[data-slot="tour-step"]').length })`,
-        ),
-      )
-      throw new Error('dumped')
-    }
+    await waitUntil(`step ${step} of 6`, () =>
+      evalJs(`document.body.innerText.includes('${step} / 6')`),
+    )
   }
   await waitUntil('gesture step', () =>
     evalJs(`document.body.innerText.includes('${GESTURE_STEP_TITLE}')`),

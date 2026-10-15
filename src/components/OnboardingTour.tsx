@@ -37,7 +37,17 @@ export function OnboardingTour({ open, onOpenChange }: OnboardingTourProps) {
   const inspectorAlign = isDesktop ? 'start' : 'center'
 
   return (
-    <Tour open={open} onOpenChange={onOpenChange} spotlightPadding={8}>
+    <Tour
+      // The step set depends on hasShot. Re-keying rebuilds the engine's
+      // step registrations wholesale when it flips: mounting steps into a
+      // live tour (with StrictMode's double effect run) re-registers them
+      // out of order, leaving their self-indexes stale — the step renders
+      // never again. A fresh Tour always registers its full set cleanly.
+      key={hasShot ? 'tour-with-shots' : 'tour-basics'}
+      open={open}
+      onOpenChange={onOpenChange}
+      spotlightPadding={8}
+    >
       <TourPortal>
         <TourSpotlight className="bg-black/60" />
         <TourSpotlightRing className="rounded-2xl ring-2 ring-[#0071E3] shadow-[0_0_20px_rgba(0,113,227,0.35)]" />
