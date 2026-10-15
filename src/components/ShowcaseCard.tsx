@@ -183,7 +183,7 @@ const Slot = memo(function Slot({
         <div
           data-testid="shot-pan-overlay"
           data-export-exclude="true"
-          className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-blue-600 dark:ring-blue-500"
+          className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-accent"
         >
           <div className="pointer-events-auto absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
             <PanOverlayButton

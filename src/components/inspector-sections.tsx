@@ -52,7 +52,7 @@ const CardStateToggle: React.FC<{
       id={id}
       checked={checked}
       onCheckedChange={onCheckedChange}
-      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-surface text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-blue-600 data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
+      className="flex size-4 items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 bg-surface text-white transition-colors duration-150 ease-out hover:border-neutral-400 data-[checked]:border-accent data-[checked]:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 cursor-pointer"
     >
       <Checkbox.Indicator>
         <Check className="size-3" strokeWidth={3} />
@@ -171,7 +171,7 @@ export const ScreenshotsSection: React.FC = () => {
               key={shot.id}
               onClick={() => setSelectedShotId((current) => (current === shot.id ? null : shot.id))}
               className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/[0.1] ${
-                selectedShotId === shot.id ? 'ring-2 ring-blue-600 dark:ring-blue-500' : ''
+                selectedShotId === shot.id ? 'ring-2 ring-accent' : ''
               }`}
             >
               {/* Named alt so identical thumbnails stay distinguishable to
@@ -310,14 +310,14 @@ export const AnnotationsSection: React.FC = () => {
             value={annotation.text}
             onChange={(e) => updateAnnotation(annotation.id, { text: e.target.value })}
             placeholder={copy.annotations_text_hint}
-            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
           <div className="flex items-center gap-1.5">
             <select
               aria-label={copy.annotations_target_label}
               value={annotation.shotId}
               onChange={(e) => updateAnnotation(annotation.id, { shotId: e.target.value })}
-              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              className="min-w-0 flex-1 px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
             >
               {shots.map((shot, index) => (
                 <option
@@ -335,7 +335,7 @@ export const AnnotationsSection: React.FC = () => {
               onChange={(e) =>
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
-              className="px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              className="px-2 py-1.5 text-xs rounded-lg bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
             >
               <option value="left">{copy.annotation_side_left}</option>
               <option value="right">{copy.annotation_side_right}</option>
@@ -501,7 +501,7 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
         onKeyDown={(e) => {
           if (e.key === 'Enter') commit()
         }}
-        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-14 px-1.5 py-0.5 text-xs font-mono text-right rounded-md bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-accent/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>px</span>
     </span>
@@ -613,8 +613,8 @@ export const StyleSection: React.FC = () => {
               >
                 <Slider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
                   <Slider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-                    <Slider.Indicator className="absolute h-full rounded-full bg-blue-600" />
-                    <Slider.Thumb className="size-4 rounded-full border-2 border-blue-600 bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40" />
+                    <Slider.Indicator className="absolute h-full rounded-full bg-accent" />
+                    <Slider.Thumb className="size-4 rounded-full border-2 border-accent bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40" />
                   </Slider.Track>
                 </Slider.Control>
               </Slider.Root>
@@ -651,7 +651,7 @@ export const HeadlineSection: React.FC = () => {
           <button
             type="button"
             onClick={() => update('uppercaseHeadline', !data.uppercaseHeadline)}
-            className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#0071E3]/10 text-[#0071E3] hover:bg-[#0071E3]/20 transition cursor-pointer"
+            className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition cursor-pointer"
           >
             AA {copy.uppercase_label}: {data.uppercaseHeadline ? copy.state_on : copy.state_off}
           </button>
@@ -664,7 +664,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.headline}
               onChange={(e) => update('headline', e.target.value)}
               placeholder={copy.empty_headline_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
             />
           }
         />
@@ -687,7 +687,7 @@ export const HeadlineSection: React.FC = () => {
               value={data.sublines}
               onChange={(e) => update('sublines', e.target.value)}
               placeholder={copy.sublines_hint}
-              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
+              className="w-full resize-none px-3.5 py-2.5 text-sm font-normal font-mono text-ink rounded-xl bg-surface border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400"
             />
           }
         />
@@ -735,7 +735,7 @@ const IosSwitch: React.FC<{
     aria-label={label}
     checked={checked}
     onCheckedChange={onCheckedChange}
-    className="relative inline-flex h-[22px] w-[38px] shrink-0 cursor-pointer items-center rounded-full bg-neutral-300 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 data-[checked]:bg-[#34C759] dark:bg-neutral-600"
+    className="relative inline-flex h-[22px] w-[38px] shrink-0 cursor-pointer items-center rounded-full bg-neutral-300 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 data-[checked]:bg-[#34C759] dark:bg-neutral-600"
   >
     <Switch.Thumb className="absolute left-[2px] top-[2px] size-[18px] rounded-full bg-white shadow transition-transform duration-200 ease-out data-[checked]:translate-x-4" />
   </Switch.Root>
@@ -958,7 +958,7 @@ export const IdentitySection: React.FC = () => {
               value={data.qrUrl}
               onChange={(value) => update('qrUrl', value)}
               placeholder="https://github.com/nampq11"
-              valueClass="font-medium text-[#0071E3] placeholder:text-[#0071E3]/40 dark:text-[#6CB2FF] dark:placeholder:text-[#6CB2FF]/40"
+              valueClass="font-medium text-link placeholder:text-link/40"
             />
 
             <div className={IDENTITY_DIVIDER_CLASS} />

@@ -52,7 +52,7 @@ export const Inspector: React.FC = () => {
       {/* Footer replacing dead white space */}
       <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-[11px] text-ink-tertiary">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           <span>{copy.inspector_footer_layout}</span>
         </div>
         <span className="font-mono text-[10px] bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 rounded text-ink-faint">

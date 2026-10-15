@@ -50,7 +50,7 @@ export function OnboardingTour({ open, onOpenChange }: OnboardingTourProps) {
     >
       <TourPortal>
         <TourSpotlight className="bg-black/60" />
-        <TourSpotlightRing className="rounded-2xl ring-2 ring-[#0071E3] shadow-[0_0_20px_rgba(0,113,227,0.35)]" />
+        <TourSpotlightRing className="rounded-2xl ring-2 ring-accent shadow-[0_0_20px_rgba(0,113,227,0.35)]" />
 
         {/* Step 1: Rendered Card Preview */}
         <TourStep

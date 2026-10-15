@@ -68,7 +68,7 @@ export function StepContent({
           <TourNext
             variant="primary"
             size="sm"
-            className="h-7 px-3.5 text-xs font-medium rounded-lg bg-[#0071E3] hover:bg-[#0077ED] active:scale-95 text-white shadow-xs transition"
+            className="h-7 px-3.5 text-xs font-medium rounded-lg bg-accent hover:bg-accent-hover active:scale-95 text-white shadow-xs transition"
           >
             {lastLabel ?? copy.tour_next}
           </TourNext>

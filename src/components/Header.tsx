@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
               className={`w-8 h-8 rounded-xl transition-colors ${
                 isInspectorCollapsed
                   ? 'text-ink-tertiary hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
-                  : 'bg-black/[0.08] dark:bg-white/[0.12] text-[#0071E3] dark:text-[#2997FF] shadow-xs'
+                  : 'bg-black/[0.08] dark:bg-white/[0.12] text-accent shadow-xs'
               }`}
             >
               <PanelLeft className="w-4 h-4" />
