@@ -13,9 +13,11 @@ import { useSheetDrag } from '../lib/use-sheet-drag'
 // slides between peek (chrome only, measured by the hook) and expanded via
 // transform: 1:1 drag with rubber-banded edges, momentum projection on
 // release, and a critically damped spring carrying the release velocity.
-// The hook writes the sheet's live coverage as the canvas's bottom padding
-// on the same every-frame path as the transform, so Fit-to-View keeps the
-// card fully visible at every sheet position (ADR 0002 addendum).
+// The hook writes the sheet's coverage as the canvas's bottom padding at
+// RESTING points only (never per frame — per-frame layout writes starved
+// iOS 18 WebKit's commit pipeline and the screen replayed stale drag
+// frames, #53), so Fit-to-View keeps the card fully visible at every
+// resting sheet position (ADR 0002 addendum).
 interface MobileSheetProps {
   canvasRef: RefObject<HTMLElement | null>
 }

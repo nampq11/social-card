@@ -33,11 +33,14 @@ drag-driven sheet following Apple's _Designing Fluid Interfaces_: 1:1
 pointer tracking with rubber-banded edges, momentum projection picks the
 resting point on release, and a critically damped spring carries the
 release velocity (`lib/sheet-drag.ts`, `lib/use-sheet-drag.ts`). The
-transform-only animation writes the canvas's bottom padding directly every
-frame (not through an inherited CSS variable, which would recalculate the
-whole document's styles per frame) — combined with content-box
-Fit-to-View, the card refits continuously and stays fully visible at
-every sheet position instead of hiding behind the expanded sheet.
+per-frame animation is transform-only; the canvas's bottom padding (the
+live reserve) is written at RESTING points — originally it rode the
+every-frame path (not an inherited CSS variable, which would recalculate
+the whole document's styles per frame), but per-frame layout writes
+starved iOS 18 WebKit's commit pipeline and the screen replayed stale
+drag frames (#53, addendum below) — combined with content-box
+Fit-to-View, the card refits at every rest and stays fully visible at
+every resting sheet position instead of hiding behind the expanded one.
 The sheet's surface is near-opaque (`--color-sheet`), not
 backdrop-filtered glass: WebKit re-samples an element's backdrop every
 frame it moves, and the per-frame reserve changes the content behind the
@@ -77,3 +80,26 @@ does main-thread work (the per-frame canvas reserve write), so the
 transform never rode the compositor alone. The sheet is deliberately
 NOT `will-change` — it paints in document order, in sync with layout,
 on every engine.
+
+## Addendum: the per-frame write budget (Oct 2026, #53 verdict)
+
+The `?sheetdebug` HUD settled it with on-device numbers: in every
+captured frame the DOM was sane (visual viewport == layout viewport,
+document unscrollable, wrapper correctly anchored, transform inside the
+rubber-band envelope) while the paint showed EARLIER drag frames — iOS 18
+WebKit stops consuming main-thread commits while a per-frame layout
+invalidation storm is in flight, and the screen replays stale frames.
+The per-frame canvas-reserve write was the only layout invalidation on
+the drag path, and the one constant across every broken revision (#48
+through the anchoring and layer experiments). The write budget since:
+
+- per frame: the sheet's transform, as `translate3d` (dedicated
+  composited layer, atomic swap) — nothing else;
+- per rest (settle, toggle, resize, measure): the canvas reserve, one
+  write, from which Fit-to-View refits off its ResizeObserver.
+
+Mid-drag, the card keeps its last-rest sizing and may sit partially
+behind the moving sheet for the gesture's duration; at every rest the
+card is fully visible (the original #47 complaint). One benign
+ResizeObserver-loop notification per rest transition is the accepted
+cost of a rest-time layout write.
