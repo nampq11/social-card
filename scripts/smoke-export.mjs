@@ -1,4 +1,4 @@
-// Export smoke for issue #34 (ADR 0005): drive the real app in headless
+// Export smoke (issue #34, ADR 0005): drive the real app in headless
 // Chrome — switch to Showcase, ingest two screenshots through the real file
 // input, Fit the hero, screenshot the preview, export through the real
 // Copy button path, and pull the exported PNG back out.
@@ -7,22 +7,13 @@
 // margin strip at ~3 distinct stripe colors; a live blur mixes them into
 // dozens of intermediate hues.
 import { writeFileSync } from 'node:fs'
-import { startSmokeApp, sleep } from './lib/smoke-app.mjs'
+import { exportCard, openShowcase, pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
 
-let app
-try {
-  app = await startSmokeApp()
+await runSmoke({}, async (app) => {
   const { send, evalJs, waitUntil } = app
 
   // --- 1. Showcase mode ----------------------------------------------------
-  await evalJs(
-    `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
-  )
-  await waitUntil('showcase section', () =>
-    evalJs(
-      `[...document.querySelectorAll('label')].some(l => l.textContent.includes('Ảnh chụp màn hình'))`,
-    ),
-  )
+  await openShowcase(app)
 
   // --- 1b. fixtures: two 800×450 PNGs drawn by the browser's own canvas -----
   const fixtureDataUrl = await evalJs(`(async () => {
@@ -53,20 +44,11 @@ try {
   writeFileSync('/tmp/smoke-shot-2.png', Buffer.from(fixtureDataUrl.two.split(',')[1], 'base64'))
 
   // --- 2. ingest two screenshots through the real input (one file per pick) -
-  const pickShot = async (file) => {
-    await send('DOM.getDocument')
-    const obj = await send('Runtime.evaluate', {
-      expression: `document.querySelector('input[type=file]')`,
-      returnByValue: false,
-    })
-    const { nodeId: id } = await send('DOM.requestNode', { objectId: obj.result.objectId })
-    await send('DOM.setFileInputFiles', { nodeId: id, files: [file] })
-  }
-  await pickShot('/tmp/smoke-shot-1.png')
+  await pickShot(app, '/tmp/smoke-shot-1.png')
   await waitUntil('hero shot', () =>
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
-  await pickShot('/tmp/smoke-shot-2.png')
+  await pickShot(app, '/tmp/smoke-shot-2.png')
   await waitUntil('two shots in preview', () =>
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length === 2`),
   )
@@ -101,26 +83,20 @@ try {
     `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Copy ảnh'))?.click()`,
   )
   await sleep(4000)
-  const copyTook = await evalJs(
-    `document.body.textContent.includes('Đã copy vào Clipboard') || document.body.textContent.includes('Không thể')`,
+  console.log(
+    'copy button path settled (headless may refuse clipboard write):',
+    await evalJs(
+      `document.body.textContent.includes('Đã copy vào Clipboard') || document.body.textContent.includes('Không thể')`,
+    ),
   )
-  console.log('copy button path settled (headless may refuse clipboard write):', copyTook)
 
   // Headless refuses clipboard.write even with permissions ("Document is not
   // focused") — so for the bytes, render through the app's own export module
   // (same options, same html-to-image) and intercept the download anchor.
-  const dataUrl = await evalJs(`(async () => {
-    const captured = []
-    const originalClick = HTMLAnchorElement.prototype.click
-    HTMLAnchorElement.prototype.click = function () { captured.push(this.href) }
-    try {
-      const exportModule = await import(new URL('src/lib/export.ts', document.baseURI).href)
-      await exportModule.downloadCardImage(document.querySelector('#social-card-node'), 'smoke.png')
-    } finally { HTMLAnchorElement.prototype.click = originalClick }
-    return captured[0] ?? null
-  })()`)
+  const dataUrl = await exportCard(app)
   if (!dataUrl) throw new Error('export module produced no PNG')
-  writeFileSync('/tmp/smoke-exported.png', Buffer.from(dataUrl.split(',')[1], 'base64'))
+  const exportedPng = Buffer.from(dataUrl.split(',')[1], 'base64')
+  writeFileSync('/tmp/smoke-exported.png', exportedPng)
 
   // --- 6. decision 3 on real pixels: the blur backdrop survived the export --
   const colorBuckets = await evalJs(`(async () => {
@@ -158,11 +134,5 @@ try {
     )
   console.log('blur backdrop survived export ✓ (margin strip color buckets:', colorBuckets + ')')
 
-  const bytes = (await import('node:fs')).statSync('/tmp/smoke-exported.png').size
-  console.log('SMOKE OK: preview + exported PNG captured, exported bytes =', bytes)
-} catch (err) {
-  console.error('SMOKE FAIL:', err.message ?? err)
-  process.exitCode = 1
-} finally {
-  app?.close()
-}
+  console.log('SMOKE OK: preview + exported PNG captured, exported bytes =', exportedPng.length)
+})

@@ -12,6 +12,10 @@
     "test": "vitest run",
     "preview": "vite preview",
     "glossary": "node scripts/check-glossary.mjs",
+    "smoke:export": "node scripts/smoke-export.mjs",
+    "smoke:pan": "node scripts/smoke-pan.mjs",
+    "smoke:tour": "node scripts/smoke-tour.mjs",
+    "smoke:zoom": "node scripts/smoke-zoom.mjs",
     "check": "pnpm glossary && pnpm lint && pnpm format:check && pnpm test && pnpm build",
     "prepare": "husky"
   },

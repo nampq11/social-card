@@ -8,56 +8,23 @@
 //      a striped fixture sampled across the hero shows ~3× fewer luminance
 //      transitions after a ≥3× zoom (a dropped transform shows the same
 //      count; cropping only shifts phase, not the count).
-import { writeFileSync, statSync } from 'node:fs'
-import { startSmokeApp, sleep } from './lib/smoke-app.mjs'
+import { writeFileSync } from 'node:fs'
+import {
+  HOVER_STUB,
+  exportCard,
+  mouseEvent,
+  openShowcase,
+  pickShot,
+  runSmoke,
+  sleep,
+  touchEvent,
+} from './lib/smoke-app.mjs'
 
-// Headless Chrome reports (hover: none) — stub it so the desktop phase
-// behaves like a mouse machine and the touch phase can flip the capability
-// off (same approach as the jsdom shim and pan-smoke).
-const HOVER_STUB = `(() => {
-  const real = window.matchMedia.bind(window)
-  const stubs = new Map()
-  window.__hoverState = true
-  window.matchMedia = (query) => {
-    if (query !== '(hover: hover)' && query !== '(hover)') return real(query)
-    if (stubs.has(query)) return stubs.get(query)
-    const listeners = new Set()
-    const mql = {
-      matches: window.__hoverState, media: query, onchange: null,
-      addEventListener: (_t, cb) => listeners.add(cb),
-      removeEventListener: (_t, cb) => listeners.delete(cb),
-      addListener: (cb) => listeners.add(cb),
-      removeListener: (cb) => listeners.delete(cb),
-      dispatchEvent: () => false,
-    }
-    stubs.set(query, mql)
-    window.__setHover = (next) => {
-      window.__hoverState = next
-      mql.matches = next
-      listeners.forEach((cb) => cb({ matches: next, media: query }))
-    }
-    return mql
-  }
-})()`
-
-let app
-try {
-  app = await startSmokeApp({ newDocumentScripts: [HOVER_STUB] })
-  const { send, evalJs, waitUntil } = app
-  await send('DOM.enable')
+await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
+  const { evalJs, waitUntil } = app
 
   // --- setup: showcase mode, tour dismissed --------------------------------
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Bỏ qua'))?.click()`,
-  )
-  await evalJs(
-    `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
-  )
-  await waitUntil('showcase section', () =>
-    evalJs(
-      `[...document.querySelectorAll('label')].some(l => l.textContent.includes('Ảnh chụp màn hình'))`,
-    ),
-  )
+  await openShowcase(app)
 
   // Slots size by flex, not a fixed ratio — measure the hero placeholder's
   // real rendered ratio and build fixtures from it: one matched (log-ratio 0
@@ -94,18 +61,10 @@ try {
   writeFileSync('/tmp/zoom-hero.png', Buffer.from(fixtures.matched.split(',')[1], 'base64'))
   writeFileSync('/tmp/zoom-wide.png', Buffer.from(fixtures.wide.split(',')[1], 'base64'))
 
-  const pickShot = async (file) => {
-    await send('DOM.getDocument')
-    const obj = await send('Runtime.evaluate', {
-      expression: `document.querySelector('input[type=file]')`,
-      returnByValue: false,
-    })
-    const { nodeId } = await send('DOM.requestNode', { objectId: obj.result.objectId })
-    await send('DOM.setFileInputFiles', { nodeId, files: [file] })
-  }
+  const mouse = (type, x, y, clickCount = 1) => mouseEvent(app, type, x, y, { clickCount })
 
   // --- 1. auto-fit: matched ratio → cover; ~2.2× wider → contain + blur ----
-  await pickShot('/tmp/zoom-hero.png')
+  await pickShot(app, '/tmp/zoom-hero.png')
   await waitUntil('hero shot', () =>
     evalJs(`!!document.querySelector('[data-testid=hero-slot] img')`),
   )
@@ -134,16 +93,6 @@ try {
     const r = document.querySelector('[data-testid=hero-slot]').getBoundingClientRect()
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
   })()`)
-  const mouse = (type, x, y, clickCount = 1) =>
-    send('Input.dispatchMouseEvent', {
-      type,
-      x,
-      y,
-      button: 'left',
-      buttons: 0,
-      pointerType: 'mouse',
-      clickCount,
-    })
   await mouse('mousePressed', heroCenter.x, heroCenter.y)
   await mouse('mouseReleased', heroCenter.x, heroCenter.y)
   await waitUntil('selection pill on a cover shot', () =>
@@ -151,8 +100,7 @@ try {
   )
   console.log('1c. desktop click selects the ratio-matched cover shot (pill) ✓')
 
-  await pickShot('/tmp/zoom-wide.png')
-  await sleep(1500)
+  await pickShot(app, '/tmp/zoom-wide.png')
   await waitUntil('wide shot in detail band', () =>
     evalJs(`!!document.querySelector('[data-testid=detail-slot] img.object-contain')`),
   )
@@ -167,19 +115,6 @@ try {
       `wide shot must derive contain + blur backdrop, got ${JSON.stringify(detailAuto)}`,
     )
   console.log('1b. ~3.3× wider shot auto-fits contain with blur backdrop ✓')
-
-  // --- 2. baseline export: transition count across the hero ----------------
-  const exportCard = async () =>
-    evalJs(`(async () => {
-      const captured = []
-      const originalClick = HTMLAnchorElement.prototype.click
-      HTMLAnchorElement.prototype.click = function () { captured.push(this.href) }
-      try {
-        const exportModule = await import(new URL('src/lib/export.ts', document.baseURI).href)
-        await exportModule.downloadCardImage(document.querySelector('#social-card-node'), 'smoke.png')
-      } finally { HTMLAnchorElement.prototype.click = originalClick }
-      return captured[0] ?? null
-    })()`)
 
   // One scanline through the hero slot's vertical middle, middle 40% of the
   // width — inside the sharp copy even when a contain render letterboxes it.
@@ -211,7 +146,7 @@ try {
       return count
     })()`)
 
-  const baseline = await exportCard()
+  const baseline = await exportCard(app)
   if (!baseline) throw new Error('baseline export produced no PNG')
   writeFileSync('/tmp/zoom-baseline.png', Buffer.from(baseline.split(',')[1], 'base64'))
   const baselineTransitions = await countTransitions(baseline)
@@ -270,29 +205,24 @@ try {
   console.log('3c. second double-click restores scale 1 ✓')
 
   // --- 4. touch: tap-to-select arms the shot, two-finger pinch zooms -------
-  await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 })
+  await app.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 })
   await evalJs(`window.__setHover(false)`)
   await sleep(400)
-  const touch = (type, points) =>
-    send('Input.dispatchTouchEvent', {
-      type,
-      touchPoints: points.map((p) => ({ x: p.x, y: p.y, id: p.id ?? 1 })),
-    })
   // Arming tap (touch needs the explicit selection step).
-  await touch('touchStart', [{ x: heroCenter.x, y: heroCenter.y }])
-  await touch('touchEnd', [])
+  await touchEvent(app, 'touchStart', [{ x: heroCenter.x, y: heroCenter.y }])
+  await touchEvent(app, 'touchEnd', [])
   await waitUntil('selection pill again', () =>
     evalJs(`!!document.querySelector('[data-testid=shot-pan-overlay]')`),
   )
   // Pinch out 40 → 90 px half-span: 2.25× anchored at the midpoint.
   const pinchAt = (span, phase) =>
-    touch(phase, [
+    touchEvent(app, phase, [
       { x: heroCenter.x - span, y: heroCenter.y, id: 1 },
       { x: heroCenter.x + span, y: heroCenter.y, id: 2 },
     ])
   await pinchAt(40, 'touchStart')
   for (let s = 50; s <= 90; s += 10) await pinchAt(s, 'touchMove')
-  await touch('touchEnd', [])
+  await touchEvent(app, 'touchEnd', [])
   await sleep(300)
   const scaleOf = () =>
     evalJs(
@@ -309,7 +239,7 @@ try {
   // ctrlKey param — an unknown key is silently dropped and the event lands
   // without the modifier.
   const wheel = (deltaY, ctrl) =>
-    send('Input.dispatchMouseEvent', {
+    app.send('Input.dispatchMouseEvent', {
       type: 'mouseWheel',
       x: heroCenter.x,
       y: heroCenter.y,
@@ -331,7 +261,7 @@ try {
   console.log('5. plain wheel inert, ctrl+wheel zoomed ✓ (scale =', afterCtrlWheel + ')')
 
   // --- 6. the zoom survives export: bar period shrinks with the zoom -------
-  const zoomed = await exportCard()
+  const zoomed = await exportCard(app)
   if (!zoomed) throw new Error('zoomed export produced no PNG')
   const zoomedTransitions = await countTransitions(zoomed)
   if (!(zoomedTransitions < baselineTransitions / 2))
@@ -345,16 +275,11 @@ try {
     zoomedTransitions,
     'transitions ✓',
   )
-  writeFileSync('/tmp/zoom-exported.png', Buffer.from(zoomed.split(',')[1], 'base64'))
+  const zoomedPng = Buffer.from(zoomed.split(',')[1], 'base64')
+  writeFileSync('/tmp/zoom-exported.png', zoomedPng)
 
-  const bytes = statSync('/tmp/zoom-exported.png').size
   console.log(
     'SMOKE OK: auto-fit + pill override + pinch/wheel zoom + zoomed export, exported bytes =',
-    bytes,
+    zoomedPng.length,
   )
-} catch (err) {
-  console.error('SMOKE FAIL:', err.message ?? err)
-  process.exitCode = 1
-} finally {
-  app?.close()
-}
+})

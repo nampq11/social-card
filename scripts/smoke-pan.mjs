@@ -3,75 +3,30 @@
 // unarmed touch Shots leaving gestures native (no touch-action hijack —
 // asserted on the real computed style, not on class tokens).
 import { writeFileSync } from 'node:fs'
-import { startSmokeApp, sleep } from './lib/smoke-app.mjs'
+import {
+  HOVER_STUB,
+  mouseEvent,
+  openShowcase,
+  pickShot,
+  runSmoke,
+  sleep,
+  touchEvent,
+} from './lib/smoke-app.mjs'
 
-// Headless Chrome reports (hover: none) — no pointing device — so the smoke
-// stubs the hover query itself (same approach as the jsdom shim) and flips
-// it via window.__setHover for the touch phase.
-const HOVER_STUB = `(() => {
-  const real = window.matchMedia.bind(window)
-  const stubs = new Map()
-  window.__hoverState = true
-  window.matchMedia = (query) => {
-    if (query !== '(hover: hover)' && query !== '(hover)') return real(query)
-    if (stubs.has(query)) return stubs.get(query)
-    const listeners = new Set()
-    const mql = {
-      matches: window.__hoverState, media: query, onchange: null,
-      addEventListener: (_t, cb) => listeners.add(cb),
-      removeEventListener: (_t, cb) => listeners.delete(cb),
-      addListener: (cb) => listeners.add(cb),
-      removeListener: (cb) => listeners.delete(cb),
-      dispatchEvent: () => false,
-    }
-    stubs.set(query, mql)
-    window.__setHover = (next) => {
-      window.__hoverState = next
-      mql.matches = next
-      listeners.forEach((cb) => cb({ matches: next, media: query }))
-    }
-    return mql
-  }
-})()`
-
-let app
-try {
-  app = await startSmokeApp({ newDocumentScripts: [HOVER_STUB] })
+await runSmoke({ newDocumentScripts: [HOVER_STUB] }, async (app) => {
   const { send, evalJs, waitUntil } = app
-  await send('DOM.enable')
 
   // --- setup: showcase + one cover shot, tour dismissed --------------------
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Bỏ qua'))?.click()`,
-  )
-  await evalJs(
-    `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
-  )
-  await waitUntil('showcase section', () =>
-    evalJs(
-      `[...document.querySelectorAll('label')].some(l => l.textContent.includes('Ảnh chụp màn hình'))`,
-    ),
-  )
-  await evalJs(`(async () => {
+  await openShowcase(app)
+  const fixture = await evalJs(`(async () => {
     const c = document.createElement('canvas'); c.width = 900; c.height = 300
     const g = c.getContext('2d')
     g.fillStyle = '#3b82f6'; g.fillRect(0, 0, 900, 300)
     g.fillStyle = '#fff'; g.font = 'bold 64px sans-serif'; g.fillText('PAN TARGET', 240, 170)
-    const a = document.createElement('a'); a.href = c.toDataURL()
-    window.__fixture = a.href
+    return c.toDataURL()
   })()`)
-  const fixture = await evalJs(`window.__fixture`)
   writeFileSync('/tmp/pan-shot.png', Buffer.from(fixture.split(',')[1], 'base64'))
-  const pickShot = async () => {
-    await send('DOM.getDocument')
-    const obj = await send('Runtime.evaluate', {
-      expression: `document.querySelector('input[type=file]')`,
-      returnByValue: false,
-    })
-    const { nodeId } = await send('DOM.requestNode', { objectId: obj.result.objectId })
-    await send('DOM.setFileInputFiles', { nodeId, files: ['/tmp/pan-shot.png'] })
-  }
-  await pickShot()
+  await pickShot(app, '/tmp/pan-shot.png')
   await waitUntil('hero shot', () =>
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
@@ -85,22 +40,8 @@ try {
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
   })()`)
   const tap = async (x, y) => {
-    await send('Input.dispatchMouseEvent', {
-      type: 'mousePressed',
-      x,
-      y,
-      button: 'left',
-      buttons: 0,
-      pointerType: 'mouse',
-    })
-    await send('Input.dispatchMouseEvent', {
-      type: 'mouseReleased',
-      x,
-      y,
-      button: 'left',
-      buttons: 0,
-      pointerType: 'mouse',
-    })
+    await mouseEvent(app, 'mousePressed', x, y)
+    await mouseEvent(app, 'mouseReleased', x, y)
   }
   await tap(setupCenter.x, setupCenter.y)
   await waitUntil('setup pill', async () =>
@@ -132,17 +73,12 @@ try {
   // --- 1. desktop: drag pans immediately, no selection chrome ---------------
   if (!(await evalJs(`matchMedia('(hover: hover)').matches`)))
     throw new Error('expected hover-capable desktop')
+  // Drag semantics: moves carry the pressed-button bitmask.
+  const mouse = (type, x, y) =>
+    mouseEvent(app, type, x, y, { buttons: type === 'mouseMoved' ? 1 : 0 })
+  const touchPoint = (type, x, y) => touchEvent(app, type, [{ x, y }])
   let pos = await position()
   let c = await centerOf()
-  const mouse = (type, x, y) =>
-    send('Input.dispatchMouseEvent', {
-      type,
-      x,
-      y,
-      button: 'left',
-      buttons: type === 'mouseMoved' ? 1 : 0,
-      pointerType: 'mouse',
-    })
   await mouse('mousePressed', c.x, c.y)
   for (let step = 1; step <= 10; step++) await mouse('mouseMoved', c.x - step * 6, c.y - step * 2)
   await mouse('mouseReleased', c.x - 60, c.y - 20)
@@ -163,8 +99,6 @@ try {
   // --- 3. unarmed touch drag does NOT pan and claims no touch-action -------
   pos = await position()
   c = await centerOf()
-  const touchPoint = (type, x, y) =>
-    send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] })
   if (await claimsTouch()) throw new Error('unarmed shot must not claim touch-action')
   await touchPoint('touchStart', c.x, c.y)
   for (let step = 1; step <= 8; step++) await touchPoint('touchMove', c.x + step * 8, c.y)
@@ -223,9 +157,4 @@ try {
     Buffer.from((await send('Page.captureScreenshot', { format: 'png' })).data, 'base64'),
   )
   console.log('SMOKE OK: hybrid pointer model verified end to end')
-} catch (err) {
-  console.error('SMOKE FAIL:', err.message ?? err)
-  process.exitCode = 1
-} finally {
-  app?.close()
-}
+})

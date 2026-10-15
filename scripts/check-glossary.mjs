@@ -46,7 +46,6 @@ for (const file of sourceFiles(path.join(ROOT, 'src'))) {
       .split('_')
       .flatMap((part) => (part === part.toUpperCase() ? [part] : part.split(/(?=[A-Z])/)))
       .map((token) => token.toLowerCase())
-      .filter(Boolean)
     for (const token of tokens) {
       if (banned.has(token)) {
         violations.push(

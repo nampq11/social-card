@@ -7,16 +7,13 @@
 //   3. finishing persists — a reload never replays it;
 //   4. the Tips popover offers the replay, which reopens the tour.
 import { writeFileSync } from 'node:fs'
-import { startSmokeApp, sleep } from './lib/smoke-app.mjs'
+import { openShowcase, pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
 
-const assert = (ok, label) => {
-  if (!ok) throw new Error('assert failed: ' + label)
-}
-
-let app
-try {
-  app = await startSmokeApp()
+await runSmoke({}, async (app) => {
   const { evalJs, waitUntil } = app
+  const assert = (ok, label) => {
+    if (!ok) throw new Error('assert failed: ' + label)
+  }
 
   // --- 1. clear the welcome gate (first-run onboarding done), go Showcase --
   assert(
@@ -25,17 +22,7 @@ try {
     ),
     'welcome card visible on first run',
   )
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Bỏ qua'))?.click()`,
-  )
-  await evalJs(
-    `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
-  )
-  await waitUntil('showcase section', () =>
-    evalJs(
-      `[...document.querySelectorAll('label')].some(l => l.textContent.includes('Ảnh chụp màn hình'))`,
-    ),
-  )
+  await openShowcase(app)
 
   // --- 2. fixture + ingest one screenshot through the real file input ------
   const fixtureDataUrl = await evalJs(`(async () => {
@@ -49,16 +36,7 @@ try {
     return c.toDataURL('image/png')
   })()`)
   writeFileSync('/tmp/smoke-shot-tour.png', Buffer.from(fixtureDataUrl.split(',')[1], 'base64'))
-  // DOM.setFileInputFiles needs a CDP node handle, same as the export smoke:
-  await (async () => {
-    await app.send('DOM.getDocument')
-    const obj = await app.send('Runtime.evaluate', {
-      expression: `document.querySelector('input[type=file]')`,
-      returnByValue: false,
-    })
-    const { nodeId: id } = await app.send('DOM.requestNode', { objectId: obj.result.objectId })
-    await app.send('DOM.setFileInputFiles', { nodeId: id, files: ['/tmp/smoke-shot-tour.png'] })
-  })()
+  await pickShot(app, '/tmp/smoke-shot-tour.png')
   await waitUntil('hero shot', () =>
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
@@ -111,19 +89,8 @@ try {
   await app.send('Page.reload')
   await waitUntil('app reboot', () => evalJs(`!!document.querySelector('#social-card-node')`))
   await waitUntil('inspector radios', () => evalJs(`!!document.querySelector('[role=radio]')`))
-  await evalJs(
-    `[...document.querySelectorAll('[role=radio]')].find(r => r.textContent.includes('Giới thiệu'))?.click()`,
-  )
-  await waitUntil('showcase again', () => evalJs(`!!document.querySelector('input[type=file]')`))
-  await (async () => {
-    await app.send('DOM.getDocument')
-    const obj = await app.send('Runtime.evaluate', {
-      expression: `document.querySelector('input[type=file]')`,
-      returnByValue: false,
-    })
-    const { nodeId: id } = await app.send('DOM.requestNode', { objectId: obj.result.objectId })
-    await app.send('DOM.setFileInputFiles', { nodeId: id, files: ['/tmp/smoke-shot-tour.png'] })
-  })()
+  await openShowcase(app)
+  await pickShot(app, '/tmp/smoke-shot-tour.png')
   await waitUntil('hero shot again', () =>
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
@@ -134,10 +101,4 @@ try {
   )
 
   console.log('SMOKE OK: shot-fit tour fires once, navigates, persists, and recalls')
-  app.close()
-  process.exit(0)
-} catch (err) {
-  console.error('SMOKE FAIL:', err.message)
-  app?.close()
-  process.exit(1)
-}
+})
