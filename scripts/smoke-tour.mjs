@@ -1,13 +1,16 @@
-// Headless-Chrome smoke for the shot-gestures onboarding tour (issue #38):
-// drives the real app — dismiss the welcome card, switch to Showcase, ingest
-// a screenshot through the real file input — and verifies the tour contract
-// end to end:
-//   1. the tour auto-fires exactly once, at the first Shot;
-//   2. both steps resolve their anchors (hero slot, Inspector) and navigate;
-//   3. finishing persists — a reload never replays it;
-//   4. the Tips popover offers the replay, which reopens the tour.
+// Headless-Chrome smoke for the single onboarding tour: drives the real app
+// — dismiss the welcome card, switch to Showcase, ingest a screenshot through
+// the real file input — and verifies the tour contract end to end:
+//   1. nothing ever auto-opens the tour at the first Shot (no mid-task
+//      interruption — the welcome card and Tips replay are the only entries);
+//   2. a Tips replay opens the ONE tour: four basics steps, plus the two
+//      Showcase gesture steps while a Shot exists (6 total), and it navigates;
+//   3. finishing closes it and a reload never resurrects it unbidden;
+//   4. the replayed tour stays open past the popover's focus-return window.
 import { writeFileSync } from 'node:fs'
 import { openShowcase, pickShot, runSmoke, sleep } from './lib/smoke-app.mjs'
+
+const GESTURE_STEP_TITLE = 'Ảnh của bạn điều khiển được'
 
 await runSmoke({}, async (app) => {
   const { evalJs, waitUntil } = app
@@ -21,6 +24,9 @@ await runSmoke({}, async (app) => {
       `[...document.querySelectorAll('button')].some(b => b.textContent.includes('Bỏ qua'))`,
     ),
     'welcome card visible on first run',
+  )
+  await evalJs(
+    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Bỏ qua, dùng ngay'))?.click()`,
   )
   await openShowcase(app)
 
@@ -41,21 +47,58 @@ await runSmoke({}, async (app) => {
     evalJs(`document.querySelectorAll('[data-testid=shot-collage] img').length >= 1`),
   )
 
-  // --- 3. the tour auto-fired at the first Shot: step 1 on the hero slot ---
-  await waitUntil('tour step 1', () =>
-    evalJs(`document.body.innerText.includes('Ảnh của bạn điều khiển được')`),
+  // --- 3. no auto-interrupt: the first Shot must NOT open any tour ---------
+  await sleep(600) // give any (wrongful) auto-fire a window to appear
+  assert(
+    !(await evalJs(`document.body.innerText.includes('${GESTURE_STEP_TITLE}')`)),
+    'no tour auto-opens at the first Shot',
   )
-  assert(await evalJs(`document.body.innerText.includes('1 / 2')`), 'step 1 of 2 shown')
+
+  // --- 4. Tips replay opens the one tour, now six steps --------------------
+  await evalJs(
+    `[...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Gợi ý đăng bài' || b.title === 'Gợi ý đăng bài')?.click()`,
+  )
+  await waitUntil('tips popover', () =>
+    evalJs(`document.body.innerText.includes('Xem lại hướng dẫn')`),
+  )
+  await evalJs(
+    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Xem lại hướng dẫn'))?.click()`,
+  )
+  await waitUntil('tour step 1', () =>
+    evalJs(`document.body.innerText.includes('Ảnh xem trước trực tiếp')`),
+  )
+  assert(await evalJs(`document.body.innerText.includes('1 / 6')`), 'step 1 of 6 shown')
 
   // evidence artifact, same pattern as the export smoke's /tmp captures
   const shot = await app.send('Page.captureScreenshot', { format: 'png' })
   writeFileSync('/tmp/tour-smoke-step1.png', Buffer.from(shot.data, 'base64'))
 
-  // --- 4. next reaches the Fit override step; Xong closes the tour ---------
+  // --- 5. walk to the gesture steps (5, 6) and finish ----------------------
+  for (let step = 2; step <= 5; step++) {
+    await evalJs(
+      `[...document.querySelectorAll('button')].find(b => b.textContent === 'Tiếp')?.click()`,
+    )
+    try {
+      await waitUntil(`step ${step} of 6`, () =>
+        evalJs(`document.body.innerText.includes('${step} / 6')`),
+      )
+    } catch {
+      console.log(
+        'DEBUG STATE:',
+        await evalJs(
+          `JSON.stringify({ debug: window.__TOUR_DEBUG__ ?? null, stepsLog: window.__TOUR_STEPS__ ?? [], heroSlot: !!document.querySelector('[data-testid="hero-slot"]'), popups: document.querySelectorAll('[data-slot="tour-step"]').length })`,
+        ),
+      )
+      throw new Error('dumped')
+    }
+  }
+  await waitUntil('gesture step', () =>
+    evalJs(`document.body.innerText.includes('${GESTURE_STEP_TITLE}')`),
+  )
   await evalJs(
     `[...document.querySelectorAll('button')].find(b => b.textContent === 'Tiếp')?.click()`,
   )
-  await waitUntil('tour step 2', () =>
+  await waitUntil('fit override step', () =>
     evalJs(`document.body.innerText.includes('Chọn cách hiển thị từng ảnh')`),
   )
   await evalJs(
@@ -63,26 +106,6 @@ await runSmoke({}, async (app) => {
   )
   await waitUntil('tour closed', () =>
     evalJs(`!document.body.innerText.includes('Chọn cách hiển thị từng ảnh')`),
-  )
-
-  // --- 5. Tips popover recall (a Shot exists): the entry reopens the tour --
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Gợi ý đăng bài' || b.title === 'Gợi ý đăng bài')?.click()`,
-  )
-  await waitUntil('tips popover', () =>
-    evalJs(`document.body.innerText.includes('Thao tác trên ảnh')`),
-  )
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Thao tác trên ảnh'))?.click()`,
-  )
-  await waitUntil('tour replayed', () =>
-    evalJs(`document.body.innerText.includes('Ảnh của bạn điều khiển được')`),
-  )
-  await evalJs(
-    `[...document.querySelectorAll('button')].find(b => b.textContent === 'Bỏ qua')?.click()`,
-  )
-  await waitUntil('replay closed', () =>
-    evalJs(`!document.body.innerText.includes('Ảnh của bạn điều khiển được')`),
   )
 
   // --- 6. persistence: reload, re-arm a Shot — the tour must stay dead -----
@@ -96,9 +119,9 @@ await runSmoke({}, async (app) => {
   )
   await sleep(600) // give any (wrongful) auto-fire a window to appear
   assert(
-    !(await evalJs(`document.body.innerText.includes('Ảnh của bạn điều khiển được')`)),
-    'tour stays dead after reload (status done, shot re-armed)',
+    !(await evalJs(`document.body.innerText.includes('${GESTURE_STEP_TITLE}')`)),
+    'tour stays dead after reload (onboarding done, shot re-armed)',
   )
 
-  console.log('SMOKE OK: shot-fit tour fires once, navigates, persists, and recalls')
+  console.log('SMOKE OK: one tour — no auto-fire, replay shows 6 steps with a Shot, persists')
 })

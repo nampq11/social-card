@@ -10,8 +10,6 @@ import { MobileSheet } from './components/MobileSheet'
 import { TipsPopover } from './components/TipsPopover'
 import { WelcomeCard } from './components/WelcomeCard'
 import { OnboardingTour } from './components/OnboardingTour'
-import { ShotFitTour } from './components/ShotFitTour'
-import { useShotFitTour } from './lib/onboarding'
 import { useOnboarding } from './lib/onboarding'
 import { Header } from './components/Header'
 import { CardPreview } from './components/CardPreview'
@@ -65,15 +63,9 @@ export function App() {
 
   // First-run onboarding lives purely in the UI layer — it never touches
   // Card State; both paths (tour taken or skipped) persist via localStorage.
+  // The tour it opens is the studio's only one: the Showcase gesture steps
+  // join it while a Shot exists (components/OnboardingTour).
   const { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour } = useOnboarding()
-  // The shot-gestures tour fires once, at the first Shot on a Showcase card
-  // once the welcome flow has cleared (lib/onboarding).
-  const shotArmed = cardState.cardType === 'showcase' && (cardState.showcase?.shots.length ?? 0) > 0
-  const {
-    isTourOpen: isFitTourOpen,
-    endTour: endFitTour,
-    replayTour: replayFitTour,
-  } = useShotFitTour(shotArmed, !isWelcomeOpen)
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const { width: cardWidth, height: cardHeight } = RATIO_INFO[cardState.ratio]
@@ -111,7 +103,6 @@ export function App() {
         // editable is worse than no control.
         onCycleRatio={cardState.cardType === 'showcase' ? undefined : cycleRatio}
         onReplayTour={startTour}
-        onReplayShotFitTour={replayFitTour}
       />
 
       {/* Main Workspace (Floating Inspector + Infinite Canvas) */}
@@ -151,7 +142,7 @@ export function App() {
                   <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
                 </button>
               )}
-              <TipsPopover onReplayTour={startTour} onReplayShotFitTour={replayFitTour} />
+              <TipsPopover onReplayTour={startTour} />
             </div>
           )}
         </main>
@@ -207,7 +198,6 @@ export function App() {
       {/* First-run onboarding: welcome gate + opt-in spotlight tour. */}
       <WelcomeCard open={isWelcomeOpen} onStartTour={startTour} onSkip={dismissWelcome} />
       <OnboardingTour open={isTourOpen} onOpenChange={(next) => !next && endTour()} />
-      <ShotFitTour open={isFitTourOpen} onOpenChange={(next) => !next && endFitTour()} />
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
       <Toaster position="bottom-center" />

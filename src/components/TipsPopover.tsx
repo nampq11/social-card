@@ -1,28 +1,27 @@
+import { useRef } from 'react'
 import { Popover } from '@base-ui/react/popover'
 import { Info, Sparkles } from 'lucide-react'
-import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
 import { Button } from './ui/Button'
 
 interface TipsPopoverProps {
-  /** Restarts the first-run tour on demand (NN/g: easy to dismiss, easy to recall). */
+  /** Restarts the tour on demand (NN/g: easy to dismiss, easy to recall). */
   onReplayTour: () => void
-  /** Restarts the shot-gestures tour; offered once a Shot exists to gesture on. */
-  onReplayShotFitTour: () => void
 }
 
 /**
  * The posting-tips note (one per canvas toolbar). A popover keeps the tips
  * reachable without spending viewport height — ADR 0002. Also hosts the tour
- * replay so the onboarding stays recallable after the first run.
+ * replay so the onboarding stays recallable after the first run — the replay
+ * includes the Showcase gesture steps while a Shot exists (OnboardingTour).
  */
-export function TipsPopover({ onReplayTour, onReplayShotFitTour }: TipsPopoverProps) {
+export function TipsPopover({ onReplayTour }: TipsPopoverProps) {
   const { copy } = useUiCopy()
-  // The shot-gestures replay targets a Screenshot Slot; without one the
-  // step has nothing to spotlight, so the entry stays hidden.
-  const hasShots = useCardStore(
-    (s) => s.card.cardType === 'showcase' && (s.card.showcase?.shots.length ?? 0) > 0,
-  )
+  // The replay button both closes this popover and opens the tour. The tour
+  // dismisses on any focusin outside its card, so the popover's focus return
+  // to its trigger would instantly kill the tour it just launched — veto
+  // that one return; the tour focuses its own first step.
+  const replayInitiatedClose = useRef(false)
 
   return (
     <Popover.Root>
@@ -35,7 +34,16 @@ export function TipsPopover({ onReplayTour, onReplayShotFitTour }: TipsPopoverPr
       />
       <Popover.Portal>
         <Popover.Positioner align="start" sideOffset={8}>
-          <Popover.Popup className="max-w-xs p-4 rounded-2xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+          <Popover.Popup
+            className="max-w-xs p-4 rounded-2xl bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] shadow-xl text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed"
+            finalFocus={() => {
+              if (replayInitiatedClose.current) {
+                replayInitiatedClose.current = false
+                return false
+              }
+              return true
+            }}
+          >
             <Popover.Title className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
               {copy.tips_title}
             </Popover.Title>
@@ -51,23 +59,11 @@ export function TipsPopover({ onReplayTour, onReplayShotFitTour }: TipsPopoverPr
                   <span>{copy.replay_tour}</span>
                 </Button>
               }
-              onClick={onReplayTour}
+              onClick={() => {
+                replayInitiatedClose.current = true
+                onReplayTour()
+              }}
             />
-            {hasShots && (
-              <Popover.Close
-                render={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-1 -ml-1 text-blue-600 dark:text-blue-400"
-                  >
-                    <Sparkles />
-                    <span>{copy.replay_fit_tour}</span>
-                  </Button>
-                }
-                onClick={onReplayShotFitTour}
-              />
-            )}
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

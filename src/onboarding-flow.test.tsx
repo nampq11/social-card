@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { ONBOARDING_STORAGE_KEY } from './lib/onboarding'
+import { useCardStore } from './lib/card-store'
 import { renderWithUiCopy, setupCardStudioTest } from './test/card-studio'
 
 // html-to-image cannot run in a jsdom DOM — the export module is the single
@@ -75,5 +76,32 @@ describe('first-run onboarding flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Xem lại hướng dẫn' }))
 
     expect(await screen.findByText('Ảnh xem trước trực tiếp')).toBeTruthy()
+    // Past the popover's focus-return window: a replayed tour must stay
+    // open, not flash and die to the trigger's focusin (TipsPopover vetoes
+    // that one focus return).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    expect(screen.getByText('Ảnh xem trước trực tiếp')).toBeTruthy()
+  })
+
+  it('the first Shot never auto-opens the tour; a replay then includes the gesture steps', async () => {
+    renderApp()
+    fireEvent.click(screen.getByRole('button', { name: 'Bỏ qua, dùng ngay' }))
+
+    act(() => {
+      useCardStore.getState().switchCardType('showcase')
+      useCardStore.getState().addShot('data:image/jpeg;base64,one')
+    })
+
+    // No mid-task interruption: the gesture steps wait inside the tour for
+    // an explicit replay (the single-flow contract).
+    expect(screen.queryByText('Ảnh của bạn điều khiển được')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gợi ý đăng bài' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Xem lại hướng dẫn' }))
+
+    expect(await screen.findByText('Ảnh xem trước trực tiếp')).toBeTruthy()
+    expect(screen.getByText('1 / 6')).toBeTruthy()
   })
 })
