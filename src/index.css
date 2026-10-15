@@ -21,9 +21,9 @@
   --color-ink-faint: #515154; /* keyboard hints */
   --color-surface: #ffffff; /* fields, popups, group cards */
   --color-surface-raised: #ffffff; /* checked segment, active preset */
-  /* Floating dialog chrome (tour card, welcome popup) — translucent so the
-     canvas dots read through. Dark unifies the former #1C1C1E/#1E1E22 pair:
-     same role, 2-hex-unit difference was copy drift. */
+  /* Floating dialog chrome (tour card, welcome popup, mobile sheet) —
+     translucent so the canvas dots read through. Dark unifies the former
+     #1C1C1E/#1E1E22 pair: same role, 2-hex-unit difference was copy drift. */
   --color-sheet: rgb(255 255 255 / 95%);
   --color-accent: #0071e3; /* the studio blue (also fills, rings) */
   --color-accent-hover: #0077ed; /* pressed-into hover for accent fills */
@@ -159,12 +159,10 @@
 }
 
 /* Apple Glass Vibrancy (macOS Sequoia) — the fill is a token; only the
-   mode-specific border and shadow stacks stay in the dark block. */
+   mode-specific border and shadow stacks stay in the dark block. Shared
+   chrome framing for floating panels. */
 .apple-glass,
-.glass-panel {
-  background: var(--color-glass);
-  backdrop-filter: saturate(190%) blur(28px);
-  -webkit-backdrop-filter: saturate(190%) blur(28px);
+.sheet-panel {
   border: 1px solid rgba(0, 0, 0, 0.07);
   box-shadow:
     0 10px 30px -5px rgba(0, 0, 0, 0.06),
@@ -172,9 +170,25 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
 }
 
+.apple-glass {
+  background: var(--color-glass);
+  backdrop-filter: saturate(190%) blur(28px);
+  -webkit-backdrop-filter: saturate(190%) blur(28px);
+}
+
+/* The Mobile Sheet's surface — near-opaque, no backdrop-filter. WebKit
+   re-samples an element's backdrop every frame it moves, and the live
+   canvas reserve (ADR 0002 addendum) changes the content behind the
+   sheet every drag frame, so a blurred fixed sheet flickers while
+   dragging on iOS (issue #49). The glass panels above never move, so
+   they keep their blur. */
+.sheet-panel {
+  background: var(--color-sheet);
+}
+
 @media (prefers-color-scheme: dark) {
   .apple-glass,
-  .glass-panel {
+  .sheet-panel {
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
       0 10px 30px -5px rgba(0, 0, 0, 0.3),

@@ -49,7 +49,7 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
         aria-label={tabTitle}
         // Height/transform are written by the drag hook; will-change keeps
         // the per-frame transform on the compositor.
-        className="glass-panel rounded-t-3xl border-b-0 overflow-hidden flex flex-col will-change-transform"
+        className="sheet-panel rounded-t-3xl border-b-0 overflow-hidden flex flex-col will-change-transform"
       >
         <button
           type="button"

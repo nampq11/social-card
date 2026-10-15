@@ -38,6 +38,12 @@ frame (not through an inherited CSS variable, which would recalculate the
 whole document's styles per frame) — combined with content-box
 Fit-to-View, the card refits continuously and stays fully visible at
 every sheet position instead of hiding behind the expanded sheet.
+The sheet's surface is near-opaque (`--color-sheet`), not
+backdrop-filtered glass: WebKit re-samples an element's backdrop every
+frame it moves, and the per-frame reserve changes the content behind the
+sheet, so a blurred fixed sheet flickered while dragging on iOS (#49).
+The never-moving glass panels (header, zoom HUD, Inspector) keep their
+blur.
 Expanded height stays 58dvh but is clamped to leave the canvas a visible
 floor (portrait phones); landscape falls back to a minimum working
 height, the card refitting into the narrow strip that remains.
