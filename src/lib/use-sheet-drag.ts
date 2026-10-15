@@ -92,7 +92,13 @@ export function useSheetDrag(
 
   const writePosition = useCallback(() => {
     const sheet = sheetRef.current
-    const transform = `translateY(${drag.offset}px)`
+    // translate3d, not translateY: the 3d form keeps the sheet on its own
+    // composited layer through the per-frame writes. iOS 18 WebKit replays
+    // stale inline tiles around JS-driven 2d transforms (on-device HUD:
+    // DOM geometry sane in every frame while the paint showed earlier drag
+    // frames — the sheet "ghosting" its dragged position, #53); a stable
+    // dedicated layer lets the compositor swap the sheet atomically.
+    const transform = `translate3d(0, ${drag.offset}px, 0)`
     if (sheet) sheet.style.transform = transform
     // The reserve is the sheet's live coverage of the canvas (`expandedPx -
     // offset`) plus the canvas's breathing room, written on the same
