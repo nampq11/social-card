@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createRef } from 'react'
+import { createRef, useRef } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MobileSheet } from './MobileSheet'
@@ -152,5 +152,48 @@ describe('MobileSheet Showcase mode', () => {
     expect(screen.getByText('Ảnh chụp màn hình')).not.toBeNull()
     expect(screen.queryByText('Mẫu nhanh')).toBeNull()
     expect(screen.queryByLabelText('Tiêu đề chính')).toBeNull()
+  })
+})
+
+describe('MobileSheet live canvas reserve (issue #47)', () => {
+  // A real host element: the contract under test is the canvas padding the
+  // hook writes per frame (ADR 0002 addendum) — the detached ref used by the
+  // other suites skips that write entirely.
+  function SheetWithCanvas() {
+    const canvasRef = useRef<HTMLDivElement>(null)
+    return (
+      <>
+        <div ref={canvasRef} data-testid="canvas" />
+        <MobileSheet canvasRef={canvasRef} />
+      </>
+    )
+  }
+
+  it('the canvas padding tracks the sheet coverage, so the card never hides behind it', () => {
+    renderWithUiCopy(<SheetWithCanvas />)
+    const canvas = screen.getByTestId('canvas')
+    const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })
+
+    // Hand-derived from the 58dvh spec (ADR 0002) at the 768px jsdom
+    // viewport, not from the hook's own helpers: expanded = round(768 × 0.58)
+    // = 445, peek offset = 445 − 96px chrome floor = 349, so the resting
+    // reserve equals the peek chrome height — the card's fit area ends
+    // exactly at the sheet's top edge, nothing clipped.
+    expect(canvas.style.paddingBottom).toBe('96px')
+
+    // Mid-drag the reserve is the sheet's live coverage: 100px of travel up
+    // lifts the coverage to 445 − 249 = 196.
+    fireEvent.pointerDown(handle, { pointerId: 1, clientY: 500 })
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 400 })
+    expect(canvas.style.paddingBottom).toBe('196px')
+
+    // Rubber-banding past expanded covers more canvas, and the reserve
+    // follows — the card keeps clearing the sheet.
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 0 })
+    expect(Number.parseInt(canvas.style.paddingBottom, 10)).toBeGreaterThanOrEqual(445)
+
+    // Yanking down past peek covers nothing, floored at 0 for CSS validity.
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 1400 })
+    expect(canvas.style.paddingBottom).toBe('0px')
   })
 })

@@ -61,9 +61,11 @@ interface DragState {
  * React state is only the settled `expanded` flag the UI Copy needs. The
  * peek resting point is measured from the DOM (top of the scrollable
  * content), so the peeked sheet shows exactly its chrome — no control is
- * ever half-clipped at rest. The canvas reserve is that same static chrome
- * height: the expanded sheet overlays the card instead of shrinking it, so
- * the headline the user is editing stays at full size.
+ * ever half-clipped at rest. The canvas reserve rides the same every-frame
+ * path: padding equals the sheet's live coverage of the canvas, so
+ * Fit-to-View re-splits the viewport with the sheet and the card stays
+ * fully visible at every sheet position (ADR 0002 addendum) instead of
+ * hiding behind the expanded one.
  */
 export function useSheetDrag(
   sheetRef: RefObject<HTMLElement | null>,
@@ -91,7 +93,18 @@ export function useSheetDrag(
     const sheet = sheetRef.current
     const transform = `translateY(${drag.offset}px)`
     if (sheet) sheet.style.transform = transform
-  }, [drag, sheetRef])
+    // The reserve is the sheet's live coverage of the canvas (`expandedPx -
+    // offset`), written on the same every-frame path as the transform: the
+    // canvas ResizeObserver refits the card as the sheet moves, so the two
+    // re-split the viewport and the card never hides behind the sheet
+    // (ADR 0002 addendum). Pulls past a resting point stay consistent — the
+    // sheet physically covers that much more or less — floored at 0 for CSS
+    // validity.
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.style.paddingBottom = `${Math.max(0, Math.round(drag.expandedPx - drag.offset))}px`
+    }
+  }, [canvasRef, drag, sheetRef])
 
   const cancelSpring = useCallback(() => {
     if (rafId.current !== null) {
@@ -127,16 +140,11 @@ export function useSheetDrag(
     } else {
       drag.offset = Math.min(Math.max(0, drag.offset), drag.maxOffset)
     }
-    // Static reserve (the chrome at rest — the safe-area padding lives inside the
-    // section height) straight to the canvas element: an inherited CSS
-    // variable would have to live on an ancestor and recalculates the whole
-    // document.
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.style.paddingBottom = `${Math.round(drag.contentTop)}px`
-    }
+    // Reserve and transform share one write path: the resting offset just
+    // re-derived above (peek on late layout changes, viewport height
+    // changes) re-derives the canvas padding with it.
     writePosition()
-  }, [canvasRef, contentRef, drag, expanded, sheetRef, writePosition])
+  }, [contentRef, drag, expanded, sheetRef, writePosition])
 
   useLayoutEffect(measure, [measure])
 

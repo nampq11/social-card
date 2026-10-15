@@ -115,10 +115,12 @@ export function App() {
           </div>
         )}
 
-        {/* Center Stage: Card Preview Canvas */}
+        {/* Center Stage: Card Preview Canvas. No padding transition: the
+            Mobile Sheet rewrites the reserve every frame (ADR 0002 addendum);
+            a CSS transition would lag the fit area behind the sheet. */}
         <main
           ref={canvasRef}
-          className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-[padding] duration-300 ${canvasPaddingClass(isDesktop, isInspectorCollapsed)}`}
+          className={`relative w-full h-full flex items-center justify-center overflow-hidden ${canvasPaddingClass(isDesktop, isInspectorCollapsed)}`}
         >
           {/* Fit refits per frame while the sheet drags — only manual
               zoom steps may animate the scale. */}
