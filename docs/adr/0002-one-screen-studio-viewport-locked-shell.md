@@ -47,3 +47,23 @@ blur.
 Expanded height stays 58dvh but is clamped to leave the canvas a visible
 floor (portrait phones); landscape falls back to a minimum working
 height, the card refitting into the narrow strip that remains.
+
+## Addendum: sheet anchoring (Oct 2026)
+
+The sheet wrapper anchors `absolute` to the app root (which is
+`relative`), not `fixed` to the viewport. On iOS 18 Safari, dragging the
+sheet up made it stutter and pin to the top of the screen with the page
+rubber-banding — while the identical bundle stayed correct on iOS 26
+and every locally driven engine (tap and drag verified frame-by-frame in
+WebKit). The pinned geometry is unreachable through the drag module's
+own math (expanded height is clamped to `innerHeight − 260`, so no
+viewport value it can read lets the sheet reach the screen's top), which
+locates the defect in the fixed-positioning path itself: the WebKit
+297779 bug family, where the compositor displaces fixed-anchored bottom
+elements during toolbar transitions. Re-anchoring to the root's box puts
+the sheet in the one coordinate system the shell's header and canvas
+already share — if the engine mis-sizes the dynamic viewport, everything
+is wrong together instead of the sheet tearing loose on its own. The
+sheet keeps `will-change: transform`: layer promotion was only a hazard
+while riding Safari's fixed-viewport machinery, and it keeps the
+per-frame drag transform off the main thread.

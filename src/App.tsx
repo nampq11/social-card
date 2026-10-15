@@ -89,7 +89,7 @@ export function App() {
   // Apple HIG Canvas-first Studio shell: 100vw × 100vh with seamless dot-grid canvas.
   // The page never scrolls; floating header, floating inspector, and floating zoom HUD.
   return (
-    <div className="h-dvh w-screen overflow-hidden apple-canvas-bg text-ink flex flex-col font-sans transition-colors duration-200 select-none">
+    <div className="relative h-dvh w-screen overflow-hidden apple-canvas-bg text-ink flex flex-col font-sans transition-colors duration-200 select-none">
       <Header
         onCopy={copyCard}
         onDownload={downloadCard}

@@ -41,8 +41,15 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
   // the un-transformed layout box (at peek it spans empty canvas above the
   // translated sheet), while the section's rect tracks the sheet's live
   // transform — the surface the spotlight must hug.
+  //
+  // Anchored absolutely to the app root, never `fixed`: iOS 18 Safari's
+  // compositor can displace fixed-anchored bottom sheets relative to the
+  // document during toolbar transitions (WebKit 297779 family), which pinned
+  // the sheet to the top of the screen mid-drag on-device while every local
+  // engine stayed correct. The root's own box is the one coordinate system
+  // the whole shell already shares, so the sheet cannot desync from it.
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40">
+    <div className="absolute inset-x-0 bottom-0 z-40">
       <section
         ref={sheetRef}
         data-tour="inspector"
