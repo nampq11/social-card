@@ -54,9 +54,15 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
         ref={sheetRef}
         data-tour="inspector"
         aria-label={tabTitle}
-        // Height/transform are written by the drag hook; will-change keeps
-        // the per-frame transform on the compositor.
-        className="sheet-panel rounded-t-3xl border-b-0 overflow-hidden flex flex-col will-change-transform"
+        // Height/transform are written by the drag hook. Deliberately NOT
+        // will-change:transform — layer promotion hands the sheet to the
+        // compositor, and iOS 18's compositor displaces composited layers
+        // at stale offsets around gestures (the sheet kept ghost-replaying
+        // its dragged position on-device even after the absolute re-anchor).
+        // The promotion bought nothing here: every drag frame already does
+        // main-thread work (the canvas reserve write), so the transform
+        // never rode the compositor alone.
+        className="sheet-panel rounded-t-3xl border-b-0 overflow-hidden flex flex-col"
       >
         <button
           type="button"
