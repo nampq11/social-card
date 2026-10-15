@@ -9,6 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react'
 import {
+  SHEET_CANVAS_GAP_PX,
   SHEET_MIN_CHROME_PX,
   rubberbandDistance,
   sheetExpandedPx,
@@ -94,15 +95,19 @@ export function useSheetDrag(
     const transform = `translateY(${drag.offset}px)`
     if (sheet) sheet.style.transform = transform
     // The reserve is the sheet's live coverage of the canvas (`expandedPx -
-    // offset`), written on the same every-frame path as the transform: the
-    // canvas ResizeObserver refits the card as the sheet moves, so the two
-    // re-split the viewport and the card never hides behind the sheet
-    // (ADR 0002 addendum). Pulls past a resting point stay consistent — the
-    // sheet physically covers that much more or less — floored at 0 for CSS
+    // offset`) plus the canvas's breathing room, written on the same
+    // every-frame path as the transform: the canvas ResizeObserver refits
+    // the card as the sheet moves, so the two re-split the viewport and the
+    // card never hides behind the sheet (ADR 0002 addendum) nor kisses its
+    // top edge. Pulls past a resting point stay consistent — the sheet
+    // physically covers that much more or less — floored at 0 for CSS
     // validity.
     const canvas = canvasRef.current
     if (canvas) {
-      canvas.style.paddingBottom = `${Math.max(0, Math.round(drag.expandedPx - drag.offset))}px`
+      canvas.style.paddingBottom = `${Math.max(
+        0,
+        Math.round(drag.expandedPx - drag.offset + SHEET_CANVAS_GAP_PX),
+      )}px`
     }
   }, [canvasRef, drag, sheetRef])
 

@@ -177,20 +177,21 @@ describe('MobileSheet live canvas reserve (issue #47)', () => {
     // Hand-derived from the 58dvh spec (ADR 0002) at the 768px jsdom
     // viewport, not from the hook's own helpers: expanded = round(768 × 0.58)
     // = 445, peek offset = 445 − 96px chrome floor = 349, so the resting
-    // reserve equals the peek chrome height — the card's fit area ends
-    // exactly at the sheet's top edge, nothing clipped.
-    expect(canvas.style.paddingBottom).toBe('96px')
+    // reserve equals the peek chrome height plus the canvas's 16px breathing
+    // room — the card's fit area ends that far above the sheet's top edge,
+    // nothing clipped.
+    expect(canvas.style.paddingBottom).toBe('112px')
 
     // Mid-drag the reserve is the sheet's live coverage: 100px of travel up
-    // lifts the coverage to 445 − 249 = 196.
+    // lifts the coverage to 445 − 249 = 196, plus the same 16px gap.
     fireEvent.pointerDown(handle, { pointerId: 1, clientY: 500 })
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 400 })
-    expect(canvas.style.paddingBottom).toBe('196px')
+    expect(canvas.style.paddingBottom).toBe('212px')
 
     // Rubber-banding past expanded covers more canvas, and the reserve
     // follows — the card keeps clearing the sheet.
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 0 })
-    expect(Number.parseInt(canvas.style.paddingBottom, 10)).toBeGreaterThanOrEqual(445)
+    expect(Number.parseInt(canvas.style.paddingBottom, 10)).toBeGreaterThanOrEqual(461)
 
     // Yanking down past peek covers nothing, floored at 0 for CSS validity.
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 1400 })

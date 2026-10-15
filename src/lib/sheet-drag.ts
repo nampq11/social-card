@@ -10,6 +10,12 @@
  * content begins — nothing is ever half-clipped at rest. */
 export const SHEET_MIN_CHROME_PX = 96
 
+/** Breathing room kept between the fitted card and the sheet's top edge —
+ * the canvas's pb-4 bottom margin, which the inline reserve write overrides
+ * (an inline style beats the Tailwind class), restated here so the fit area
+ * never kisses the sheet at expanded. */
+export const SHEET_CANVAS_GAP_PX = 16
+
 /** Sheet spring response (critically damped, no overshoot). */
 export const SHEET_RESPONSE_S = 0.3
 
