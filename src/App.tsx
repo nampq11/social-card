@@ -16,11 +16,17 @@ import { CardPreview } from './components/CardPreview'
 import { useCardExport } from './lib/use-card-export'
 import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
+import { SheetDebugHud } from './components/SheetDebugHud'
 import { Tooltip } from './components/ui/Tooltip'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
 import { Toaster } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
+
+// Diagnostic HUD for the iOS 18 Safari sheet bug — active only when the
+// URL carries ?sheetdebug, so it never renders for users. See the
+// component for what it reads and why.
+const SHEET_DEBUG = new URLSearchParams(window.location.search).has('sheetdebug')
 
 /** Canvas padding follows the shell: mobile keeps a slim margin; desktop
  * reserves the floating Inspector's rail unless focus mode collapsed it. */
@@ -208,6 +214,8 @@ export function App() {
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
       <Toaster position="bottom-center" />
+
+      {SHEET_DEBUG && <SheetDebugHud />}
     </div>
   )
 }
