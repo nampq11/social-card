@@ -13,6 +13,8 @@
 
 - Fixed dark mode on OS-dark machines: three hand-written `.dark` CSS blocks (glass, canvas, card elevation) never applied because nothing sets a `dark` class, rendering light-on-light glass panels. #45
 - Kept hover tooltips working on disabled undo/redo — browsers suppress pointer events on disabled buttons, so the tooltip trigger gained a hoverable wrapper. #45
+- Stopped the expanded mobile Bottom Sheet from covering the card: the canvas reserve now tracks the sheet's live coverage every frame (the ADR 0002 addendum's never-implemented behavior — git shows both prior sheet commits wrote it statically once), so the card refits continuously while the sheet drags and the two re-split the viewport instead of the sheet occluding the card behind dead space. #47
+- Stopped `.card-elevation`'s transform transition from trailing per-frame fit writes: the unlayered CSS transition outranked every Tailwind class, so the `animated` gate never actually suppressed it and the card lagged behind the sheet mid-drag and behind window-resize refits; in fit mode only the transform transition is suppressed now, keeping ratio-swap morphs. #47
 
 ## 0.1.0 (2026-10-15)
 
