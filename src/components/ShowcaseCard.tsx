@@ -102,7 +102,7 @@ const ShotImage = ({
       }}
       className={`relative h-full w-full ${
         windowCard
-          ? 'scale-[0.92] rounded-xl object-contain shadow-lg ring-1 ring-black/10'
+          ? 'scale-[0.92] rounded-xl object-contain shadow-lg'
           : `object-cover ${pan.interactive ? 'touch-none cursor-grab' : ''} ${
               pan.dragging ? 'cursor-grabbing' : ''
             }`
