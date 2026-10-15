@@ -192,7 +192,13 @@ export const ScreenshotsSection: React.FC = () => {
               <button
                 type="button"
                 aria-label={copy.shots_remove_title}
-                onClick={() => removeShot(shot.id)}
+                onClick={(event) => {
+                  // Delete is not select: the click must not bubble into the
+                  // thumbnail's toggle, which would point selection at the
+                  // just-removed shot's id.
+                  event.stopPropagation()
+                  removeShot(shot.id)
+                }}
                 className="absolute right-1 top-1 flex size-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
               >
                 <X className="size-3" />

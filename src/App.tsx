@@ -105,7 +105,11 @@ export function App() {
         isDesktop={isDesktop}
         isInspectorCollapsed={isInspectorCollapsed}
         onToggleInspector={toggleInspector}
-        onCycleRatio={cycleRatio}
+        // Showcase is always 1:1 (the store enforces it on type switch), so
+        // the header hides the cycling pill for it — same rule as the
+        // Inspector's ratio control: a control that lies about what's
+        // editable is worse than no control.
+        onCycleRatio={cardState.cardType === 'showcase' ? undefined : cycleRatio}
         onReplayTour={startTour}
         onReplayShotFitTour={replayFitTour}
       />
@@ -133,16 +137,20 @@ export function App() {
               vertical axis against the centered Card. */}
           {!isDesktop && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              <button
-                type="button"
-                onClick={cycleRatio}
-                title={copy.ratio_cycle_title}
-                aria-label={copy.ratio_cycle_title}
-                className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate [@media(pointer:coarse)]:min-h-11"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-                <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
-              </button>
+              {/* Showcase is always 1:1 — the cycling chip hides for it, same
+                  rule as the header pill and the Inspector's ratio control. */}
+              {cardState.cardType !== 'showcase' && (
+                <button
+                  type="button"
+                  onClick={cycleRatio}
+                  title={copy.ratio_cycle_title}
+                  aria-label={copy.ratio_cycle_title}
+                  className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate [@media(pointer:coarse)]:min-h-11"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
+                  <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
+                </button>
+              )}
               <TipsPopover onReplayTour={startTour} onReplayShotFitTour={replayFitTour} />
             </div>
           )}
