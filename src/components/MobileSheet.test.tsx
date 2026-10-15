@@ -108,7 +108,9 @@ describe('MobileSheet tab pill docking', () => {
     // Peek offset is hand-derived from the 58dvh spec (ADR 0002), not from the
     // implementation's own helpers: a 768px viewport expands to round(768 × 0.58)
     // = 445px, so the sheet peeks at 445 − 96px chrome floor = 349px.
-    expect(section.style.transform).toBe('translateY(349px)')
+    // translate3d form: keeps the sheet on its own composited layer (iOS 18
+    // stale-tile ghosting, #53).
+    expect(section.style.transform).toBe('translate3d(0, 349px, 0)')
   })
 
   it('re-derives the resting peek offset on window resize even after user interactions', () => {
@@ -127,7 +129,7 @@ describe('MobileSheet tab pill docking', () => {
     fireEvent(window, new Event('resize'))
 
     // Hand-derived again: 900px viewport → round(900 × 0.58) = 522 − 96 = 426.
-    expect(section.style.transform).toBe('translateY(426px)')
+    expect(section.style.transform).toBe('translate3d(0, 426px, 0)')
   })
 
   it('the sheet header names the sheet, not the active tab (no duplicated label)', () => {
