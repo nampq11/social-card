@@ -15,6 +15,7 @@
 - Kept hover tooltips working on disabled undo/redo — browsers suppress pointer events on disabled buttons, so the tooltip trigger gained a hoverable wrapper. #45
 - Stopped the expanded mobile Bottom Sheet from covering the card: the canvas reserve now tracks the sheet's live coverage every frame (the ADR 0002 addendum's never-implemented behavior — git shows both prior sheet commits wrote it statically once), so the card refits continuously while the sheet drags and the two re-split the viewport instead of the sheet occluding the card behind dead space; the reserve also carries the canvas's 16px breathing room above the sheet (the pb-4 margin the inline write overrides). #47
 - Stopped `.card-elevation`'s transform transition from trailing per-frame fit writes: the unlayered CSS transition outranked every Tailwind class, so the `animated` gate never actually suppressed it and the card lagged behind the sheet mid-drag and behind window-resize refits; in fit mode only the transform transition is suppressed now, keeping ratio-swap morphs. #47
+- Stopped the mobile Bottom Sheet flickering on iPhone while dragging: WebKit re-samples a `backdrop-filter` element's backdrop every frame it moves, and the live canvas reserve changes the content behind the sheet every drag frame — the sheet now takes the near-opaque `--color-sheet` surface instead of glass (its fill was already 85% opaque, so the look barely moves); the never-moving glass panels keep their blur. #49
 
 ## 0.1.0 (2026-10-15)
 
