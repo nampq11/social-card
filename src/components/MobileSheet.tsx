@@ -13,9 +13,13 @@ import { useSheetDrag } from '../lib/use-sheet-drag'
 // slides between peek (chrome only, measured by the hook) and expanded via
 // transform: 1:1 drag with rubber-banded edges, momentum projection on
 // release, and a critically damped spring carrying the release velocity.
-// The hook writes the sheet's live coverage as the canvas's bottom padding
-// on the same every-frame path as the transform, so Fit-to-View keeps the
-// card fully visible at every sheet position (ADR 0002 addendum).
+// The hook writes the sheet's coverage as the canvas's bottom padding
+// only when a resting point is committed — on release from the projected
+// destination, so the card refit runs concurrent with the spring (never
+// per frame: per-frame layout writes starved iOS 18 WebKit's commit
+// pipeline and the screen replayed stale drag frames, #53) — so
+// Fit-to-View keeps the card fully visible at every resting sheet
+// position (ADR 0002 addendum).
 interface MobileSheetProps {
   canvasRef: RefObject<HTMLElement | null>
 }
@@ -59,9 +63,11 @@ export function MobileSheet({ canvasRef }: MobileSheetProps) {
         // compositor, and iOS 18's compositor displaces composited layers
         // at stale offsets around gestures (the sheet kept ghost-replaying
         // its dragged position on-device even after the absolute re-anchor).
-        // The promotion bought nothing here: every drag frame already does
-        // main-thread work (the canvas reserve write), so the transform
-        // never rode the compositor alone.
+        // The write budget addendum later traced the ghost to the
+        // per-frame layout storm (#53), not the promotion — but promotion
+        // still buys nothing: the drag transform is translate3d, which
+        // already keeps the sheet on its own composited layer, so an
+        // explicit hint would only re-add the displacement variable above.
         className="sheet-panel rounded-t-3xl border-b-0 overflow-hidden flex flex-col"
       >
         <button

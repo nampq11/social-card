@@ -157,10 +157,10 @@ describe('MobileSheet Showcase mode', () => {
   })
 })
 
-describe('MobileSheet live canvas reserve (issue #47)', () => {
+describe('MobileSheet rest-time canvas reserve (issues #47/#53)', () => {
   // A real host element: the contract under test is the canvas padding the
-  // hook writes per frame (ADR 0002 addendum) — the detached ref used by the
-  // other suites skips that write entirely.
+  // hook writes at resting points (ADR 0002 addendum, rest-time since #53) —
+  // the detached ref used by the other suites skips that write entirely.
   function SheetWithCanvas() {
     const canvasRef = useRef<HTMLDivElement>(null)
     return (
@@ -171,10 +171,14 @@ describe('MobileSheet live canvas reserve (issue #47)', () => {
     )
   }
 
-  it('the canvas padding tracks the sheet coverage, so the card never hides behind it', () => {
+  it('rewrites the reserve only at rest — drags stay transform-only', () => {
+    // Earlier suites in this file leave innerHeight at 900; pin the viewport
+    // this suite's hand-derived numbers assume.
+    window.innerHeight = 768
     renderWithUiCopy(<SheetWithCanvas />)
     const canvas = screen.getByTestId('canvas')
     const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })
+    const section = document.querySelector('section') as HTMLElement
 
     // Hand-derived from the 58dvh spec (ADR 0002) at the 768px jsdom
     // viewport, not from the hook's own helpers: expanded = round(768 × 0.58)
@@ -184,19 +188,42 @@ describe('MobileSheet live canvas reserve (issue #47)', () => {
     // nothing clipped.
     expect(canvas.style.paddingBottom).toBe('112px')
 
-    // Mid-drag the reserve is the sheet's live coverage: 100px of travel up
-    // lifts the coverage to 445 − 249 = 196, plus the same 16px gap.
+    // Mid-drag NOT A SINGLE layout write happens (they starved iOS 18
+    // WebKit's commit pipeline and the screen replayed stale frames, #53):
+    // 100px of travel up moves only the transform — 349 − 100 = 249.
     fireEvent.pointerDown(handle, { pointerId: 1, clientY: 500 })
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 400 })
-    expect(canvas.style.paddingBottom).toBe('212px')
+    expect(section.style.transform).toBe('translate3d(0, 249px, 0)')
+    expect(canvas.style.paddingBottom).toBe('112px')
 
-    // Rubber-banding past expanded covers more canvas, and the reserve
-    // follows — the card keeps clearing the sheet.
+    // Rubber-banding past expanded also stays transform-only.
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 0 })
-    expect(Number.parseInt(canvas.style.paddingBottom, 10)).toBeGreaterThanOrEqual(461)
+    expect(canvas.style.paddingBottom).toBe('112px')
 
-    // Yanking down past peek covers nothing, floored at 0 for CSS validity.
-    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 1400 })
-    expect(canvas.style.paddingBottom).toBe('0px')
+    // Release commits expanded: the reserve lands from the projected
+    // destination at release itself — concurrent with the spring, so the
+    // card refit and the sheet arrive together (the full 445px coverage
+    // plus the 16px gap).
+    fireEvent.pointerUp(handle, { pointerId: 1, clientY: 0 })
+    expect(canvas.style.paddingBottom).toBe('461px')
+  })
+
+  it('commits the reserve from the projected destination at release — mid-flight offsets never leak in', () => {
+    window.innerHeight = 768
+    renderWithUiCopy(<SheetWithCanvas />)
+    const canvas = screen.getByTestId('canvas')
+    const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })
+
+    // From peek (offset 349), drag up past the midpoint to offset 99 and
+    // release with no velocity: the projection commits expanded
+    // (destination 0) while the sheet is still mid-flight. The reserve
+    // must read the DESTINATION (445 + 16 = 461px), and the setExpanded
+    // re-render's measure pass — which runs synchronously right after
+    // release — must not overwrite it with the transient offset
+    // (445 − 99 + 16 = 362px).
+    fireEvent.pointerDown(handle, { pointerId: 1, clientY: 500 })
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 250 })
+    fireEvent.pointerUp(handle, { pointerId: 1, clientY: 250 })
+    expect(canvas.style.paddingBottom).toBe('461px')
   })
 })

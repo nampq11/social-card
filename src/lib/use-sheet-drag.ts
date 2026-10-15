@@ -62,10 +62,15 @@ interface DragState {
  * React state is only the settled `expanded` flag the UI Copy needs. The
  * peek resting point is measured from the DOM (top of the scrollable
  * content), so the peeked sheet shows exactly its chrome — no control is
- * ever half-clipped at rest. The canvas reserve rides the same every-frame
- * path: padding equals the sheet's live coverage of the canvas, so
- * Fit-to-View re-splits the viewport with the sheet and the card stays
- * fully visible at every sheet position (ADR 0002 addendum) instead of
+ * ever half-clipped at rest. The canvas reserve (padding = the sheet's
+ * coverage plus breathing room) is written when a resting point is
+ * committed — on release from the projected destination, so the card refit
+ * runs concurrent with the spring and the two surfaces land together; on
+ * toggle/cancel; re-asserted at settle — never per frame: per-frame layout
+ * writes starved iOS 18 WebKit's commit pipeline and the screen replayed
+ * stale drag frames (#53). Mid-drag the card keeps its last committed
+ * sizing; at every committed rest Fit-to-View re-splits the viewport with
+ * the sheet, so the card is fully visible (ADR 0002 addendum) instead of
  * hiding behind the expanded one.
  */
 export function useSheetDrag(
@@ -90,32 +95,37 @@ export function useSheetDrag(
   }).current
   const rafId = useRef<number | null>(null)
 
+  /** The canvas reserve for the sheet's coverage. Written when a resting
+   * point is COMMITTED — at release the projected destination is passed in,
+   * so the card refit runs concurrent with the spring and the two surfaces
+   * land together — and re-derived at rest (settle, measure); never per
+   * frame: per-frame layout writes (this padding) starved iOS 18 WebKit's
+   * commit pipeline during drags and the screen replayed stale frames —
+   * the on-device HUD showed sane DOM geometry while the paint displayed
+   * earlier drag positions (#53). Fit-to-View refits off each
+   * ResizeObserver tick a value change fires. */
+  const writeReserve = useCallback(
+    (coverageOffsetPx?: number) => {
+      const canvas = canvasRef.current
+      if (canvas) {
+        const coverage = coverageOffsetPx ?? drag.offset
+        canvas.style.paddingBottom = `${Math.max(
+          0,
+          Math.round(drag.expandedPx - coverage + SHEET_CANVAS_GAP_PX),
+        )}px`
+      }
+    },
+    [canvasRef, drag],
+  )
+
   const writePosition = useCallback(() => {
     const sheet = sheetRef.current
     // translate3d, not translateY: the 3d form keeps the sheet on its own
-    // composited layer through the per-frame writes. iOS 18 WebKit replays
-    // stale inline tiles around JS-driven 2d transforms (on-device HUD:
-    // DOM geometry sane in every frame while the paint showed earlier drag
-    // frames — the sheet "ghosting" its dragged position, #53); a stable
-    // dedicated layer lets the compositor swap the sheet atomically.
+    // composited layer through the per-frame writes, so the compositor
+    // swaps the sheet atomically instead of re-tiling inline content.
     const transform = `translate3d(0, ${drag.offset}px, 0)`
     if (sheet) sheet.style.transform = transform
-    // The reserve is the sheet's live coverage of the canvas (`expandedPx -
-    // offset`) plus the canvas's breathing room, written on the same
-    // every-frame path as the transform: the canvas ResizeObserver refits
-    // the card as the sheet moves, so the two re-split the viewport and the
-    // card never hides behind the sheet (ADR 0002 addendum) nor kisses its
-    // top edge. Pulls past a resting point stay consistent — the sheet
-    // physically covers that much more or less — floored at 0 for CSS
-    // validity.
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.style.paddingBottom = `${Math.max(
-        0,
-        Math.round(drag.expandedPx - drag.offset + SHEET_CANVAS_GAP_PX),
-      )}px`
-    }
-  }, [canvasRef, drag, sheetRef])
+  }, [drag, sheetRef])
 
   const cancelSpring = useCallback(() => {
     if (rafId.current !== null) {
@@ -144,18 +154,26 @@ export function useSheetDrag(
     // maxOffset if peeked. This correctly re-derives the resting peek on
     // late layout changes (font swaps, dynamic content) and viewport
     // height changes (orientation change, URL bar collapse), while
-    // mid-gesture frames preserve user tracking clamped to [0, maxOffset].
-    const isGestureActive = drag.pointerId !== -1 || drag.animating
-    if (!isGestureActive) {
+    // mid-drag frames preserve user tracking clamped to [0, maxOffset].
+    // Mid-spring, the spring owns both writes: the setExpanded re-render
+    // runs measure synchronously right after release, and re-clamping
+    // there would teleport rubber-banded releases to their bound and
+    // re-derive the reserve from the transient mid-flight offset. The
+    // bounds refreshed above still apply; the settle frame re-asserts
+    // the invariant.
+    if (drag.animating) return
+    const isDragging = drag.pointerId !== -1
+    if (!isDragging) {
       drag.offset = expanded ? 0 : drag.maxOffset
     } else {
       drag.offset = Math.min(Math.max(0, drag.offset), drag.maxOffset)
     }
-    // Reserve and transform share one write path: the resting offset just
-    // re-derived above (peek on late layout changes, viewport height
-    // changes) re-derives the canvas padding with it.
+    // The resting offset just re-derived above (peek on late layout
+    // changes, viewport height changes) drives both writes: the transform
+    // and the canvas reserve.
     writePosition()
-  }, [contentRef, drag, expanded, sheetRef, writePosition])
+    writeReserve()
+  }, [contentRef, drag, expanded, sheetRef, writePosition, writeReserve])
 
   useLayoutEffect(measure, [measure])
 
@@ -204,10 +222,18 @@ export function useSheetDrag(
         drag.offset = target
         drag.velocity = 0
         writePosition()
+        writeReserve()
         return
       }
       drag.animating = true
       drag.velocity = initialVelocity
+      // The resting point is already decided here (release projection,
+      // toggle, cancel): commit its reserve NOW so the card refit runs
+      // concurrent with the spring and the surfaces land together, instead
+      // of the card catching up a beat after the sheet stops. The settle
+      // frame re-asserts it — the same value, so no second refit fires,
+      // unless a resize changed the bounds mid-spring.
+      writeReserve(target)
       let last = performance.now()
       const frame = (now: number) => {
         const dt = Math.min((now - last) / 1000, 0.064)
@@ -221,7 +247,12 @@ export function useSheetDrag(
           drag.velocity = 0
           drag.animating = false
           rafId.current = null
+          // Rest reached: re-assert the reserve from the settled offset —
+          // normally the same value the release committed (no second refit
+          // fires); different only if a resize changed the bounds
+          // mid-spring, in which case this is the catch-up write.
           writePosition()
+          writeReserve()
           return
         }
         writePosition()
@@ -229,7 +260,7 @@ export function useSheetDrag(
       }
       rafId.current = requestAnimationFrame(frame)
     },
-    [cancelSpring, drag, writePosition],
+    [cancelSpring, drag, writePosition, writeReserve],
   )
 
   /** Keyboard / tap activation: flip the committed resting point. The live
