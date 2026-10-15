@@ -34,13 +34,15 @@ pointer tracking with rubber-banded edges, momentum projection picks the
 resting point on release, and a critically damped spring carries the
 release velocity (`lib/sheet-drag.ts`, `lib/use-sheet-drag.ts`). The
 per-frame animation is transform-only; the canvas's bottom padding (the
-live reserve) is written at RESTING points — originally it rode the
+live reserve) is written when a resting point is committed (release
+projection, toggle; re-asserted at settle) — originally it rode the
 every-frame path (not an inherited CSS variable, which would recalculate
 the whole document's styles per frame), but per-frame layout writes
 starved iOS 18 WebKit's commit pipeline and the screen replayed stale
 drag frames (#53, addendum below) — combined with content-box
-Fit-to-View, the card refits at every rest and stays fully visible at
-every resting sheet position instead of hiding behind the expanded one.
+Fit-to-View, the card refits concurrent with every committed spring and
+stays fully visible at every resting sheet position instead of hiding
+behind the expanded one.
 The sheet's surface is near-opaque (`--color-sheet`), not
 backdrop-filtered glass: WebKit re-samples an element's backdrop every
 frame it moves, and the per-frame reserve changes the content behind the
@@ -95,11 +97,21 @@ through the anchoring and layer experiments). The write budget since:
 
 - per frame: the sheet's transform, as `translate3d` (dedicated
   composited layer, atomic swap) — nothing else;
-- per rest (settle, toggle, resize, measure): the canvas reserve, one
-  write, from which Fit-to-View refits off its ResizeObserver.
+- per committed rest (release, toggle, cancel): the canvas reserve, one
+  write derived from the committed DESTINATION — the resting point is
+  already decided at release, so the card's refit runs concurrent with
+  the spring and the two surfaces land together instead of the card
+  catching up a beat after the sheet stops. The settle frame re-asserts
+  the same value (no second refit fires) unless a resize changed the
+  bounds mid-spring;
+- measure during a spring writes nothing: the spring owns the position
+  and the reserve until it settles. The setExpanded re-render runs
+  measure synchronously right after release, and re-clamping there used
+  to teleport rubber-banded releases to their bound and re-derive the
+  reserve from the transient mid-flight offset.
 
-Mid-drag, the card keeps its last-rest sizing and may sit partially
-behind the moving sheet for the gesture's duration; at every rest the
-card is fully visible (the original #47 complaint). One benign
-ResizeObserver-loop notification per rest transition is the accepted
+Mid-drag, the card keeps its last-committed sizing and may sit partially
+behind the moving sheet for the gesture's duration; at every committed
+rest the card is fully visible (the original #47 complaint). One benign
+ResizeObserver-loop notification per committed rest is the accepted
 cost of a rest-time layout write.

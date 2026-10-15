@@ -63,12 +63,15 @@ interface DragState {
  * peek resting point is measured from the DOM (top of the scrollable
  * content), so the peeked sheet shows exactly its chrome — no control is
  * ever half-clipped at rest. The canvas reserve (padding = the sheet's
- * coverage plus breathing room) is written at RESTING points only, never
- * per frame: per-frame layout writes starved iOS 18 WebKit's commit
- * pipeline and the screen replayed stale drag frames (#53). At every rest
- * the reserve re-derives and Fit-to-View re-splits the viewport with the
- * sheet, so the card is fully visible at every resting sheet position
- * (ADR 0002 addendum) instead of hiding behind the expanded one.
+ * coverage plus breathing room) is written when a resting point is
+ * committed — on release from the projected destination, so the card refit
+ * runs concurrent with the spring and the two surfaces land together; on
+ * toggle/cancel; re-asserted at settle — never per frame: per-frame layout
+ * writes starved iOS 18 WebKit's commit pipeline and the screen replayed
+ * stale drag frames (#53). Mid-drag the card keeps its last committed
+ * sizing; at every committed rest Fit-to-View re-splits the viewport with
+ * the sheet, so the card is fully visible (ADR 0002 addendum) instead of
+ * hiding behind the expanded one.
  */
 export function useSheetDrag(
   sheetRef: RefObject<HTMLElement | null>,
@@ -92,22 +95,28 @@ export function useSheetDrag(
   }).current
   const rafId = useRef<number | null>(null)
 
-  /** The canvas reserve for the sheet's CURRENT coverage. Rest-only by
-   * design: per-frame layout writes (this padding) starved iOS 18 WebKit's
+  /** The canvas reserve for the sheet's coverage. Written when a resting
+   * point is COMMITTED — at release the projected destination is passed in,
+   * so the card refit runs concurrent with the spring and the two surfaces
+   * land together — and re-derived at rest (settle, measure); never per
+   * frame: per-frame layout writes (this padding) starved iOS 18 WebKit's
    * commit pipeline during drags and the screen replayed stale frames —
    * the on-device HUD showed sane DOM geometry while the paint displayed
-   * earlier drag positions (#53). Drags are transform-only; the reserve is
-   * rewritten once when the sheet reaches a resting point, and Fit-to-View
-   * refits off that single ResizeObserver tick. */
-  const writeReserve = useCallback(() => {
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.style.paddingBottom = `${Math.max(
-        0,
-        Math.round(drag.expandedPx - drag.offset + SHEET_CANVAS_GAP_PX),
-      )}px`
-    }
-  }, [canvasRef, drag])
+   * earlier drag positions (#53). Fit-to-View refits off each
+   * ResizeObserver tick a value change fires. */
+  const writeReserve = useCallback(
+    (coverageOffsetPx?: number) => {
+      const canvas = canvasRef.current
+      if (canvas) {
+        const coverage = coverageOffsetPx ?? drag.offset
+        canvas.style.paddingBottom = `${Math.max(
+          0,
+          Math.round(drag.expandedPx - coverage + SHEET_CANVAS_GAP_PX),
+        )}px`
+      }
+    },
+    [canvasRef, drag],
+  )
 
   const writePosition = useCallback(() => {
     const sheet = sheetRef.current
@@ -145,16 +154,23 @@ export function useSheetDrag(
     // maxOffset if peeked. This correctly re-derives the resting peek on
     // late layout changes (font swaps, dynamic content) and viewport
     // height changes (orientation change, URL bar collapse), while
-    // mid-gesture frames preserve user tracking clamped to [0, maxOffset].
-    const isGestureActive = drag.pointerId !== -1 || drag.animating
-    if (!isGestureActive) {
+    // mid-drag frames preserve user tracking clamped to [0, maxOffset].
+    // Mid-spring, the spring owns both writes: the setExpanded re-render
+    // runs measure synchronously right after release, and re-clamping
+    // there would teleport rubber-banded releases to their bound and
+    // re-derive the reserve from the transient mid-flight offset. The
+    // bounds refreshed above still apply; the settle frame re-asserts
+    // the invariant.
+    if (drag.animating) return
+    const isDragging = drag.pointerId !== -1
+    if (!isDragging) {
       drag.offset = expanded ? 0 : drag.maxOffset
     } else {
       drag.offset = Math.min(Math.max(0, drag.offset), drag.maxOffset)
     }
     // The resting offset just re-derived above (peek on late layout
     // changes, viewport height changes) drives both writes: the transform
-    // and the rest-time canvas reserve.
+    // and the canvas reserve.
     writePosition()
     writeReserve()
   }, [contentRef, drag, expanded, sheetRef, writePosition, writeReserve])
@@ -211,6 +227,13 @@ export function useSheetDrag(
       }
       drag.animating = true
       drag.velocity = initialVelocity
+      // The resting point is already decided here (release projection,
+      // toggle, cancel): commit its reserve NOW so the card refit runs
+      // concurrent with the spring and the surfaces land together, instead
+      // of the card catching up a beat after the sheet stops. The settle
+      // frame re-asserts it — the same value, so no second refit fires,
+      // unless a resize changed the bounds mid-spring.
+      writeReserve(target)
       let last = performance.now()
       const frame = (now: number) => {
         const dt = Math.min((now - last) / 1000, 0.064)
@@ -224,9 +247,10 @@ export function useSheetDrag(
           drag.velocity = 0
           drag.animating = false
           rafId.current = null
-          // Rest reached: this is the one layout write per gesture — the
-          // reserve (and, off its ResizeObserver, the card refit) catches
-          // up with where the sheet actually settled.
+          // Rest reached: re-assert the reserve from the settled offset —
+          // normally the same value the release committed (no second refit
+          // fires); different only if a resize changed the bounds
+          // mid-spring, in which case this is the catch-up write.
           writePosition()
           writeReserve()
           return

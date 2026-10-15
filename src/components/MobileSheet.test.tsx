@@ -200,10 +200,30 @@ describe('MobileSheet rest-time canvas reserve (issues #47/#53)', () => {
     fireEvent.pointerMove(handle, { pointerId: 1, clientY: 0 })
     expect(canvas.style.paddingBottom).toBe('112px')
 
-    // Release springs to expanded; the layout effect re-measures at the new
-    // resting point, and the reserve + card refit catch up there: the full
-    // 445px coverage plus the 16px gap.
+    // Release commits expanded: the reserve lands from the projected
+    // destination at release itself — concurrent with the spring, so the
+    // card refit and the sheet arrive together (the full 445px coverage
+    // plus the 16px gap).
     fireEvent.pointerUp(handle, { pointerId: 1, clientY: 0 })
+    expect(canvas.style.paddingBottom).toBe('461px')
+  })
+
+  it('commits the reserve from the projected destination at release — mid-flight offsets never leak in', () => {
+    window.innerHeight = 768
+    renderWithUiCopy(<SheetWithCanvas />)
+    const canvas = screen.getByTestId('canvas')
+    const handle = screen.getByRole('button', { name: /Mở hoặc thu gọn bảng tùy chỉnh/ })
+
+    // From peek (offset 349), drag up past the midpoint to offset 99 and
+    // release with no velocity: the projection commits expanded
+    // (destination 0) while the sheet is still mid-flight. The reserve
+    // must read the DESTINATION (445 + 16 = 461px), and the setExpanded
+    // re-render's measure pass — which runs synchronously right after
+    // release — must not overwrite it with the transient offset
+    // (445 − 99 + 16 = 362px).
+    fireEvent.pointerDown(handle, { pointerId: 1, clientY: 500 })
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 250 })
+    fireEvent.pointerUp(handle, { pointerId: 1, clientY: 250 })
     expect(canvas.style.paddingBottom).toBe('461px')
   })
 })
