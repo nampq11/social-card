@@ -103,6 +103,8 @@ const vi = {
   bold_sublines_label: 'Subline đậm',
   sublines_hint: 'Mỗi dòng một ý, ví dụ: threads.net/@nampq',
   author_label: 'Thông tin tác giả',
+  avatar_row_title: 'Ảnh đại diện',
+  avatar_row_subtitle: 'Hiển thị ở góc dưới Card',
   avatar_alt: 'Avatar',
   change_photo: 'Đổi ảnh',
   original_avatar: 'Dùng avatar gốc',
@@ -110,7 +112,9 @@ const vi = {
   author_name_label: 'Tên',
   author_bio_label: 'Bio / Chức danh',
   qr_label: 'Mã QR & Kêu gọi',
+  qr_toggle_title: 'Hiển thị Mã QR & Lời kêu gọi',
   qr_url_label: 'Link liên kết',
+  qr_url_row_label: 'Link liên kết (Quét mã QR)',
   qr_cta_label: 'Nội dung kêu gọi bên cạnh QR',
   avatar_read_error: 'Không đọc được nội dung ảnh. Vui lòng thử file khác!',
   avatar_file_error: 'Không thể đọc file ảnh. Vui lòng thử lại!',
@@ -171,7 +175,6 @@ const vi = {
   tour_fit_override_title: 'Chọn cách hiển thị từng ảnh',
   tour_fit_override_body:
     'Ảnh lệch tỷ lệ tự hiển thị toàn bộ. Đổi Cover/Contain riêng cho từng ảnh trong tab Nội dung.',
-  replay_fit_tour: 'Thao tác trên ảnh',
 }
 
 /** A UI Copy dictionary key — lets constants (e.g. presets) reference copy by name. */
@@ -261,6 +264,8 @@ const en: typeof vi = {
   bold_sublines_label: 'Bold sublines',
   sublines_hint: 'One per line, e.g. threads.net/@nampq',
   author_label: 'Author info',
+  avatar_row_title: 'Profile photo',
+  avatar_row_subtitle: 'Shown at the bottom of the card',
   avatar_alt: 'Avatar',
   change_photo: 'Change photo',
   original_avatar: 'Use original avatar',
@@ -268,7 +273,9 @@ const en: typeof vi = {
   author_name_label: 'Name',
   author_bio_label: 'Bio / title',
   qr_label: 'QR code & call to action',
+  qr_toggle_title: 'Show QR code & call to action',
   qr_url_label: 'Link',
+  qr_url_row_label: 'Link (scanned by the QR)',
   qr_cta_label: 'Call-to-action text beside QR',
   avatar_read_error: "Couldn't read that image. Try a different file!",
   avatar_file_error: "Couldn't read the image file. Please try again!",
@@ -329,7 +336,6 @@ const en: typeof vi = {
   tour_fit_override_title: 'Choose how each shot renders',
   tour_fit_override_body:
     'Mismatched shots show whole by default. Override Cover/Contain per shot in the Content tab.',
-  replay_fit_tour: 'Shot gestures',
 }
 
 export const dictionaries: Record<Language, typeof vi> = { vi, en }

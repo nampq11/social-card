@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type {
   AnnotationSide,
   CardState,
@@ -25,7 +25,6 @@ import {
   Moon,
   Cloud,
   QrCode,
-  User,
   Upload,
   Check,
   Plus,
@@ -681,11 +680,95 @@ export const HeadlineSection: React.FC = () => {
   )
 }
 
+// The Identity editor as an iOS inset-grouped list (the reference idiom):
+// uppercase section micro-labels, one rounded card per group, hairline
+// dividers inset past the leading icons, label-left/value-right rows, and
+// iOS green switches. Values stay editable in place — the row IS the form
+// field, so editing never leaves the list (grouping & mapping: a control
+// sits next to what it changes).
+
+const SECTION_LABEL_CLASS =
+  'text-[11px] font-semibold uppercase tracking-[0.08em] text-[#86868B] dark:text-[#A1A1A6]'
+
+const GROUP_CARD_CLASS =
+  'overflow-hidden rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:bg-[#1E1E22] dark:border-white/[0.08]'
+
+const IDENTITY_ROW_CLASS = 'flex items-center gap-3 px-3.5 py-2.5'
+
+// Inset hairline (iOS): starts past the 40px leading icon + row padding, so
+// dividers align with the row titles instead of cutting across the icons.
+const IDENTITY_DIVIDER_CLASS = 'ml-[66px] h-px bg-black/[0.06] dark:bg-white/[0.08]'
+
+// One iOS switch skin for both boolean identity controls (QR visibility,
+// grayscale avatar) — green when on, per the iOS Settings idiom.
+const IosSwitch: React.FC<{
+  id: string
+  label: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}> = ({ id, label, checked, onCheckedChange }) => (
+  <Switch.Root
+    id={id}
+    aria-label={label}
+    checked={checked}
+    onCheckedChange={onCheckedChange}
+    className="relative inline-flex h-[22px] w-[38px] shrink-0 cursor-pointer items-center rounded-full bg-neutral-300 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 data-[checked]:bg-[#34C759] dark:bg-neutral-600"
+  >
+    <Switch.Thumb className="absolute left-[2px] top-[2px] size-[18px] rounded-full bg-white shadow transition-transform duration-200 ease-out data-[checked]:translate-x-4" />
+  </Switch.Root>
+)
+
+// The QR row's tinted icon box: same 40px geometry as the avatar preview, so
+// the two groups' leading edges read as one table.
+const QrIconBox = () => (
+  <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-black/[0.04] dark:bg-white/[0.06]">
+    <QrCode className="size-5 text-[#1D1D1F] dark:text-[#F5F5F7]" strokeWidth={1.75} />
+  </div>
+)
+
+// Label above a full-width editable value (iOS detail rows). Hosts the QR
+// link and CTA fields that only exist while the QR is switched on.
+const LabeledValueRow: React.FC<{
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  valueClass: string
+}> = ({ id, label, value, onChange, placeholder, valueClass }) => (
+  <Field.Root className="flex flex-col gap-0.5 px-3.5 py-2.5">
+    <Field.Label className="text-[11px] font-medium text-[#86868B] dark:text-[#A1A1A6]">
+      {label}
+    </Field.Label>
+    <Field.Control
+      id={id}
+      value={value}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`w-full bg-transparent text-[13px] focus:outline-none ${valueClass}`}
+    />
+  </Field.Root>
+)
+
 export const IdentitySection: React.FC = () => {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bioRef = useRef<HTMLTextAreaElement>(null)
+
+  // The bio auto-grows with its content: a one-line bio is a one-line row
+  // (label and value share the first line), newlines grow the row. rows=2
+  // remains the fallback sizing when layout is unavailable.
+  useEffect(() => {
+    const bio = bioRef.current
+    if (!bio) return
+    // Collapsing to 0 first lets the row shrink again: scrollHeight never
+    // reads below the current clientHeight, so measuring at 'auto' would
+    // pin the height to the rows-attr floor.
+    bio.style.height = '0'
+    bio.style.height = `${bio.scrollHeight}px`
+  }, [data.authorBio])
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -725,36 +808,43 @@ export const IdentitySection: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-1.5">
-        <User className="w-3.5 h-3.5 text-neutral-500" />
-        <span className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-          {copy.author_label}
-        </span>
-      </div>
+    <div className="flex flex-col gap-1.5">
+      <span className={SECTION_LABEL_CLASS}>{copy.author_label}</span>
 
-      <div className="flex items-center gap-3">
-        <div className="relative group w-12 h-12 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
-          <img
-            src={data.avatarUrl}
-            alt={copy.avatar_alt}
-            className="w-full h-full object-cover object-top"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => fileInputRef.current?.click()} variant="secondary" size="sm">
-            <Upload className="w-3 h-3" />
-            <span>{copy.change_photo}</span>
-          </Button>
-          {data.avatarUrl !== DEFAULT_CARD_STATE.avatarUrl && (
-            <Button
-              onClick={() => update('avatarUrl', DEFAULT_CARD_STATE.avatarUrl)}
-              variant="ghost"
-              size="sm"
-            >
-              {copy.original_avatar}
+      {/* Author group: avatar, grayscale switch, name, bio */}
+      <div className={GROUP_CARD_CLASS}>
+        {/* Avatar row: the preview mirrors the card render, grayscale included */}
+        <div className={IDENTITY_ROW_CLASS}>
+          <div className="size-10 shrink-0 overflow-hidden rounded-[10px] ring-1 ring-black/10 dark:ring-white/15">
+            <img
+              src={data.avatarUrl}
+              alt={copy.avatar_alt}
+              className={`h-full w-full object-cover object-top ${data.avatarGrayscale ? 'grayscale' : ''}`}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold leading-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {copy.avatar_row_title}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-tight text-[#86868B] dark:text-[#A1A1A6]">
+              {copy.avatar_row_subtitle}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-stretch gap-1">
+            <Button onClick={() => fileInputRef.current?.click()} variant="secondary" size="sm">
+              <Upload className="w-3 h-3" />
+              <span>{copy.change_photo}</span>
             </Button>
-          )}
+            {data.avatarUrl !== DEFAULT_CARD_STATE.avatarUrl && (
+              <Button
+                onClick={() => update('avatarUrl', DEFAULT_CARD_STATE.avatarUrl)}
+                variant="ghost"
+                size="sm"
+              >
+                {copy.original_avatar}
+              </Button>
+            )}
+          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -763,91 +853,104 @@ export const IdentitySection: React.FC = () => {
             className="hidden"
           />
         </div>
-      </div>
 
-      <CardStateToggle
-        id="inspector-grayscale-avatar"
-        label={copy.grayscale_avatar_label}
-        checked={data.avatarGrayscale}
-        onCheckedChange={(checked) => update('avatarGrayscale', checked)}
-      />
+        <div className={IDENTITY_DIVIDER_CLASS} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <Field.Root className="flex flex-col gap-1.5">
-          <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+        <div className={IDENTITY_ROW_CLASS}>
+          <label
+            htmlFor="inspector-grayscale-avatar"
+            className="flex-1 cursor-pointer select-none text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7]"
+          >
+            {copy.grayscale_avatar_label}
+          </label>
+          <IosSwitch
+            id="inspector-grayscale-avatar"
+            label={copy.grayscale_avatar_label}
+            checked={data.avatarGrayscale}
+            onCheckedChange={(checked) => update('avatarGrayscale', checked)}
+          />
+        </div>
+
+        <div className={IDENTITY_DIVIDER_CLASS} />
+
+        {/* Name: label left, editable value right — the iOS settings row */}
+        <Field.Root className={IDENTITY_ROW_CLASS}>
+          <Field.Label className="shrink-0 text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7]">
             {copy.author_name_label}
           </Field.Label>
           <Field.Control
             id="inspector-author-name"
             value={data.authorName}
             onChange={(e) => update('authorName', e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="min-w-0 flex-1 bg-transparent text-right text-[13px] font-semibold text-[#1D1D1F] focus:outline-none placeholder:text-neutral-400 dark:text-[#F5F5F7]"
           />
         </Field.Root>
-        <Field.Root className="flex flex-col gap-1.5">
-          <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
+
+        <div className={IDENTITY_DIVIDER_CLASS} />
+
+        {/* Bio: same row grammar; the multiline value stays a textarea */}
+        <Field.Root className="flex items-start gap-3 px-3.5 py-2.5">
+          {/* Same line-height as the textarea so the first lines share one
+              baseline — the label rides the value's first line, iOS-style. */}
+          <Field.Label className="shrink-0 text-[13px] leading-snug text-[#1D1D1F] dark:text-[#F5F5F7]">
             {copy.author_bio_label}
           </Field.Label>
           <Field.Control
             id="inspector-author-bio"
             render={
               <textarea
+                ref={bioRef}
                 rows={2}
                 value={data.authorBio}
                 onChange={(e) => update('authorBio', e.target.value)}
-                className="w-full resize-none px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-[#1D1D1F] focus:outline-none placeholder:text-neutral-400 dark:text-[#F5F5F7]"
               />
             }
           />
         </Field.Root>
       </div>
 
-      <div className="flex flex-col gap-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <QrCode className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-              {copy.qr_label}
-            </span>
-          </div>
-          <Switch.Root
+      <span className={`${SECTION_LABEL_CLASS} mt-2.5`}>{copy.qr_label}</span>
+
+      {/* QR group: the visibility switch leads the fields it controls */}
+      <div className={GROUP_CARD_CLASS}>
+        <div className={IDENTITY_ROW_CLASS}>
+          <QrIconBox />
+          <p className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-[#1D1D1F] dark:text-[#F5F5F7]">
+            {copy.qr_toggle_title}
+          </p>
+          <IosSwitch
             id="inspector-qr-toggle"
-            aria-label={copy.qr_label}
+            label={copy.qr_toggle_title}
             checked={data.qrEnabled}
             onCheckedChange={(checked) => update('qrEnabled', checked)}
-            className="relative inline-flex h-4.5 w-8 shrink-0 items-center rounded-full bg-neutral-300 dark:bg-neutral-600 transition-colors duration-150 ease-out data-[checked]:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 cursor-pointer"
-          >
-            <Switch.Thumb className="absolute left-[2px] top-[2px] size-3.5 rounded-full bg-white shadow transition-transform duration-150 ease-out data-[checked]:translate-x-3.5" />
-          </Switch.Root>
+          />
         </div>
 
         {data.qrEnabled && (
-          <div className="flex flex-col gap-2">
-            <Field.Root className="flex flex-col gap-1.5">
-              <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-                {copy.qr_url_label}
-              </Field.Label>
-              <Field.Control
-                id="inspector-qr-url"
-                value={data.qrUrl}
-                onChange={(e) => update('qrUrl', e.target.value)}
-                placeholder="https://github.com/nampq11"
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
-            </Field.Root>
-            <Field.Root className="flex flex-col gap-1.5">
-              <Field.Label className="text-xs font-medium text-[#424245] dark:text-[#A1A1A6]">
-                {copy.qr_cta_label}
-              </Field.Label>
-              <Field.Control
-                id="inspector-qr-cta"
-                value={data.qrCta}
-                onChange={(e) => update('qrCta', e.target.value)}
-                placeholder={copy.qr_cta_placeholder}
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-[#1E1E22] border border-black/[0.08] dark:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
-            </Field.Root>
-          </div>
+          <>
+            <div className={IDENTITY_DIVIDER_CLASS} />
+
+            <LabeledValueRow
+              id="inspector-qr-url"
+              label={copy.qr_url_row_label}
+              value={data.qrUrl}
+              onChange={(value) => update('qrUrl', value)}
+              placeholder="https://github.com/nampq11"
+              valueClass="font-medium text-[#0071E3] placeholder:text-[#0071E3]/40 dark:text-[#6CB2FF] dark:placeholder:text-[#6CB2FF]/40"
+            />
+
+            <div className={IDENTITY_DIVIDER_CLASS} />
+
+            <LabeledValueRow
+              id="inspector-qr-cta"
+              label={copy.qr_cta_label}
+              value={data.qrCta}
+              onChange={(value) => update('qrCta', value)}
+              placeholder={copy.qr_cta_placeholder}
+              valueClass="text-[#1D1D1F] placeholder:text-neutral-400 dark:text-[#F5F5F7]"
+            />
+          </>
         )}
       </div>
     </div>

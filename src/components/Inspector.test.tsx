@@ -145,7 +145,7 @@ describe('Inspector', () => {
 
   it('provides an accessible name and state for the QR toggle switch', () => {
     renderInspector('identity')
-    const qrToggle = screen.getByRole('switch', { name: /Mã QR & Kêu gọi/i })
+    const qrToggle = screen.getByRole('switch', { name: /Hiển thị Mã QR/i })
     expect(qrToggle.getAttribute('aria-checked')).toBe('true')
   })
 
@@ -162,7 +162,7 @@ describe('Inspector', () => {
 
   it('toggles grayscale avatar through the checkbox beside the avatar controls', () => {
     renderInspector('identity')
-    const toggle = screen.getByRole('checkbox', { name: /Avatar đen trắng/i })
+    const toggle = screen.getByRole('switch', { name: /Avatar đen trắng/i })
     expect(toggle.getAttribute('aria-checked')).toBe('false')
 
     fireEvent.click(toggle)

@@ -37,7 +37,7 @@ describe('MobileSheet', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Định danh/ }))
 
     expect(screen.getByLabelText(/^Tên$/)).not.toBeNull()
-    expect(screen.getByRole('switch', { name: /Mã QR & Kêu gọi/ })).not.toBeNull()
+    expect(screen.getByRole('switch', { name: /Hiển thị Mã QR/ })).not.toBeNull()
   })
 
   it('the drag handle expands and collapses the sheet as a button', () => {
