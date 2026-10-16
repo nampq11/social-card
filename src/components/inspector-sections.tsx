@@ -473,6 +473,8 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
   )
 }
 
+const THEME_KEYS = ['paper', 'white', 'dark', 'mist'] as const
+
 export const StyleSection: React.FC = () => {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
@@ -529,12 +531,11 @@ export const StyleSection: React.FC = () => {
           aria-labelledby="theme-label"
           value={data.theme}
           onChange={(t) => update('theme', t)}
-          options={[
-            { value: 'paper', label: copy.theme_paper, swatchClass: CARD_THEME_STYLES.paper.bg },
-            { value: 'white', label: copy.theme_white, swatchClass: CARD_THEME_STYLES.white.bg },
-            { value: 'dark', label: copy.theme_dark, swatchClass: CARD_THEME_STYLES.dark.bg },
-            { value: 'mist', label: copy.theme_mist, swatchClass: CARD_THEME_STYLES.mist.bg },
-          ]}
+          options={THEME_KEYS.map((theme) => ({
+            value: theme,
+            label: copy[`theme_${theme}`],
+            swatchClass: CARD_THEME_STYLES[theme].bg,
+          }))}
         />
       </div>
 
