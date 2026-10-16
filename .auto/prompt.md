@@ -90,3 +90,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #30: Streamline onboarding status parsing & alias dismissWelcome (-0.09 kb entry JS, -0.09 kb total JS).
 - Win #30: Streamline onboarding status parsing & alias dismissWelcome (-0.09 kb entry JS, -0.09 kb total JS).
 - Win #31: Deduplicate logDebug prefix & simplify Inspector declaration (-0.02 kb entry JS, -0.01 kb total JS).
+- Win #31: Deduplicate logDebug prefix & simplify Inspector declaration (-0.02 kb entry JS, -0.01 kb total JS).
+- Discard #32: Named memo import in Header (+0.01 kb entry JS).
+- Win #33: Function declarations over React.FC in inspector-sections (-0.03 kb entry JS, -175 ms build).
