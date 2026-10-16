@@ -19,8 +19,9 @@ export const VIEW_META: Record<ViewName, { title: string; path: string }> = {
   feedback: { title: 'Social Card — Feedback', path: FEEDBACK_PATH },
 }
 
-// Dedicated SERP copy for meta + og:description; the hero lede it replaced
-// lacked the free/no-account hook that earns the click.
+// Dedicated SERP copy for meta + og:description — it must carry the
+// free/no-account hook that earns the click; the on-page hero lede
+// deliberately doesn't.
 export const SEO_DESCRIPTION =
   'Create share-ready card images for Threads, X & Facebook in under a minute — Quote Cards, Showcase Cards, a QR call-to-action, pixel-exact Retina PNG. Free, no account, nothing to install.'
 
