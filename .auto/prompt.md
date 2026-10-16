@@ -127,3 +127,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #52: Extract shared Hint caption component in inspector-sections (-0.27 kb entry JS).
 - Win #52: Extract shared Hint caption component in inspector-sections (-0.27 kb entry JS).
 - Win #53: Extract shared HistoryButton in Header undo/redo (-0.13 kb entry JS).
+- Win #53: Extract shared HistoryButton in Header undo/redo (-0.13 kb entry JS).
+- Win #54: Demo shot becomes a public asset instead of inline base64 (-5.00 kb entry JS, -3.20 kb gzip).
