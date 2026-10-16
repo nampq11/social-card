@@ -93,3 +93,7 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #31: Deduplicate logDebug prefix & simplify Inspector declaration (-0.02 kb entry JS, -0.01 kb total JS).
 - Discard #32: Named memo import in Header (+0.01 kb entry JS).
 - Win #33: Function declarations over React.FC in inspector-sections (-0.03 kb entry JS, -175 ms build).
+- Win #33: Function declarations over React.FC in inspector-sections (-0.03 kb entry JS, -175 ms build).
+- Discard #34: Precompute ratio pixel string in RATIO_INFO (+0.12 kb entry JS).
+- Discard #35: Derive isShowcase from card data (+0.06 kb entry JS).
+- Win #36: Derive nameKey and descKey in STYLE_PRESETS dynamically (-0.09 kb entry JS, -0.10 kb total JS).
