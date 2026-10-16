@@ -42,7 +42,6 @@ export interface Preset {
 export const PRESETS: Preset[] = [
   {
     id: 'original',
-    nameKey: 'preset_original',
     state: {
       headline: 'Em vừa được tậu đất:',
       sublines: 'lanphinh.com\nlanphinh.io',
@@ -53,7 +52,6 @@ export const PRESETS: Preset[] = [
   },
   {
     id: 'ship-ai',
-    nameKey: 'preset_ship_ai',
     state: {
       headline: 'Vừa ship xong dự án AI mới:',
       sublines: 'github.com/nampq11/social-card\nTrải nghiệm ngay tại link bên dưới 👇',
@@ -64,7 +62,6 @@ export const PRESETS: Preset[] = [
   },
   {
     id: 'tech-note',
-    nameKey: 'preset_tech_note',
     state: {
       headline: 'Less code = less bugs',
       sublines:
@@ -76,9 +73,6 @@ export const PRESETS: Preset[] = [
   },
   {
     id: 'quote',
-    nameKey: 'preset_quote',
-    // The full replica look in one click. Unlike the other presets it sets
-    // the bio: the two-line bio is part of the replica look.
     state: {
       headline: 'Làm ít, làm sâu, làm thật.',
       sublines: 'Ít tính năng hơn.\nÍt lời hứa hơn.\nNhiều giá trị hơn.',
@@ -93,12 +87,12 @@ export const PRESETS: Preset[] = [
       avatarGrayscale: true,
     },
   },
-]
+].map(({ id, state }) => ({
+  id,
+  nameKey: `preset_${id.replace(/-/g, '_')}` as UiCopyKey,
+  state: state as Partial<CardState>,
+}))
 
-// Style Presets (GLOSSARY.md) restyle the card without touching any Card
-// Content field: one click writes the full style quadruple as a single
-// undoable step. Preset names are UI Copy — resolved through the dictionary
-// at render time, never stored on the state.
 export type StylePresetState = Pick<
   CardState,
   'theme' | 'ratio' | 'headlineSize' | 'uppercaseHeadline'
