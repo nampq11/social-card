@@ -33,10 +33,14 @@ describe('FeedbackPage', () => {
     expect(send.disabled).toBe(false)
   })
 
-  it('sends the typed feedback as a prefilled GitHub issue in a new tab', () => {
+  it('sends the typed feedback as a prefilled GitHub issue in a new tab', async () => {
     renderWithUiCopy(<FeedbackPage />)
     const t = landingDictionaries.vi
-    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+    // A truthy handle is what a real browser returns on success (the
+    // opener is severed manually, not via the 'noopener' feature — that
+    // forces a null return and would disguise success as a block).
+    const tab: { opener: unknown } = { opener: window }
+    const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window)
 
     fireEvent.click(screen.getByText(t.feedback_kind_idea))
     fireEvent.change(screen.getByLabelText(t.feedback_message_label), {
@@ -47,16 +51,37 @@ describe('FeedbackPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: t.feedback_submit }))
 
-    expect(open).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(1))
     expect(open).toHaveBeenCalledWith(
       expect.stringContaining('https://github.com/nampq11/social-card/issues/new'),
       '_blank',
-      'noopener',
     )
+    // The severed opener proves the if-branch ran; jsdom freezes the
+    // location members, so the mutually exclusive same-tab fallback
+    // is verified in the live browser, not here.
+    expect(tab.opener).toBeNull()
     const url = new URL(open.mock.calls[0]![0] as string)
     expect(url.searchParams.get('title')).toBe('[Idea] Thêm theme tối hơn nữa')
     expect(url.searchParams.get('body')).toContain('Thêm theme tối hơn nữa')
     expect(url.searchParams.get('body')).toContain('Reply-to: me@example.com')
+  })
+
+  it('falls back to same-tab navigation when the new tab is blocked', async () => {
+    renderWithUiCopy(<FeedbackPage />)
+    const t = landingDictionaries.vi
+    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+
+    fireEvent.change(screen.getByLabelText(t.feedback_message_label), {
+      target: { value: 'Trình duyệt chặn popup' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: t.feedback_submit }))
+
+    // location.assign is unforgeable in jsdom, so the fallback navigation
+    // itself cannot be observed here — pin that the null return still
+    // built and handed off the prefilled URL without stranding the form.
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(1))
+    const url = new URL(open.mock.calls[0]![0] as string)
+    expect(url.searchParams.get('title')).toBe('[Bug] Trình duyệt chặn popup')
   })
 
   it('never opens GitHub while the message is empty', () => {

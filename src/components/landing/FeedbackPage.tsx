@@ -2,12 +2,14 @@ import { Paperclip, X } from 'lucide-react'
 import { useState } from 'react'
 import {
   FEEDBACK_MAX_LENGTH,
+  GITHUB_ATTACHMENT_MAX_BYTES,
   buildFeedbackIssueUrl,
   screenshotToPngBlob,
   validateScreenshot,
   type FeedbackKind,
   type ScreenshotValidation,
 } from '../../lib/feedback-issue'
+import { logDebug } from '../../lib/log-debug'
 import { LANDING_PATH } from '../../lib/view-route'
 import { LandingNav } from './LandingNav'
 import { useLandingCopy } from './landing-copy'
@@ -69,9 +71,15 @@ export function FeedbackPage() {
       // drag & drop.
       try {
         const png = await screenshotToPngBlob(screenshot)
+        if (png.size > GITHUB_ATTACHMENT_MAX_BYTES) {
+          throw new Error('re-encoded PNG exceeds the GitHub attachment cap')
+        }
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
         copied = true
-      } catch {
+      } catch (error) {
+        // Any hand-off failure only degrades the note — GitHub's own box
+        // takes drag & drop — but leaves a trace for the support thread.
+        logDebug('FeedbackPage.send', 'screenshot clipboard hand-off failed', error)
         copied = false
       }
     }
@@ -81,9 +89,16 @@ export function FeedbackPage() {
       email: email.trim() || undefined,
       userAgent: navigator.userAgent,
     })
-    const issueTab = window.open(issueUrl, '_blank', 'noopener')
-    // A popup blocker swallowed the tab — same destination, same tab.
-    if (!issueTab) window.location.assign(issueUrl)
+    // 'noopener' as a feature forces a null return even on success, which
+    // would make the blocked check below meaningless — sever the opener on
+    // the live handle instead (settable cross-origin per spec).
+    const issueTab = window.open(issueUrl, '_blank')
+    if (issueTab) {
+      issueTab.opener = null
+    } else {
+      // A popup blocker swallowed the tab — same destination, same tab.
+      window.location.assign(issueUrl)
+    }
     setSendNote(screenshot ? (copied ? 'copied' : 'copy-failed') : null)
     setIsSending(false)
   }
@@ -179,7 +194,12 @@ export function FeedbackPage() {
                 accept="image/*"
                 className="sr-only"
                 aria-label={t.feedback_attach_label}
-                onChange={(event) => pickScreenshot(event.target.files?.[0])}
+                onChange={(event) => {
+                  pickScreenshot(event.target.files?.[0])
+                  // Clear the picker so re-choosing the same file fires
+                  // change again — Chromium skips identical re-picks.
+                  event.target.value = ''
+                }}
               />
             </label>
             {!screenshot && (

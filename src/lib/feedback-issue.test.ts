@@ -56,6 +56,15 @@ describe('buildFeedbackIssueUrl', () => {
     expect(params.get('title')!.length).toBeLessThan(80)
     expect(params.get('body')).toContain(longLine)
   })
+
+  it('never splits an emoji when truncating the title', () => {
+    // 59 chars + a 2-unit emoji straddles the truncation point: a UTF-16
+    // slice would leave a lone surrogate that URI-encodes as malformed.
+    const message = `${'x'.repeat(59)}🙂 and then some more text`
+    const title = issueParams(buildFeedbackIssueUrl({ kind: 'idea', message })).get('title')!
+
+    expect(title).toContain('🙂')
+  })
 })
 
 describe('validateScreenshot', () => {

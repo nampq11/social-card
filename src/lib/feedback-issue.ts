@@ -29,8 +29,11 @@ export function buildFeedbackIssueUrl(input: {
   userAgent?: string
 }): string {
   const firstLine = input.message.split('\n', 1)[0].trim()
+  // Truncate by code points, not UTF-16 units: slicing through an emoji
+  // leaves a lone surrogate that makes encodeURIComponent throw.
+  const chars = Array.from(firstLine)
   const titleFirstLine =
-    firstLine.length > TITLE_MAX_LINE ? `${firstLine.slice(0, TITLE_MAX_LINE)}…` : firstLine
+    chars.length > TITLE_MAX_LINE ? `${chars.slice(0, TITLE_MAX_LINE).join('')}…` : firstLine
   const title = `[${KIND_LABEL[input.kind]}] ${titleFirstLine}`
 
   // The trailer groups the metadata the reporter did not type (and keeps
@@ -48,9 +51,18 @@ export function buildFeedbackIssueUrl(input: {
 
 // Screenshots ride to GitHub via the reporter's own clipboard: Send copies
 // a PNG while the issue tab opens, and GitHub uploads pasted images under
-// the reporter's session — no storage of ours involved. The cap guards
-// decode cost, not an upload quota (GitHub takes up to 10 MB per image).
+// the reporter's session — no storage of ours involved. The pick cap only
+// guards decode cost — the paste cap is what the re-encoded PNG must fit.
 export const FEEDBACK_SCREENSHOT_MAX_BYTES = 3 * 1024 * 1024
+
+/** GitHub rejects issue attachments past this size — a copied PNG over it
+ *  would fail the instructed paste with no in-app signal. */
+export const GITHUB_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024
+
+// Long-side cap for the PNG re-encode: keeps the clipboard payload small
+// (and the encode fast enough to stay inside the click's activation
+// window) while staying legible at GitHub's ~880px issue column.
+const SCREENSHOT_LONG_SIDE_MAX = 2000
 
 export type ScreenshotValidation = 'ok' | 'too-large' | 'not-image'
 
@@ -64,15 +76,20 @@ export function validateScreenshot(file: { size: number; type: string }): Screen
  *  clipboard image format every GitHub-pasting browser accepts. */
 export async function screenshotToPngBlob(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
+  // Downscale oversized picks (a 3 MB photo decodes to ~12 MP, whose PNG
+  // re-encode alone would blow GitHub's 10 MB paste cap) while leaving
+  // ordinary screenshots untouched.
+  const scale = Math.min(1, SCREENSHOT_LONG_SIDE_MAX / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
-  canvas.width = bitmap.width
-  canvas.height = bitmap.height
+  canvas.width = Math.round(bitmap.width * scale)
+  canvas.height = Math.round(bitmap.height * scale)
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     bitmap.close()
     throw new Error('Canvas 2D unavailable')
   }
-  ctx.drawImage(bitmap, 0, 0)
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close()
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
