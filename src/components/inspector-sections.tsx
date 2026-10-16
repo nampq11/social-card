@@ -366,12 +366,6 @@ export const PresetsSection: React.FC = () => {
               aria-pressed={active}
               variant={active ? 'primary' : 'secondary'}
               size="sm"
-              className={clsx(
-                'text-[12px] font-medium transition',
-                active
-                  ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                  : 'bg-black/[0.05] text-ink-secondary hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
-              )}
             >
               {copy[p.nameKey]}
             </Button>

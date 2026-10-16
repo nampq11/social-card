@@ -55,7 +55,7 @@ export function useCardExport() {
 
   const copy = () =>
     runExport(
-      (card) => copyCardToClipboard(card),
+      copyCardToClipboard,
       {
         loading: uiCopy.copy_processing,
         success: uiCopy.copy_success,
