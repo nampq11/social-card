@@ -38,7 +38,7 @@ function buttonVariants({
   variant?: ButtonStyle
   size?: ButtonScale
 } = {}) {
-  return clsx(BUTTON_BASE, variant && BUTTON_VARIANTS[variant], size && BUTTON_SIZES[size])
+  return `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]}`
 }
 
 export function Button({

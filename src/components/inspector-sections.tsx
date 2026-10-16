@@ -61,6 +61,8 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
 
+const CARD_TYPES: CardType[] = ['quote', 'showcase']
+
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
 // dedicated atomic switch action; the checked segment mirrors the Card Type.
@@ -77,10 +79,7 @@ export const CardTypeSwitcherSection: React.FC = () => {
         value={cardType}
         onChange={switchCardType}
         className="w-full"
-        options={[
-          { value: 'quote', label: copy.card_type_quote },
-          { value: 'showcase', label: copy.card_type_showcase },
-        ]}
+        options={CARD_TYPES.map((t) => ({ value: t, label: copy[`card_type_${t}`] }))}
       />
     </div>
   )
