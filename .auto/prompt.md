@@ -148,3 +148,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #62: Verification hold + final audit — zero dup literals, zero dead exports anywhere in src.
 - Discard #63: Terser minifier — +0.74 kb entry and 2x build time; oxc baseline optimal. Backlog rewritten with true remaining levers.
 - Win #64: Post-discard verification — revert restored 419.21 kb exactly (7th identical run).
+- Win #64: Post-discard verification — revert restored 419.21 kb exactly (7th identical run).
+- Win #65: Verification hold (8th identical); lazy popover content rejected on first-open flicker.
