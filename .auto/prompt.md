@@ -123,3 +123,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #50: Native switch replaces base-ui SwitchRoot stack (-2.00 kb entry JS, -0.64 kb gzip, 55ms mount best).
 - Win #50: Native switch replaces base-ui SwitchRoot stack (-2.00 kb entry JS, -0.64 kb gzip, 55ms mount best).
 - Win #51: Native radios replace base-ui radio stack in SegmentedControl+SwatchPicker (-16.21 kb entry JS, -6.20 kb gzip).
+- Win #51: Native radios replace base-ui radio stack in SegmentedControl+SwatchPicker (-16.21 kb entry JS, -6.20 kb gzip).
+- Win #52: Extract shared Hint caption component in inspector-sections (-0.27 kb entry JS).

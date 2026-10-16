@@ -1,4 +1,4 @@
-import React, { type ChangeEvent, useEffect, useRef, useState } from 'react'
+import React, { type ChangeEvent, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, ShotFit } from '../types'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
@@ -79,6 +79,13 @@ export function CardTypeSwitcherSection() {
 
 const SHOT_FIT_OPTIONS = ['auto', 'cover', 'contain'] as const
 
+// The one hint caption typography: the tertiary meta line under a label or
+// beside a control (cap hints, badges, counters). One definition so the
+// six call sites can't drift.
+function Hint({ children }: { children: ReactNode }) {
+  return <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">{children}</span>
+}
+
 // One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
 // through the shared ingest (normalize + re-encode) into the store; the
 // thumbnail grid shows upload order — the first Shot renders in the Hero
@@ -123,9 +130,9 @@ export function ScreenshotsSection() {
     <div className="flex flex-col gap-2">
       <FieldLabel
         aside={
-          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+          <Hint>
             {shots.length}/{MAX_SHOTS}
-          </span>
+          </Hint>
         }
       >
         {copy.shots_label}
@@ -195,11 +202,7 @@ export function ScreenshotsSection() {
         <Plus className="w-3 h-3" />
         <span>{copy.shots_add}</span>
       </Button>
-      {atCap && (
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {copy.shots_cap_hint}
-        </span>
-      )}
+      {atCap && <Hint>{copy.shots_cap_hint}</Hint>}
       <input
         type="file"
         ref={fileInputRef}
@@ -318,9 +321,7 @@ export function AnnotationsSection() {
         </div>
       ))}
       {shots.length === 0 ? (
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {copy.annotations_needs_shot_hint}
-        </span>
+        <Hint>{copy.annotations_needs_shot_hint}</Hint>
       ) : (
         <>
           {shots.map((shot, index) => {
@@ -336,9 +337,7 @@ export function AnnotationsSection() {
             )
           })}
           {shots.every((shot) => annotations.some((a) => a.shotId === shot.id)) && (
-            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-              {copy.annotations_cap_hint}
-            </span>
+            <Hint>{copy.annotations_cap_hint}</Hint>
           )}
         </>
       )}
@@ -353,15 +352,7 @@ export function PresetsSection() {
 
   return (
     <div className="flex flex-col gap-2">
-      <FieldLabel
-        aside={
-          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-            {copy.presets_badge}
-          </span>
-        }
-      >
-        {copy.presets_label}
-      </FieldLabel>
+      <FieldLabel aside={<Hint>{copy.presets_badge}</Hint>}>{copy.presets_label}</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
@@ -620,14 +611,7 @@ export function HeadlineSection() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel
-          htmlFor="inspector-sublines"
-          aside={
-            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-              {copy.sublines_badge}
-            </span>
-          }
-        >
+        <FieldLabel htmlFor="inspector-sublines" aside={<Hint>{copy.sublines_badge}</Hint>}>
           {copy.sublines_label}
         </FieldLabel>
         <textarea
