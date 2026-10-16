@@ -117,3 +117,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #47: Defer sonner out of entry via lazy Toaster + toast proxy (-40.25 kb entry JS, -11.2 kb gzip, 57ms mount).
 - Win #47: Defer sonner out of entry via lazy Toaster + toast proxy (-40.25 kb entry JS, -11.2 kb gzip, 57ms mount).
 - Win #48: Native range input replaces base-ui Slider stack (-15.91 kb entry JS, -5.76 kb gzip, +0.21 kb CSS).
+- Win #48: Native range input replaces base-ui Slider stack (-15.91 kb entry JS, -5.76 kb gzip, +0.21 kb CSS).
+- Win #49: Native checkbox replaces base-ui CheckboxRoot stack (-4.19 kb entry JS, -1.24 kb gzip, +0.16 kb CSS).
