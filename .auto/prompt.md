@@ -83,3 +83,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Discard #25: Extract static section arrays in inspector-tabs (+0.03 kb entry JS).
 - Discard #26: Imported useState and global parseInt in HeadlineSizeInput (entry JS unchanged).
 - Win #27: Map over SHOT_FIT_OPTIONS in ScreenshotsSection (-0.04 kb entry JS, -0.04 kb total JS).
+- Win #27: Map over SHOT_FIT_OPTIONS in ScreenshotsSection (-0.04 kb entry JS, -0.04 kb total JS).
+- Win #28: Extract shared AuthorSignature components (-0.03 kb entry JS, -0.03 kb total JS, 56ms mount time).
