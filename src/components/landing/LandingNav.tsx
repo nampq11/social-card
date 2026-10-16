@@ -1,25 +1,22 @@
 import { Globe, Layers } from 'lucide-react'
 import { useUiCopy } from '../../lib/i18n'
-import { FEEDBACK_PATH } from '../../lib/view-route'
+import { FEEDBACK_PATH, LANDING_PATH, resolveView } from '../../lib/view-route'
 import { Button } from '../ui/Button'
 import { useLandingCopy } from './landing-copy'
 import { StudioCta } from './StudioCta'
 
 // Floating glass bar mirroring the studio's own header — every landing
-// page shows the same bar, so the product reads as one. Pages that don't
-// carry the sections themselves (the feedback page) point the anchors at
-// the landing via sectionHrefBase; the landing keeps plain "#anchors".
-export function LandingNav({
-  homeHref = '#top',
-  sectionHrefBase = '',
-}: {
-  homeHref?: string
-  sectionHrefBase?: string
-}) {
+// page shows the same bar, so the product reads as one. Link targets
+// derive from the same route source main.tsx branches on: on the landing
+// itself the anchors stay local; on any other page they travel home
+// first, and the logo returns home instead of scrolling to top.
+export function LandingNav() {
   const t = useLandingCopy()
   const { language, setLanguage, copy } = useUiCopy()
 
-  const sectionHref = (id: string) => `${sectionHrefBase}#${id}`
+  const onLanding = resolveView(window.location.pathname) === 'landing'
+  const homeHref = onLanding ? '#top' : LANDING_PATH
+  const sectionHref = (id: string) => `${onLanding ? '' : `${LANDING_PATH}/`}#${id}`
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">

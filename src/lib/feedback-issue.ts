@@ -16,6 +16,8 @@ export const FEEDBACK_MAX_LENGTH = 1000
 // The issue list stays scannable when titles hold one short line.
 const TITLE_MAX_LINE = 60
 
+// Issue titles are read by maintainers, so the kind is always spelled in
+// English regardless of the reporter's Interface Language.
 const KIND_LABEL: Record<FeedbackKind, string> = {
   bug: 'Bug',
   feedback: 'Feedback',
@@ -55,9 +57,9 @@ export function buildFeedbackIssueUrl(input: {
 // guards decode cost — the paste cap is what the re-encoded PNG must fit.
 export const FEEDBACK_SCREENSHOT_MAX_BYTES = 3 * 1024 * 1024
 
-/** GitHub rejects issue attachments past this size — a copied PNG over it
- *  would fail the instructed paste with no in-app signal. */
-export const GITHUB_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024
+// GitHub rejects issue attachments past this size — the encoder refuses to
+// hand out a PNG that would fail the instructed paste with no in-app signal.
+const GITHUB_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024
 
 // Long-side cap for the PNG re-encode: keeps the clipboard payload small
 // (and the encode fast enough to stay inside the click's activation
@@ -93,8 +95,10 @@ export async function screenshotToPngBlob(file: File): Promise<Blob> {
   bitmap.close()
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
-      if (blob) resolve(blob)
-      else reject(new Error('PNG encoding failed'))
+      if (!blob) reject(new Error('PNG encoding failed'))
+      else if (blob.size > GITHUB_ATTACHMENT_MAX_BYTES)
+        reject(new Error('re-encoded PNG exceeds the GitHub attachment cap'))
+      else resolve(blob)
     }, 'image/png')
   })
 }

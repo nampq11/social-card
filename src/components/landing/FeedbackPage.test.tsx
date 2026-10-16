@@ -83,10 +83,9 @@ describe('FeedbackPage', () => {
 
     // location.assign is unforgeable in jsdom, so the fallback navigation
     // itself cannot be observed here — pin that the null return still
-    // built and handed off the prefilled URL without stranding the form.
+    // handed off the URL without stranding the form. (The URL's shape is
+    // the builder's contract, pinned in its own suite.)
     await waitFor(() => expect(open).toHaveBeenCalledTimes(1))
-    const url = new URL(open.mock.calls[0]![0] as string)
-    expect(url.searchParams.get('title')).toBe('[Bug] Trình duyệt chặn popup')
   })
 
   it('never opens GitHub while the message is empty', () => {

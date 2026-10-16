@@ -2,7 +2,6 @@ import { Paperclip, X } from 'lucide-react'
 import { useState } from 'react'
 import {
   FEEDBACK_MAX_LENGTH,
-  GITHUB_ATTACHMENT_MAX_BYTES,
   buildFeedbackIssueUrl,
   screenshotToPngBlob,
   validateScreenshot,
@@ -10,7 +9,6 @@ import {
   type ScreenshotValidation,
 } from '../../lib/feedback-issue'
 import { logDebug } from '../../lib/log-debug'
-import { LANDING_PATH } from '../../lib/view-route'
 import { LandingNav } from './LandingNav'
 import { SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
@@ -65,16 +63,12 @@ export function FeedbackPage() {
       // drag & drop.
       try {
         const png = await screenshotToPngBlob(screenshot)
-        if (png.size > GITHUB_ATTACHMENT_MAX_BYTES) {
-          throw new Error('re-encoded PNG exceeds the GitHub attachment cap')
-        }
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
         copied = true
       } catch (error) {
         // Any hand-off failure only degrades the note — GitHub's own box
         // takes drag & drop — but leaves a trace for the support thread.
         logDebug('FeedbackPage.send', 'screenshot clipboard hand-off failed', error)
-        copied = false
       }
     }
     const issueUrl = buildFeedbackIssueUrl({
@@ -99,9 +93,7 @@ export function FeedbackPage() {
 
   return (
     <div className="min-h-dvh bg-canvas font-sans text-ink">
-      {/* The very same header as the landing — the anchors just travel
-          home first, since this page has no #sections of its own. */}
-      <LandingNav homeHref={LANDING_PATH} sectionHrefBase={`${LANDING_PATH}/`} />
+      <LandingNav />
       <main className="mx-auto w-full max-w-xl px-6 pb-24 pt-16 md:pt-24">
         <SectionHeading
           eyebrow={t.feedback_eyebrow}

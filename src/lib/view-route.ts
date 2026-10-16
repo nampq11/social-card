@@ -14,18 +14,15 @@ export const STUDIO_PATH = '/social-card/studio'
 /** The feedback page's path. */
 export const FEEDBACK_PATH = '/social-card/feedback'
 
-// Every non-landing view with its own path, checked in order; the bare app
-// path, its trailing-slash twin and stray paths the catch-all served fall
-// through to the landing.
-const VIEW_PATHS: Array<[Exclude<ViewName, 'landing'>, string]> = [
-  ['studio', STUDIO_PATH],
-  ['feedback', FEEDBACK_PATH],
-]
+// Each non-landing view matches its own path exactly (optionally with a
+// trailing slash); everything else — the bare app path, its trailing-slash
+// twin, stray paths the catch-all served — falls through to the landing.
+const STUDIO_PATH_RE = new RegExp(`^${STUDIO_PATH}/?$`)
+const FEEDBACK_PATH_RE = new RegExp(`^${FEEDBACK_PATH}/?$`)
 
 /** Each view renders only at its own path. */
 export function resolveView(pathname: string): ViewName {
-  for (const [view, path] of VIEW_PATHS) {
-    if (new RegExp(`^${path}/?$`).test(pathname)) return view
-  }
+  if (STUDIO_PATH_RE.test(pathname)) return 'studio'
+  if (FEEDBACK_PATH_RE.test(pathname)) return 'feedback'
   return 'landing'
 }
