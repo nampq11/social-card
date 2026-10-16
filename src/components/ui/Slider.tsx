@@ -1,10 +1,11 @@
-import { Slider as BaseSlider } from '@base-ui/react/slider'
+import type { CSSProperties } from 'react'
 
-// Shared primitives layer (ADR 0001): a one-value range slider styled for
-// the Inspector (accent fill, white thumb, a taller coarse-pointer touch
-// zone). base-ui owns the slider ARIA, keyboard behavior, and the step
-// default (1); the Array|number normalization of onValueChange folds into
-// the scalar API.
+// Shared primitives layer (ADR 0001): a one-value native range input styled
+// for the Inspector (.studio-range in index.css: accent fill, white thumb,
+// taller coarse-pointer touch zone). The native element owns pointer
+// dragging, the slider role, and the value contract; the keydown handler
+// mirrors the platform ±1 step (clamped) with preventDefault so browsers
+// don't double-step.
 interface SliderProps {
   value: number
   min: number
@@ -20,21 +21,30 @@ export function Slider({
   'aria-labelledby': labelledBy,
   onValueChange,
 }: SliderProps) {
+  const fill = ((value - min) / (max - min)) * 100
   return (
-    <BaseSlider.Root
+    <input
+      type="range"
       value={value}
       min={min}
       max={max}
+      step={1}
+      aria-valuenow={value}
       aria-labelledby={labelledBy}
-      onValueChange={(v) => onValueChange(Array.isArray(v) ? v[0] : v)}
-      className="flex min-w-0 flex-1 cursor-pointer select-none"
-    >
-      <BaseSlider.Control className="flex w-full touch-none items-center py-1 [@media(pointer:coarse)]:py-3">
-        <BaseSlider.Track className="relative h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
-          <BaseSlider.Indicator className="absolute h-full rounded-full bg-accent" />
-          <BaseSlider.Thumb className="size-4 rounded-full border-2 border-accent bg-white shadow-sm [@media(pointer:coarse)]:size-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40" />
-        </BaseSlider.Track>
-      </BaseSlider.Control>
-    </BaseSlider.Root>
+      onChange={(e) => onValueChange(e.currentTarget.valueAsNumber)}
+      onKeyDown={(e) => {
+        const delta =
+          e.key === 'ArrowRight' || e.key === 'ArrowUp'
+            ? 1
+            : e.key === 'ArrowLeft' || e.key === 'ArrowDown'
+              ? -1
+              : 0
+        if (!delta) return
+        e.preventDefault()
+        onValueChange(Math.min(max, Math.max(min, value + delta)))
+      }}
+      className="studio-range min-w-0 flex-1 cursor-pointer select-none py-1 [@media(pointer:coarse)]:py-3"
+      style={{ '--fill': `${fill}%` } as CSSProperties}
+    />
   )
 }

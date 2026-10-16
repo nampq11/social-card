@@ -115,3 +115,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #45: Inline buttonVariants directly in Button component (-0.04 kb entry JS, -0.05 kb total JS).
 - Win #46: Streamline useFlash timer cleanup & type-only ButtonHTMLAttributes (-0.03 kb entry JS).
 - Win #47: Defer sonner out of entry via lazy Toaster + toast proxy (-40.25 kb entry JS, -11.2 kb gzip, 57ms mount).
+- Win #47: Defer sonner out of entry via lazy Toaster + toast proxy (-40.25 kb entry JS, -11.2 kb gzip, 57ms mount).
+- Win #48: Native range input replaces base-ui Slider stack (-15.91 kb entry JS, -5.76 kb gzip, +0.21 kb CSS).
