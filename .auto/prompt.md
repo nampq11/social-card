@@ -88,3 +88,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #28: Extract shared AuthorSignature components (-0.03 kb entry JS, -0.03 kb total JS, 56ms mount time).
 - Discard #29: Split HeadlineSection into 4 useCardStore selectors (+0.04 kb entry JS).
 - Win #30: Streamline onboarding status parsing & alias dismissWelcome (-0.09 kb entry JS, -0.09 kb total JS).
+- Win #30: Streamline onboarding status parsing & alias dismissWelcome (-0.09 kb entry JS, -0.09 kb total JS).
+- Win #31: Deduplicate logDebug prefix & simplify Inspector declaration (-0.02 kb entry JS, -0.01 kb total JS).
