@@ -31,13 +31,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: ButtonScale
 }
 
-function buttonVariants({
-  variant = 'secondary',
-  size = 'md',
-}: {
-  variant?: ButtonStyle
-  size?: ButtonScale
-} = {}) {
+function buttonVariants(variant: ButtonStyle = 'secondary', size: ButtonScale = 'md') {
   return `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]}`
 }
 
@@ -49,6 +43,6 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button type={type} className={clsx(buttonVariants({ variant, size }), className)} {...props} />
+    <button type={type} className={clsx(buttonVariants(variant, size), className)} {...props} />
   )
 }
