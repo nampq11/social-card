@@ -145,3 +145,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #61: Tooltip deferral proven contract-dead (sync-focus test); 419.21 kb is the honest floor.
 - Win #61: Tooltip deferral proven contract-dead (sync-focus test); 419.21 kb is the honest floor.
 - Win #62: Verification hold + final audit — zero dup literals, zero dead exports anywhere in src.
+- Win #62: Verification hold + final audit — zero dup literals, zero dead exports anywhere in src.
+- Discard #63: Terser minifier — +0.74 kb entry and 2x build time; oxc baseline optimal. Backlog rewritten with true remaining levers.
+- Win #64: Post-discard verification — revert restored 419.21 kb exactly (7th identical run).
