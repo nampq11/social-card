@@ -1,4 +1,3 @@
-import { toBlob, toPng } from 'html-to-image'
 import { EXPORT_PIXEL_RATIO } from '../constants/ratios'
 import { logDebug } from './log-debug'
 
@@ -20,6 +19,7 @@ const EXPORT_IMAGE_OPTIONS = {
 
 export async function copyCardToClipboard(element: HTMLElement): Promise<boolean> {
   try {
+    const { toBlob } = await import('html-to-image')
     const blob = await toBlob(element, EXPORT_IMAGE_OPTIONS)
 
     if (!blob) {
@@ -44,6 +44,7 @@ export async function downloadCardImage(
   filename = 'social-card.png',
 ): Promise<void> {
   try {
+    const { toPng } = await import('html-to-image')
     const dataUrl = await toPng(element, EXPORT_IMAGE_OPTIONS)
 
     const link = document.createElement('a')

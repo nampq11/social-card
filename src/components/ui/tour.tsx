@@ -23,7 +23,7 @@ import {
   shift,
   useFloating,
 } from "@floating-ui/react-dom";
-import { cn } from "cn";
+import { clsx as cn } from "clsx";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 

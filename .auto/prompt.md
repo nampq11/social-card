@@ -50,4 +50,14 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 
 ## What's Been Tried
 
-- Baseline: 593.01 kb entry JS (193.10 kb gzip), 75ms mount time.
+- Baseline (#1): 593.01 kb entry JS, 193.10 kb gzip, 71ms Chrome mount.
+- Win #2: Lazy load html-to-image on demand for card exports (-11.08 kb entry JS, -3.87 kb gzip).
+- Win #3: Lazy load OnboardingTour via React.lazy (-46.67 kb entry JS, -17.44 kb gzip).
+- Win #4: Narrow App store subscription to ratio & cardType, and memoize Header (isolates root render cascade).
+- Discard #5: Trim unused font weights in index.html (entry JS unchanged; keep in backlog).
+- Discard #6: Set build.target to es2022 (no JS size delta).
+- Crash #7: esbuild legalComments option not recognized in Vite ESBuildOptions.
+- Discard #8: Memoize useInspectorTab & useCardUpdate (slight +0.06 kb hook boilerplate overhead).
+- Win #9: Defer @vercel/analytics in main.tsx via React.lazy (-2.38 kb entry JS, -0.92 kb gzip).
+- Win #10: Lazy load SheetDebugHud & replace 44kB cn package with clsx in tour (-2.77 kb entry JS, -25.14 kb total JS, -9.93 kb total gzip).
+- Win #11: Disable legacy modulepreload polyfill in vite.config.ts (-0.52 kb entry JS, -0.22 kb gzip).
