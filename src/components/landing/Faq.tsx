@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import { SectionHeading } from './SectionHeading'
+import { SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 // Native <details> accordion — keyboard- and screen-reader-accessible with
@@ -8,7 +8,7 @@ export function Faq() {
   const t = useLandingCopy()
 
   return (
-    <section id="faq" className="scroll-mt-24 py-20 md:py-28">
+    <section id="faq" className={SECTION_SPACING}>
       <div className="mx-auto max-w-3xl px-6">
         <SectionHeading eyebrow={t.faq_eyebrow} title={t.faq_title} />
         <div className="mt-10 divide-y divide-hairline rounded-2xl border border-hairline bg-surface">

@@ -30,13 +30,4 @@ describe('landing dictionary parity', () => {
   it('keeps identical shapes for both languages, list lengths included', () => {
     expectSameShape(landingDictionaries.vi, landingDictionaries.en, 'root')
   })
-
-  it('ships the same number of feature-grid, how-to and FAQ entries in both languages', () => {
-    expect(landingDictionaries.en.grid_items).toHaveLength(landingDictionaries.vi.grid_items.length)
-    expect(landingDictionaries.en.how_steps).toHaveLength(landingDictionaries.vi.how_steps.length)
-    expect(landingDictionaries.en.faq_items).toHaveLength(landingDictionaries.vi.faq_items.length)
-    expect(landingDictionaries.en.marquee_items).toHaveLength(
-      landingDictionaries.vi.marquee_items.length,
-    )
-  })
 })

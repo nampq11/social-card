@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { dictionaries } from '../../lib/i18n'
+import { STUDIO_PATH } from '../../lib/view-route'
 import { renderWithUiCopy } from '../../test/card-studio'
 import { landingDictionaries } from './landing-copy'
 import { Landing } from './Landing'
@@ -31,7 +32,7 @@ describe('Landing', () => {
       .map((link) => link.getAttribute('href'))
     // Nav, hero and final CTA all carry the same destination.
     expect(studioLinks.length).toBeGreaterThanOrEqual(3)
-    for (const href of studioLinks) expect(href).toBe('/social-card/studio')
+    for (const href of studioLinks) expect(href).toBe(STUDIO_PATH)
   })
 
   it('switches Interface Language from the landing nav', () => {
@@ -49,7 +50,8 @@ describe('Landing', () => {
     const first = landingDictionaries.vi.faq_items[0]
     const summary = screen.getByText(first.question)
     expect(summary.tagName).toBe('SUMMARY')
-    fireEvent.click(summary)
+    // jsdom keeps <details> content in the DOM unopened, so the answer is
+    // asserted structurally — the toggle behavior belongs to the browser.
     expect(screen.getByText(first.answer)).toBeTruthy()
   })
 })

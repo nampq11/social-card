@@ -1,7 +1,7 @@
 import quoteShot from '../../assets/landing/card-quote-mist.png'
 import showcaseShot from '../../assets/landing/card-showcase-paper.png'
 import { PointList } from './PointList'
-import { SectionHeading } from './SectionHeading'
+import { SECTION_CONTAINER, SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 function CardExample({
@@ -36,12 +36,14 @@ function CardExample({
   )
 }
 
-export function CardShowcase() {
+// The two Card Types side by side, each shown as a real export — the
+// gallery that answers "what does this app make?" before any copy does.
+export function CardTypes() {
   const t = useLandingCopy()
 
   return (
-    <section id="cards" className="scroll-mt-24 py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-6">
+    <section id="cards" className={SECTION_SPACING}>
+      <div className={SECTION_CONTAINER}>
         <SectionHeading eyebrow={t.cards_eyebrow} title={t.cards_title} lede={t.cards_lede} />
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           <CardExample

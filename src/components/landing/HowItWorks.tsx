@@ -1,13 +1,13 @@
 import { ShieldCheck } from 'lucide-react'
-import { SectionHeading } from './SectionHeading'
+import { SECTION_CONTAINER, SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 export function HowItWorks() {
   const t = useLandingCopy()
 
   return (
-    <section className="py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-6">
+    <section className={SECTION_SPACING}>
+      <div className={SECTION_CONTAINER}>
         <SectionHeading eyebrow={t.how_eyebrow} title={t.how_title} />
         <ol className="mt-12 grid gap-10 md:grid-cols-3">
           {t.how_steps.map((step, index) => (

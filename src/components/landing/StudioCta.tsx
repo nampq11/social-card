@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { STUDIO_PATH } from '../../lib/view-route'
 import { useLandingCopy } from './landing-copy'
 
 // The one call to action the whole page shares: open the studio route.
@@ -6,7 +7,7 @@ export function StudioCta({ large = false }: { large?: boolean }) {
   const t = useLandingCopy()
   return (
     <a
-      href="/social-card/studio"
+      href={STUDIO_PATH}
       className={`apple-button inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent font-semibold text-white shadow-sm hover:bg-accent-hover ${
         large ? 'px-7 py-3.5 text-base' : 'px-4 py-2 text-xs'
       }`}

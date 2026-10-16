@@ -8,7 +8,7 @@ import {
   Sparkles,
   Undo2,
 } from 'lucide-react'
-import { SectionHeading } from './SectionHeading'
+import { SECTION_CONTAINER, SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 // One icon per grid item, by position — decoration only; the copy module
@@ -19,11 +19,8 @@ export function FeatureGrid() {
   const t = useLandingCopy()
 
   return (
-    <section
-      id="features"
-      className="scroll-mt-24 border-y border-hairline bg-surface/50 py-20 md:py-28"
-    >
-      <div className="mx-auto max-w-6xl px-6">
+    <section id="features" className={`${SECTION_SPACING} border-y border-hairline bg-surface/50`}>
+      <div className={SECTION_CONTAINER}>
         <SectionHeading eyebrow={t.grid_eyebrow} title={t.grid_title} />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {t.grid_items.map((item, index) => {

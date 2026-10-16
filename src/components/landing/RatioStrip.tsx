@@ -1,7 +1,7 @@
 import { EXPORT_PIXEL_RATIO, RATIO_INFO } from '../../constants/ratios'
 import type { AspectRatio } from '../../types'
 import { useUiCopy } from '../../lib/i18n'
-import { SectionHeading } from './SectionHeading'
+import { SECTION_CONTAINER, SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 const RATIOS: AspectRatio[] = ['1:1', '4:5', '16:9']
@@ -21,8 +21,8 @@ export function RatioStrip() {
   const { language } = useUiCopy()
 
   return (
-    <section id="ratios" className="scroll-mt-24 py-20 md:py-28">
-      <div className="mx-auto max-w-6xl px-6">
+    <section id="ratios" className={SECTION_SPACING}>
+      <div className={SECTION_CONTAINER}>
         <SectionHeading eyebrow={t.ratios_eyebrow} title={t.ratios_title} lede={t.ratios_lede} />
         <div className="mx-auto mt-12 flex max-w-3xl items-end justify-center gap-4 md:gap-8">
           {RATIOS.map((ratio) => {

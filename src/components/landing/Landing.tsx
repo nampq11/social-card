@@ -1,4 +1,4 @@
-import { CardShowcase } from './CardShowcase'
+import { CardTypes } from './CardTypes'
 import { Faq } from './Faq'
 import { FeatureGrid } from './FeatureGrid'
 import { FinalCta } from './FinalCta'
@@ -21,7 +21,7 @@ export function Landing() {
       <LandingNav />
       <LandingHero />
       <MarqueeTicker />
-      <CardShowcase />
+      <CardTypes />
       <StudioSection />
       <RatioStrip />
       <FeatureGrid />

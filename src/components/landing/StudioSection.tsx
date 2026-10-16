@@ -1,5 +1,6 @@
 import studioMobileShot from '../../assets/landing/studio-mobile.png'
 import { PointList } from './PointList'
+import { SECTION_CONTAINER, SECTION_SPACING, SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 // Left-copy / right-media split (the reference structure's alternation):
@@ -9,14 +10,15 @@ export function StudioSection() {
   const t = useLandingCopy()
 
   return (
-    <section id="studio" className="scroll-mt-24 py-20 md:py-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 md:grid-cols-2 md:gap-16">
+    <section id="studio" className={SECTION_SPACING}>
+      <div className={`grid ${SECTION_CONTAINER} items-center gap-12 md:grid-cols-2 md:gap-16`}>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] text-accent">{t.studio_eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-ink md:text-4xl">
-            {t.studio_title}
-          </h2>
-          <p className="mt-4 text-ink-secondary md:text-lg">{t.studio_body}</p>
+          <SectionHeading
+            align="start"
+            eyebrow={t.studio_eyebrow}
+            title={t.studio_title}
+            lede={t.studio_body}
+          />
           <div className="mt-6">
             <PointList points={t.studio_points} />
           </div>

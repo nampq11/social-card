@@ -1,4 +1,5 @@
 import { Layers } from 'lucide-react'
+import { STUDIO_PATH } from '../../lib/view-route'
 import { useLandingCopy } from './landing-copy'
 
 const linkClass = 'text-ink-secondary transition-colors hover:text-ink'
@@ -29,7 +30,7 @@ export function LandingFooter() {
           </h3>
           <ul className="mt-4 space-y-2.5 text-sm">
             <li>
-              <a className={linkClass} href="/social-card/studio">
+              <a className={linkClass} href={STUDIO_PATH}>
                 {t.cta_open_studio}
               </a>
             </li>

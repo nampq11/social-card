@@ -62,8 +62,7 @@ const vi = {
     'Chân trang tác giả + mã QR kêu gọi',
   ],
   card_quote_alt: 'Một Quote Card theme Sương với tiêu đề "Làm ít, làm sâu, làm thật."',
-  card_showcase_alt:
-    'Một Showcase Card theme Giấy với ảnh hero, tiêu đề "Em vừa được tậu đất:" và mã QR',
+  card_showcase_alt: 'Một Showcase Card theme Giấy với ảnh hero và chân trang tác giả',
 
   // ── One-screen studio ─────────────────────────────────────────────────
   studio_eyebrow: 'MỘT MÀN HÌNH',
@@ -233,8 +232,7 @@ const en: typeof vi = {
     'Author footer + QR call-to-action',
   ],
   card_quote_alt: 'A Quote Card in the Mist theme with the headline "Làm ít, làm sâu, làm thật."',
-  card_showcase_alt:
-    'A Showcase Card in the Paper theme: a hero shot, the headline "Em vừa được tậu đất:" and a QR code',
+  card_showcase_alt: 'A Showcase Card in the Paper theme: a hero shot and the author footer',
 
   studio_eyebrow: 'ONE SCREEN',
   studio_title: 'Edit and see it instantly. On any screen.',
