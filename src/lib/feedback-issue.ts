@@ -45,3 +45,39 @@ export function buildFeedbackIssueUrl(input: {
 
   return `${ISSUES_NEW_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`
 }
+
+// Screenshots ride to GitHub via the reporter's own clipboard: Send copies
+// a PNG while the issue tab opens, and GitHub uploads pasted images under
+// the reporter's session — no storage of ours involved. The cap guards
+// decode cost, not an upload quota (GitHub takes up to 10 MB per image).
+export const FEEDBACK_SCREENSHOT_MAX_BYTES = 3 * 1024 * 1024
+
+export type ScreenshotValidation = 'ok' | 'too-large' | 'not-image'
+
+export function validateScreenshot(file: { size: number; type: string }): ScreenshotValidation {
+  if (!file.type.startsWith('image/')) return 'not-image'
+  if (file.size > FEEDBACK_SCREENSHOT_MAX_BYTES) return 'too-large'
+  return 'ok'
+}
+
+/** Decode any browser-supported image and re-encode it as PNG — the one
+ *  clipboard image format every GitHub-pasting browser accepts. */
+export async function screenshotToPngBlob(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file)
+  const canvas = document.createElement('canvas')
+  canvas.width = bitmap.width
+  canvas.height = bitmap.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    bitmap.close()
+    throw new Error('Canvas 2D unavailable')
+  }
+  ctx.drawImage(bitmap, 0, 0)
+  bitmap.close()
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob)
+      else reject(new Error('PNG encoding failed'))
+    }, 'image/png')
+  })
+}

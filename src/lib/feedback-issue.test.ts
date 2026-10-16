@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { buildFeedbackIssueUrl } from './feedback-issue'
+import {
+  FEEDBACK_SCREENSHOT_MAX_BYTES,
+  buildFeedbackIssueUrl,
+  validateScreenshot,
+} from './feedback-issue'
 
 // The URL query is the whole transport to GitHub, so the tests read the
 // decoded params back out of the composed URL — the contract a reporter
@@ -51,5 +55,26 @@ describe('buildFeedbackIssueUrl', () => {
 
     expect(params.get('title')!.length).toBeLessThan(80)
     expect(params.get('body')).toContain(longLine)
+  })
+})
+
+describe('validateScreenshot', () => {
+  it('accepts an image at or under the 3 MB cap', () => {
+    expect(validateScreenshot({ type: 'image/png', size: FEEDBACK_SCREENSHOT_MAX_BYTES })).toBe(
+      'ok',
+    )
+    expect(validateScreenshot({ type: 'image/jpeg', size: 1 })).toBe('ok')
+  })
+
+  it('rejects images past the cap', () => {
+    expect(validateScreenshot({ type: 'image/png', size: FEEDBACK_SCREENSHOT_MAX_BYTES + 1 })).toBe(
+      'too-large',
+    )
+  })
+
+  it('rejects non-image files before even looking at the size', () => {
+    expect(
+      validateScreenshot({ type: 'application/pdf', size: FEEDBACK_SCREENSHOT_MAX_BYTES + 1 }),
+    ).toBe('not-image')
   })
 })

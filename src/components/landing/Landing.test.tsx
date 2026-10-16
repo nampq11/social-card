@@ -35,11 +35,15 @@ describe('Landing', () => {
     for (const href of studioLinks) expect(href).toBe(STUDIO_PATH)
   })
 
-  it('links the footer to the feedback page', () => {
+  it('links the nav and the footer to the feedback page', () => {
     renderWithUiCopy(<Landing />)
 
-    const feedbackLink = screen.getByRole('link', { name: landingDictionaries.vi.footer_feedback })
-    expect(feedbackLink.getAttribute('href')).toBe(FEEDBACK_PATH)
+    const feedbackHrefs = screen
+      .getAllByRole('link', { name: landingDictionaries.vi.feedback_link })
+      .map((link) => link.getAttribute('href'))
+    // One in the nav's link group, one in the footer's Product column.
+    expect(feedbackHrefs).toHaveLength(2)
+    for (const href of feedbackHrefs) expect(href).toBe(FEEDBACK_PATH)
   })
 
   it('switches Interface Language from the landing nav', () => {

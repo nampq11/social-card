@@ -1,8 +1,12 @@
+import { Paperclip, X } from 'lucide-react'
 import { useState } from 'react'
 import {
   FEEDBACK_MAX_LENGTH,
   buildFeedbackIssueUrl,
+  screenshotToPngBlob,
+  validateScreenshot,
   type FeedbackKind,
+  type ScreenshotValidation,
 } from '../../lib/feedback-issue'
 import { LANDING_PATH } from '../../lib/view-route'
 import { LandingNav } from './LandingNav'
@@ -25,33 +29,70 @@ const KIND_LABEL_KEY: Record<
 // The third view: one quiet page whose only job is turning a message into
 // a prefilled GitHub issue. The shape learns from tryonenotch's /feedback
 // (nav, centered form, trust line, no footer); the destination is the
-// public repo, so nothing here needs a server.
+// public repo, so nothing here needs a server — even the screenshot only
+// travels through the reporter's own clipboard into GitHub's uploader.
 export function FeedbackPage() {
   const t = useLandingCopy()
   const [kind, setKind] = useState<FeedbackKind>('bug')
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
+  const [screenshot, setScreenshot] = useState<File | null>(null)
+  const [screenshotError, setScreenshotError] = useState<ScreenshotValidation | null>(null)
+  // What Send wants the reporter to know once the issue tab is open —
+  // only ever about the screenshot; the message itself needs no follow-up.
+  const [sendNote, setSendNote] = useState<'copied' | 'copy-failed' | null>(null)
+  const [isSending, setIsSending] = useState(false)
 
   // An empty message would file an empty issue — it is the one field that
   // must exist before Send lights up.
   const canSend = message.trim().length > 0
 
-  const send = () => {
-    window.open(
-      buildFeedbackIssueUrl({
-        kind,
-        message,
-        email: email.trim() || undefined,
-        userAgent: navigator.userAgent,
-      }),
-      '_blank',
-      'noopener',
-    )
+  const pickScreenshot = (file: File | undefined) => {
+    setSendNote(null)
+    if (!file) {
+      setScreenshot(null)
+      setScreenshotError(null)
+      return
+    }
+    const verdict = validateScreenshot(file)
+    setScreenshotError(verdict === 'ok' ? null : verdict)
+    setScreenshot(verdict === 'ok' ? file : null)
+  }
+
+  const send = async () => {
+    setIsSending(true)
+    let copied = false
+    if (screenshot) {
+      // The clipboard write must land inside the click's transient
+      // activation window, so convert-then-copy runs before the tab opens;
+      // a failed copy only degrades the note — GitHub's own box takes
+      // drag & drop.
+      try {
+        const png = await screenshotToPngBlob(screenshot)
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+        copied = true
+      } catch {
+        copied = false
+      }
+    }
+    const issueUrl = buildFeedbackIssueUrl({
+      kind,
+      message,
+      email: email.trim() || undefined,
+      userAgent: navigator.userAgent,
+    })
+    const issueTab = window.open(issueUrl, '_blank', 'noopener')
+    // A popup blocker swallowed the tab — same destination, same tab.
+    if (!issueTab) window.location.assign(issueUrl)
+    setSendNote(screenshot ? (copied ? 'copied' : 'copy-failed') : null)
+    setIsSending(false)
   }
 
   return (
     <div className="min-h-dvh bg-canvas font-sans text-ink">
-      <LandingNav homeHref={LANDING_PATH} showSections={false} />
+      {/* The very same header as the landing — the anchors just travel
+          home first, since this page has no #sections of its own. */}
+      <LandingNav homeHref={LANDING_PATH} sectionHrefBase={`${LANDING_PATH}/`} />
       <main className="mx-auto w-full max-w-xl px-6 pb-24 pt-16 md:pt-24">
         <p className="text-xs font-semibold tracking-[0.2em] text-accent">{t.feedback_eyebrow}</p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink md:text-4xl">
@@ -63,7 +104,7 @@ export function FeedbackPage() {
           className="mt-10"
           onSubmit={(event) => {
             event.preventDefault()
-            if (canSend) send()
+            if (canSend && !isSending) void send()
           }}
         >
           <p id="feedback-kind-label" className="text-sm font-semibold text-ink">
@@ -127,15 +168,56 @@ export function FeedbackPage() {
             />
           </div>
 
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-raised focus-within:ring-2 focus-within:ring-accent/60">
+              <Paperclip className="size-3.5" aria-hidden />
+              <span className="max-w-48 truncate">
+                {screenshot ? screenshot.name : t.feedback_attach_label}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                aria-label={t.feedback_attach_label}
+                onChange={(event) => pickScreenshot(event.target.files?.[0])}
+              />
+            </label>
+            {!screenshot && (
+              <span className="text-sm text-ink-tertiary">{t.feedback_attach_hint}</span>
+            )}
+            {screenshot && (
+              <button
+                type="button"
+                onClick={() => pickScreenshot(undefined)}
+                aria-label={t.feedback_attach_remove}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-hairline text-ink-secondary transition-colors hover:text-ink"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+          {screenshotError && (
+            <p className="mt-2 text-sm text-red-500 dark:text-red-400" role="alert">
+              {screenshotError === 'too-large'
+                ? t.feedback_attach_too_large
+                : t.feedback_attach_not_image}
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={!canSend}
+            disabled={!canSend || isSending}
             className="apple-button mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-white shadow-sm enabled:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t.feedback_submit}
           </button>
 
           <p className="mt-5 text-sm text-ink-tertiary">{t.feedback_trust}</p>
+          {sendNote && (
+            <p className="mt-2 text-sm text-ink-secondary" aria-live="polite">
+              {sendNote === 'copied' ? t.feedback_attach_copied : t.feedback_attach_copy_failed}
+            </p>
+          )}
         </form>
       </main>
     </div>

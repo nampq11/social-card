@@ -189,13 +189,21 @@ const vi = {
   feedback_submit: 'Gửi phản hồi',
   feedback_trust:
     'Gửi sẽ mở một issue GitHub trong tab mới (cần tài khoản GitHub) — email chỉ dùng để phản hồi bạn.',
+  feedback_attach_label: 'Đính kèm ảnh chụp màn hình',
+  feedback_attach_hint: 'Không bắt buộc · tối đa 3 MB',
+  feedback_attach_too_large: 'Ảnh quá lớn — dung lượng tối đa 3 MB.',
+  feedback_attach_not_image: 'Hãy chọn một tệp ảnh (PNG, JPG, WebP…).',
+  feedback_attach_remove: 'Bỏ ảnh chụp màn hình',
+  feedback_attach_copied: 'Đã copy ảnh chụp màn hình — dán vào issue bằng Ctrl+V.',
+  feedback_attach_copy_failed:
+    'Không copy được ảnh — bạn vẫn có thể đính kèm trực tiếp trong issue.',
 
   // ── Footer ────────────────────────────────────────────────────────────
   footer_story:
     'Social Card là sản phẩm indie của Nam Phạm — xây cho thói quen chia sẻ tiến trình mỗi ngày trên Threads và X. Không quảng cáo, không theo dõi.',
   footer_product_heading: 'Sản phẩm',
   footer_links_heading: 'Liên kết',
-  footer_feedback: 'Góp ý',
+  feedback_link: 'Góp ý',
   footer_credit: 'Một sản phẩm indie của Nam Phạm',
 }
 
@@ -370,12 +378,20 @@ const en: typeof vi = {
   feedback_submit: 'Send feedback',
   feedback_trust:
     'Sending opens a GitHub issue in a new tab (a GitHub account is needed) — your email is only used to reply to you.',
+  feedback_attach_label: 'Attach a screenshot',
+  feedback_attach_hint: 'Optional · 3 MB max',
+  feedback_attach_too_large: 'That image is too large — 3 MB max.',
+  feedback_attach_not_image: 'Pick an image file (PNG, JPG, WebP…).',
+  feedback_attach_remove: 'Remove the screenshot',
+  feedback_attach_copied: 'Screenshot copied — paste it into the issue with Ctrl+V.',
+  feedback_attach_copy_failed:
+    'The screenshot could not be copied — you can still attach it directly in the issue.',
 
   footer_story:
     'Social Card is an indie product by Nam Phạm — built for the daily habit of sharing progress on Threads and X. No ads, no tracking.',
   footer_product_heading: 'Product',
   footer_links_heading: 'Links',
-  footer_feedback: 'Feedback',
+  feedback_link: 'Feedback',
   footer_credit: 'An indie product by Nam Phạm',
 }
 

@@ -46,7 +46,7 @@ export function LandingFooter() {
             </li>
             <li>
               <a className={linkClass} href={FEEDBACK_PATH}>
-                {t.footer_feedback}
+                {t.feedback_link}
               </a>
             </li>
           </ul>
@@ -70,7 +70,7 @@ export function LandingFooter() {
             <li>
               <a
                 className={linkClass}
-                href="https://threads.net/@nampq"
+                href="https://www.threads.com/@builtaiwithnam"
                 target="_blank"
                 rel="noreferrer"
               >

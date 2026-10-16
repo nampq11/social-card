@@ -1,22 +1,25 @@
 import { Globe, Layers } from 'lucide-react'
 import { useUiCopy } from '../../lib/i18n'
+import { FEEDBACK_PATH } from '../../lib/view-route'
 import { Button } from '../ui/Button'
 import { useLandingCopy } from './landing-copy'
 import { StudioCta } from './StudioCta'
 
-// Floating glass bar mirroring the studio's own header — the landing and
-// the app should read as one product. The feedback page reuses the same
-// bar: its logo returns home instead of an anchor, and the section
-// anchors only exist on the landing — hence the landing-shaped defaults.
+// Floating glass bar mirroring the studio's own header — every landing
+// page shows the same bar, so the product reads as one. Pages that don't
+// carry the sections themselves (the feedback page) point the anchors at
+// the landing via sectionHrefBase; the landing keeps plain "#anchors".
 export function LandingNav({
   homeHref = '#top',
-  showSections = true,
+  sectionHrefBase = '',
 }: {
   homeHref?: string
-  showSections?: boolean
+  sectionHrefBase?: string
 }) {
   const t = useLandingCopy()
   const { language, setLanguage, copy } = useUiCopy()
+
+  const sectionHref = (id: string) => `${sectionHrefBase}#${id}`
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
@@ -30,19 +33,20 @@ export function LandingNav({
           </span>
         </a>
 
-        {showSections && (
-          <div className="hidden items-center gap-6 text-sm font-medium text-ink-secondary md:flex">
-            <a className="transition-colors hover:text-ink" href="#cards">
-              {t.nav_cards}
-            </a>
-            <a className="transition-colors hover:text-ink" href="#features">
-              {t.nav_features}
-            </a>
-            <a className="transition-colors hover:text-ink" href="#faq">
-              {t.nav_faq}
-            </a>
-          </div>
-        )}
+        <div className="hidden items-center gap-6 text-sm font-medium text-ink-secondary md:flex">
+          <a className="transition-colors hover:text-ink" href={sectionHref('cards')}>
+            {t.nav_cards}
+          </a>
+          <a className="transition-colors hover:text-ink" href={sectionHref('features')}>
+            {t.nav_features}
+          </a>
+          <a className="transition-colors hover:text-ink" href={sectionHref('faq')}>
+            {t.nav_faq}
+          </a>
+          <a className="transition-colors hover:text-ink" href={FEEDBACK_PATH}>
+            {t.feedback_link}
+          </a>
+        </div>
 
         <div className="flex items-center gap-2">
           {/* Same Interface Language toggle as the studio header — the

@@ -43,9 +43,9 @@ describe('toFilename', () => {
 
 describe('splitLines', () => {
   it('splits on newlines and trims each line', () => {
-    expect(splitLines('github.com/nampq11\n  threads.net/@nampq  ')).toEqual([
+    expect(splitLines('github.com/nampq11\n  threads.com/@builtaiwithnam  ')).toEqual([
       'github.com/nampq11',
-      'threads.net/@nampq',
+      'threads.com/@builtaiwithnam',
     ])
   })
 

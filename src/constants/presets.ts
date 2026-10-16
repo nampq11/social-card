@@ -17,7 +17,7 @@ export const DEFAULT_CARD_STATE: CardState = {
   cardType: 'showcase',
   showcase: { shots: [{ id: DEMO_SHOT_ID, dataUrl: DEMO_SHOT_URL }], annotations: [] },
   headline: 'Em vừa được tậu đất:',
-  sublines: 'github.com/nampq11\nthreads.net/@nampq',
+  sublines: 'github.com/nampq11\nthreads.com/@builtaiwithnam',
   authorName: FALLBACK_AUTHOR_NAME,
   authorBio: 'AI Engineer • Building AI Agents',
   avatarUrl: defaultAvatarUrl,

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { CardTypes } from './CardTypes'
 import { Faq } from './Faq'
 import { FeatureGrid } from './FeatureGrid'
@@ -16,6 +17,13 @@ import { StudioSection } from './StudioSection'
 // app's own token vocabulary, so the landing follows OS dark mode like
 // the studio does.
 export function Landing() {
+  // The browser's own hash scroll fires at navigation commit, before this
+  // lazy chunk mounts — arrivals like /social-card/#cards from the nav on
+  // other pages need one manual scroll once the sections exist.
+  useEffect(() => {
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView()
+  }, [])
+
   return (
     <div className="min-h-dvh overflow-x-clip bg-canvas font-sans text-ink">
       <LandingNav />
