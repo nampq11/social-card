@@ -29,6 +29,37 @@ interface HeaderProps {
   onReplayTour?: () => void
 }
 
+// One history step in the undo/redo pill: a disabled button sits inside a
+// hoverable span so the tooltip still fires when the action is unavailable.
+function HistoryButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  disabled: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <Tooltip label={label}>
+      <span className="inline-flex">
+        <Button
+          onClick={onClick}
+          disabled={disabled}
+          aria-label={label}
+          variant="ghost"
+          size="icon"
+          className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
+        >
+          {children}
+        </Button>
+      </span>
+    </Tooltip>
+  )
+}
+
 export const Header: React.FC<HeaderProps> = React.memo(
   ({
     onCopy,
@@ -126,36 +157,12 @@ export const Header: React.FC<HeaderProps> = React.memo(
         <div className="flex items-center gap-2">
           {isDesktop && (
             <div className="hidden lg:flex items-center bg-black/[0.04] dark:bg-white/[0.06] p-0.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06]">
-              <Tooltip label={copy.undo_button_title}>
-                {/* Browsers suppress pointer events on disabled buttons —
-                  this span keeps the tooltip hoverable when Undo is off */}
-                <span className="inline-flex">
-                  <Button
-                    onClick={undo}
-                    disabled={!canUndo}
-                    aria-label={copy.undo_button_title}
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-                  >
-                    <Undo2 className="w-3.5 h-3.5" />
-                  </Button>
-                </span>
-              </Tooltip>
-              <Tooltip label={copy.redo_button_title}>
-                <span className="inline-flex">
-                  <Button
-                    onClick={redo}
-                    disabled={!canRedo}
-                    aria-label={copy.redo_button_title}
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-neutral-800 disabled:opacity-35"
-                  >
-                    <Redo2 className="w-3.5 h-3.5" />
-                  </Button>
-                </span>
-              </Tooltip>
+              <HistoryButton label={copy.undo_button_title} disabled={!canUndo} onClick={undo}>
+                <Undo2 className="w-3.5 h-3.5" />
+              </HistoryButton>
+              <HistoryButton label={copy.redo_button_title} disabled={!canRedo} onClick={redo}>
+                <Redo2 className="w-3.5 h-3.5" />
+              </HistoryButton>
             </div>
           )}
 

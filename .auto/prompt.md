@@ -125,3 +125,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #51: Native radios replace base-ui radio stack in SegmentedControl+SwatchPicker (-16.21 kb entry JS, -6.20 kb gzip).
 - Win #51: Native radios replace base-ui radio stack in SegmentedControl+SwatchPicker (-16.21 kb entry JS, -6.20 kb gzip).
 - Win #52: Extract shared Hint caption component in inspector-sections (-0.27 kb entry JS).
+- Win #52: Extract shared Hint caption component in inspector-sections (-0.27 kb entry JS).
+- Win #53: Extract shared HistoryButton in Header undo/redo (-0.13 kb entry JS).
