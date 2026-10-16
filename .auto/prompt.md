@@ -85,3 +85,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #27: Map over SHOT_FIT_OPTIONS in ScreenshotsSection (-0.04 kb entry JS, -0.04 kb total JS).
 - Win #27: Map over SHOT_FIT_OPTIONS in ScreenshotsSection (-0.04 kb entry JS, -0.04 kb total JS).
 - Win #28: Extract shared AuthorSignature components (-0.03 kb entry JS, -0.03 kb total JS, 56ms mount time).
+- Win #28: Extract shared AuthorSignature components (-0.03 kb entry JS, -0.03 kb total JS, 56ms mount time).
+- Discard #29: Split HeadlineSection into 4 useCardStore selectors (+0.04 kb entry JS).
+- Win #30: Streamline onboarding status parsing & alias dismissWelcome (-0.09 kb entry JS, -0.09 kb total JS).
