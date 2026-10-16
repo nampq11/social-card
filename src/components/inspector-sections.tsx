@@ -85,6 +85,8 @@ export const CardTypeSwitcherSection: React.FC = () => {
   )
 }
 
+const SHOT_FIT_OPTIONS = ['auto', 'cover', 'contain'] as const
+
 // One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
 // through the shared ingest (normalize + re-encode) into the store; the
 // thumbnail grid shows upload order — the first Shot renders in the Hero
@@ -186,11 +188,7 @@ export const ScreenshotsSection: React.FC = () => {
                 : setShotFit(selectedShot.id, choice)
             }
             className="w-full"
-            options={[
-              { value: 'auto', label: copy.shot_fit_auto },
-              { value: 'cover', label: copy.shot_fit_cover },
-              { value: 'contain', label: copy.shot_fit_contain },
-            ]}
+            options={SHOT_FIT_OPTIONS.map((f) => ({ value: f, label: copy[`shot_fit_${f}`] }))}
           />
         </div>
       )}
