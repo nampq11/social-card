@@ -107,3 +107,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #41: Positional arguments in buttonVariants (-0.03 kb entry JS, -0.03 kb total JS).
 - Win #41: Positional arguments in buttonVariants (-0.03 kb entry JS, -0.03 kb total JS).
 - Win #42: Eliminate clsx in Button.tsx & prune unused font weights in index.html (-0.02 kb entry JS, 58ms mount).
+- Win #42: Eliminate clsx in Button.tsx & prune unused font weights in index.html (-0.02 kb entry JS, 58ms mount).
+- Discard #43: Type imports in PresetCard, SegmentedControl, tabs (entry JS unchanged).
+- Win #44: Eliminate redundant invariant qrBg across CARD_THEME_STYLES (-0.07 kb entry JS, -0.06 kb total JS).
