@@ -2,6 +2,8 @@
 // studio (Header actions, Inspector controls, app-root toolbar).
 // `apple-button` carries the tactile press feedback defined in index.css.
 // focus-visible ring: the one keyboard affordance every studio button shares.
+import type { ButtonHTMLAttributes } from 'react'
+
 const BUTTON_BASE =
   'inline-flex items-center justify-center text-xs apple-button cursor-pointer [&_svg]:size-3.5 [&_svg]:shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60'
 
@@ -24,7 +26,7 @@ const BUTTON_SIZES = {
 type ButtonStyle = keyof typeof BUTTON_VARIANTS
 type ButtonScale = keyof typeof BUTTON_SIZES
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonStyle
   size?: ButtonScale
 }

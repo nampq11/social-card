@@ -12,9 +12,7 @@ export function useFlash<T>(initial: T) {
   // A new flash owns the slot: any pending auto-hide from an earlier flash
   // must not clear this one early.
   const flash = (next: T, durationMs: number) => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-    }
+    clearTimeout(timerRef.current!)
     setValue(next)
     timerRef.current = setTimeout(() => {
       timerRef.current = null
@@ -23,14 +21,7 @@ export function useFlash<T>(initial: T) {
   }
 
   // No late setState after unmount: the pending auto-hide dies with the hook.
-  useEffect(
-    () => () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
-    },
-    [],
-  )
+  useEffect(() => () => clearTimeout(timerRef.current!), [])
 
   return [value, { flash }] as const
 }
