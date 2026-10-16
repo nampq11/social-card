@@ -5,6 +5,7 @@
 ### Changed
 
 - Moved the default avatar and factory demo shot into the build pipeline: both images are imported through Vite from `src/assets/` — the avatar ships as a hashed `/assets/` file, the 3.8 KB demo shot inlines into the entry JS — instead of loading from `public/` via runtime `BASE_URL` paths and hand-maintained Vercel rewrites.
+- Imported `qrcode.react` statically instead of through a lazy chunk: the factory card paints its QR on the first screen, so the separate production chunk only added an entry-JS → QR-chunk waterfall (the QR popped in after first paint); the library now ships inside the entry bundle.
 
 - Migrated the UI to a semantic design-token system: one Tailwind v4 vocabulary for ink, surfaces, accent, hairline, canvas, and glass, with OS-following dark values that flip the whole app with no per-element work. Unified the true duplicates (two accent blues, two brand gradients, the sheet pair, the hairline border). #45
 - Made card themes read static card tokens so an export never depends on the viewer's OS color scheme — guarded by a unit test and a new `smoke:theme` OS-emulation check. #45

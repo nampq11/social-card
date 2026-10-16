@@ -1,4 +1,5 @@
-import { forwardRef, lazy, Suspense } from 'react'
+import { forwardRef } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useCardStore } from '../lib/card-store'
 import { RATIO_INFO } from '../constants/ratios'
 import { FALLBACK_QR_URL } from '../constants/presets'
@@ -7,8 +8,6 @@ import { ShowcaseCard } from './ShowcaseCard'
 import { useUiCopy } from '../lib/i18n'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { AuthorAvatar, AuthorBio } from './AuthorSignature'
-
-const LazyQRCodeSVG = lazy(() => import('qrcode.react').then((m) => ({ default: m.QRCodeSVG })))
 
 interface CardPreviewProps {
   scale?: number
@@ -106,15 +105,13 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                       data-testid="qr-container"
                       className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center bg-white shadow-sm border ${themeStyles.border}`}
                     >
-                      <Suspense fallback={null}>
-                        <LazyQRCodeSVG
-                          value={data.qrUrl || FALLBACK_QR_URL}
-                          size={48}
-                          fgColor={themeStyles.qrFg}
-                          bgColor="transparent"
-                          level="M"
-                        />
-                      </Suspense>
+                      <QRCodeSVG
+                        value={data.qrUrl || FALLBACK_QR_URL}
+                        size={48}
+                        fgColor={themeStyles.qrFg}
+                        bgColor="transparent"
+                        level="M"
+                      />
                     </div>
                     {data.qrCta && (
                       <span
