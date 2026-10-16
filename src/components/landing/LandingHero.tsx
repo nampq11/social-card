@@ -13,7 +13,7 @@ export function LandingHero() {
           {t.hero_badge}
         </p>
 
-        <h1 className="mt-6 text-5xl font-extrabold leading-[1.05] tracking-tight text-ink md:text-7xl">
+        <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight text-ink md:text-7xl">
           {t.hero_title_a}
           <br />
           <span className="text-accent">{t.hero_title_b}</span>

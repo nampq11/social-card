@@ -12,7 +12,7 @@ export function LandingNav() {
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
-      <nav className="apple-glass flex items-center justify-between gap-3 rounded-2xl px-3.5 py-2">
+      <nav className="apple-glass flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3">
         <a href="#top" className="flex items-center gap-2.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-brand-from to-brand-to text-white shadow-sm shadow-blue-500/25">
             <Layers className="size-4" />

@@ -20,7 +20,7 @@ export function SectionHeading({
   return (
     <div className={align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}>
       <p className="text-xs font-semibold tracking-[0.2em] text-accent">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-ink md:text-4xl">{title}</h2>
+      <h2 className="mt-3 text-3xl font-bold tracking-tight text-ink md:text-4xl">{title}</h2>
       {lede && <p className="mt-4 text-base text-ink-secondary md:text-lg">{lede}</p>}
     </div>
   )
