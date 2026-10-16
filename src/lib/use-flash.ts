@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Transient button feedback that auto-hides after its duration (the copy
@@ -10,15 +10,19 @@ export function useFlash<T>(initial: T) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // A new flash owns the slot: any pending auto-hide from an earlier flash
-  // must not clear this one early.
-  const flash = (next: T, durationMs: number) => {
-    clearTimeout(timerRef.current!)
-    setValue(next)
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null
-      setValue(initial)
-    }, durationMs)
-  }
+  // must not clear this one early. Stable identity (initial is fixed per
+  // slot) so consumers can keep their own callbacks memoized.
+  const flash = useCallback(
+    (next: T, durationMs: number) => {
+      clearTimeout(timerRef.current!)
+      setValue(next)
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null
+        setValue(initial)
+      }, durationMs)
+    },
+    [initial],
+  )
 
   // No late setState after unmount: the pending auto-hide dies with the hook.
   useEffect(() => () => clearTimeout(timerRef.current!), [])

@@ -18,13 +18,13 @@ import {
 export type Language = 'vi' | 'en'
 
 /** localStorage key persisting the manually chosen Interface Language. */
+export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language'
+
 /** Inline code emphasis in the posting-tips copy: the one mono style both
     languages' ratio mentions share. */
 function Code({ children }: { children: ReactNode }) {
   return <code className="font-mono text-neutral-700 dark:text-neutral-300">{children}</code>
 }
-
-export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language'
 
 /**
  * UI Copy dictionary — everything the tool itself says (GLOSSARY.md).

@@ -817,9 +817,9 @@ export function IdentitySection() {
             onCheckedChange={(checked) => update('avatarGrayscale', checked)}
           />
         </div>
-        <div className={IDENTITY_ROW_CLASS}>
-          <div className={IDENTITY_DIVIDER_CLASS} />
+        <div className={IDENTITY_DIVIDER_CLASS} />
 
+        <div className={IDENTITY_ROW_CLASS}>
           <label htmlFor="inspector-author-name" className="shrink-0 text-[13px] text-ink">
             {copy.author_name_label}
           </label>
