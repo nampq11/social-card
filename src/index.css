@@ -302,3 +302,26 @@
       0 0 0 1px rgba(255, 255, 255, 0.08);
   }
 }
+
+/* Landing feature ticker (components/landing/MarqueeTicker.tsx): the track
+   holds three identical strips and slides exactly one strip-width per
+   loop, so the repetition reads as seamless. Reduced motion parks the
+   strip — the chips stay readable, only the glide drops. */
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% / 3));
+  }
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee-track {
+    animation: none;
+  }
+}

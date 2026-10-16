@@ -8,7 +8,9 @@ import { spawn } from 'node:child_process'
 import { setTimeout as sleep } from 'node:timers/promises'
 
 const PORT = 9222
-const URL_APP = 'http://localhost:5173/'
+// The studio lives at /social-card/studio since the landing took the bare
+// app path as the front door — smokes exercise the studio, so they follow.
+const URL_APP = 'http://localhost:5173/social-card/studio'
 
 export { sleep }
 

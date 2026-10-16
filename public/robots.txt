@@ -1,0 +1,6 @@
+# Nothing under this app is crawl-sensitive; the sitemap location is the
+# only real instruction.
+User-agent: *
+Allow: /
+
+Sitemap: https://workboost.qzz.io/sitemap.xml

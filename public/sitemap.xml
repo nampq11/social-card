@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exactly the three view canonicals (src/lib/view-meta.ts); no lastmod or
+     priority — we have no honest data for either. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://workboost.qzz.io/social-card</loc></url>
+  <url><loc>https://workboost.qzz.io/social-card/studio</loc></url>
+  <url><loc>https://workboost.qzz.io/social-card/feedback</loc></url>
+</urlset>
