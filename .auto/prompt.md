@@ -133,3 +133,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #55: Verification rerun — #54 reproduces exactly (419.57 kb); plateau confirmed real.
 - Win #55: Verification rerun — #54 reproduces exactly (419.57 kb); plateau confirmed real.
 - Win #56: Extract shared Stack component in inspector-sections (-0.22 kb entry JS).
+- Win #56: Extract shared Stack component in inspector-sections (-0.22 kb entry JS).
+- Win #57: Extract shared Code helper in i18n posting_tips (-0.14 kb entry JS).

@@ -18,6 +18,12 @@ import {
 export type Language = 'vi' | 'en'
 
 /** localStorage key persisting the manually chosen Interface Language. */
+/** Inline code emphasis in the posting-tips copy: the one mono style both
+    languages' ratio mentions share. */
+function Code({ children }: { children: ReactNode }) {
+  return <code className="font-mono text-neutral-700 dark:text-neutral-300">{children}</code>
+}
+
 export const UI_LANGUAGE_STORAGE_KEY = 'social-card.ui-language'
 
 /**
@@ -142,10 +148,9 @@ const vi = {
 
   posting_tips: (
     <>
-      Tỉ lệ <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> và{' '}
-      <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> hiển thị hoàn
-      hảo nhất trên dòng thời gian di động của Threads và X. Dùng tính năng{' '}
-      <strong>Copy ảnh</strong> để dán trực tiếp vào bài viết mà không cần tải và lưu file rác.
+      Tỉ lệ <Code>1:1</Code> và <Code>4:5</Code> hiển thị hoàn hảo nhất trên dòng thời gian di động
+      của Threads và X. Dùng tính năng <strong>Copy ảnh</strong> để dán trực tiếp vào bài viết mà
+      không cần tải và lưu file rác.
     </>
   ) as ReactNode,
 
@@ -307,10 +312,9 @@ const en: typeof vi = {
 
   posting_tips: (
     <>
-      The <code className="font-mono text-neutral-700 dark:text-neutral-300">1:1</code> and{' '}
-      <code className="font-mono text-neutral-700 dark:text-neutral-300">4:5</code> ratios look best
-      on the mobile timelines of Threads and X. Use <strong>Copy image</strong> to paste straight
-      into your post — no stray files to download and delete.
+      The <Code>1:1</Code> and <Code>4:5</Code> ratios look best on the mobile timelines of Threads
+      and X. Use <strong>Copy image</strong> to paste straight into your post — no stray files to
+      download and delete.
     </>
   ) as ReactNode,
 
