@@ -227,6 +227,8 @@ export const ScreenshotsSection: React.FC = () => {
 const shotName = (copy: ReturnType<typeof useUiCopy>['copy'], position: number) =>
   `${copy.shots_label} ${position}`
 
+const ANNOTATION_SIDES: AnnotationSide[] = ['left', 'right', 'top']
+
 // One Shot's line in the Annotations section: the Shot (named by upload
 // order, like the thumbnails' alt text) beside its add affordance, which
 // mirrors the store's one-annotation-per-Shot refusal by disabling.
@@ -305,9 +307,11 @@ export const AnnotationsSection: React.FC = () => {
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
             >
-              <option value="left">{copy.annotation_side_left}</option>
-              <option value="right">{copy.annotation_side_right}</option>
-              <option value="top">{copy.annotation_side_top}</option>
+              {ANNOTATION_SIDES.map((side) => (
+                <option key={side} value={side}>
+                  {copy[`annotation_side_${side}`]}
+                </option>
+              ))}
             </Select>
             <button
               type="button"
