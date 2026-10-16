@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type {
   AnnotationSide,
   CardState,
@@ -66,7 +66,7 @@ const CARD_TYPES: CardType[] = ['quote', 'showcase']
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
 // dedicated atomic switch action; the checked segment mirrors the Card Type.
-export const CardTypeSwitcherSection: React.FC = () => {
+export function CardTypeSwitcherSection() {
   const { copy } = useUiCopy()
   const cardType = useCardStore((s) => s.card.cardType)
   const switchCardType = useCardStore((s) => s.switchCardType)
@@ -92,7 +92,7 @@ const SHOT_FIT_OPTIONS = ['auto', 'cover', 'contain'] as const
 // thumbnail grid shows upload order — the first Shot renders in the Hero
 // Slot — with a delete per Shot. Adding disables at MAX_SHOTS with the cap
 // spelled out, mirroring the store's own refusal.
-export const ScreenshotsSection: React.FC = () => {
+export function ScreenshotsSection() {
   const { copy } = useUiCopy()
   // Select the array reference itself (stable while untouched); defaulting
   // inside the selector would mint a fresh [] per check and loop React's
@@ -108,7 +108,7 @@ export const ScreenshotsSection: React.FC = () => {
   const [selectedShotId, setSelectedShotId] = useState<string | null>(null)
   const selectedShot = shots.find((shot) => shot.id === selectedShotId)
 
-  const handleShotPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleShotPick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     // Clear value so re-picking the same file still triggers onChange
     event.target.value = ''
@@ -229,7 +229,7 @@ const ANNOTATION_SIDES: AnnotationSide[] = ['left', 'right', 'top']
 // One Shot's line in the Annotations section: the Shot (named by upload
 // order, like the thumbnails' alt text) beside its add affordance, which
 // mirrors the store's one-annotation-per-Shot refusal by disabling.
-const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, position }) => {
+function AnnotationAddRow({ shot, position }: { shot: Shot; position: number }) {
   const { copy } = useUiCopy()
   const annotated = useCardStore(
     (s) => s.card.showcase?.annotations.some((a) => a.shotId === shot.id) ?? false,
@@ -258,7 +258,7 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
 // per spec #33 — no canvas selection: each row is the annotation's text, its
 // target Shot, its side, and a delete. Adding is capped at one per Shot; the
 // store refuses the add and the per-Shot add affordance mirrors that cap.
-export const AnnotationsSection: React.FC = () => {
+export function AnnotationsSection() {
   const { copy } = useUiCopy()
   const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
   const annotations = useCardStore((s) => s.card.showcase?.annotations) ?? []
@@ -341,7 +341,7 @@ export const AnnotationsSection: React.FC = () => {
   )
 }
 
-export const PresetsSection: React.FC = () => {
+export function PresetsSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const patchCard = useCardStore((s) => s.patchCard)
@@ -391,12 +391,7 @@ const PRESET_MOCK_ASPECT: Record<AspectRatio, string> = {
   '16:9': 'aspect-video',
 }
 
-const StylePresetMock: React.FC<StylePresetState> = ({
-  theme,
-  ratio,
-  headlineSize,
-  uppercaseHeadline,
-}) => {
+function StylePresetMock({ theme, ratio, headlineSize, uppercaseHeadline }: StylePresetState) {
   const tokens = CARD_THEME_STYLES[theme]
   // Headline bar weight tracks the preset's headline size (34px → 3px …
   // 54px → 5px); a caps headline reads as a wider first line.
@@ -436,8 +431,8 @@ const StylePresetMock: React.FC<StylePresetState> = ({
 // value for precision). Drafts locally and commits on blur/Enter — clamping
 // on every keystroke would fight mid-typing ("5" of "50").
 function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
-  const [draft, setDraft] = React.useState(String(value))
-  const [seenValue, setSeenValue] = React.useState(value)
+  const [draft, setDraft] = useState(String(value))
+  const [seenValue, setSeenValue] = useState(value)
   if (seenValue !== value) {
     // Derived state during render: an external size change (slider drag,
     // preset, undo) resets the draft without an effect or remount.
@@ -476,7 +471,7 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
 
 const THEME_KEYS = ['paper', 'white', 'dark', 'mist'] as const
 
-export const StyleSection: React.FC = () => {
+export function StyleSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
@@ -587,7 +582,7 @@ export const StyleSection: React.FC = () => {
   )
 }
 
-export const HeadlineSection: React.FC = () => {
+export function HeadlineSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
@@ -707,7 +702,7 @@ const LabeledValueRow: React.FC<{
   </div>
 )
 
-export const IdentitySection: React.FC = () => {
+export function IdentitySection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
@@ -727,7 +722,7 @@ export const IdentitySection: React.FC = () => {
     bio.style.height = `${bio.scrollHeight}px`
   }, [data.authorBio])
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Clear value so re-uploading the same file still triggers onChange
     e.target.value = ''
