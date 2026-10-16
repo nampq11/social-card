@@ -104,7 +104,7 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   <div className="flex items-center gap-3.5 max-w-[50%]">
                     <div
                       data-testid="qr-container"
-                      className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border ${themeStyles.border}`}
+                      className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center bg-white shadow-sm border ${themeStyles.border}`}
                     >
                       <Suspense fallback={null}>
                         <LazyQRCodeSVG
