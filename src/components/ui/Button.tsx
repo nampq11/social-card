@@ -29,10 +29,6 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: ButtonScale
 }
 
-function buttonVariants(variant: ButtonStyle = 'secondary', size: ButtonScale = 'md') {
-  return `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]}`
-}
-
 export function Button({
   className,
   variant = 'secondary',
@@ -40,6 +36,6 @@ export function Button({
   type = 'button',
   ...props
 }: ButtonProps) {
-  const base = buttonVariants(variant, size)
+  const base = `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]}`
   return <button type={type} className={className ? `${base} ${className}` : base} {...props} />
 }
