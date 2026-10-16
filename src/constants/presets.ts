@@ -1,6 +1,6 @@
 import type { CardState } from '../types'
 import type { UiCopyKey, UiStringKey } from '../lib/i18n'
-import { DEMO_SHOT_DATA_URL, DEMO_SHOT_ID } from './demo-shot'
+import { DEMO_SHOT_ID, DEMO_SHOT_URL } from './demo-shot'
 
 // Shared fallbacks so the preview placeholders and the default state never
 // drift apart.
@@ -14,7 +14,7 @@ export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 // restores them untouched (ADR 0004).
 export const DEFAULT_CARD_STATE: CardState = {
   cardType: 'showcase',
-  showcase: { shots: [{ id: DEMO_SHOT_ID, dataUrl: DEMO_SHOT_DATA_URL }], annotations: [] },
+  showcase: { shots: [{ id: DEMO_SHOT_ID, dataUrl: DEMO_SHOT_URL }], annotations: [] },
   headline: 'Em vừa được tậu đất:',
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: FALLBACK_AUTHOR_NAME,
@@ -39,6 +39,8 @@ export interface Preset {
   state: Partial<CardState>
 }
 
+// nameKey/descKey stay literal rather than derived from id: only literals
+// check against the dictionary unions, so a missing key fails the build.
 export const PRESETS: Preset[] = [
   {
     id: 'original',

@@ -58,7 +58,7 @@ export function useFitScale(
     refit()
     // jsdom has no ResizeObserver: tests keep the initial computation only.
     if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => refit())
+    const observer = new ResizeObserver(refit)
     observer.observe(el)
     return () => observer.disconnect()
   }, [mode, refit, containerRef])

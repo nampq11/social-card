@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, lazy, Suspense } from 'react'
 import { useCardStore } from './lib/card-store'
 import { RATIO_INFO } from './constants/ratios'
 import type { AspectRatio } from './types'
@@ -9,17 +9,14 @@ import { Inspector } from './components/Inspector'
 import { MobileSheet } from './components/MobileSheet'
 import { TipsPopover } from './components/TipsPopover'
 import { WelcomeCard } from './components/WelcomeCard'
-import { OnboardingTour } from './components/OnboardingTour'
 import { useOnboarding } from './lib/onboarding'
 import { Header } from './components/Header'
 import { CardPreview } from './components/CardPreview'
 import { useCardExport } from './lib/use-card-export'
 import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
-import { SheetDebugHud } from './components/SheetDebugHud'
 import { Tooltip } from './components/ui/Tooltip'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
-import { Toaster } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
@@ -27,6 +24,15 @@ const DESKTOP_QUERY = '(min-width: 1024px)'
 // URL carries ?sheetdebug, so it never renders for users. See the
 // component for what it reads and why.
 const SHEET_DEBUG = new URLSearchParams(window.location.search).has('sheetdebug')
+
+const OnboardingTour = lazy(() =>
+  import('./components/OnboardingTour').then((m) => ({ default: m.OnboardingTour })),
+)
+
+const SheetDebugHud = lazy(() =>
+  import('./components/SheetDebugHud').then((m) => ({ default: m.SheetDebugHud })),
+)
+const Toaster = lazy(() => import('sonner').then((m) => ({ default: m.Toaster })))
 
 /** Canvas padding follows the shell: mobile keeps a slim margin; desktop
  * reserves the floating Inspector's rail unless focus mode collapsed it. */
@@ -51,7 +57,8 @@ export function App() {
   const { copy } = useUiCopy()
   // The Card State lives in its store; the app root only reads it for the
   // canvas toolbar label and the Fit-to-View sizes.
-  const cardState = useCardStore((s) => s.card)
+  const ratio = useCardStore((s) => s.card.ratio)
+  const cardType = useCardStore((s) => s.card.cardType)
   const patchCard = useCardStore((s) => s.patchCard)
 
   // Desktop focus mode: collapsing the Inspector gives the card the whole
@@ -75,15 +82,15 @@ export function App() {
   const { isWelcomeOpen, isTourOpen, startTour, dismissWelcome, endTour } = useOnboarding()
 
   const canvasRef = useRef<HTMLDivElement>(null)
-  const { width: cardWidth, height: cardHeight } = RATIO_INFO[cardState.ratio]
+  const { width: cardWidth, height: cardHeight } = RATIO_INFO[ratio]
   const { scale, mode, zoomIn, zoomOut, fit } = useFitScale(canvasRef, cardWidth, cardHeight)
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
 
   const cycleRatio = useCallback(() => {
     const ratios: AspectRatio[] = ['1:1', '4:5', '16:9']
-    const nextIdx = (ratios.indexOf(cardState.ratio) + 1) % ratios.length
+    const nextIdx = (ratios.indexOf(ratio) + 1) % ratios.length
     patchCard({ ratio: ratios[nextIdx] })
-  }, [cardState.ratio, patchCard])
+  }, [ratio, patchCard])
 
   useStudioShortcuts({
     onUndo: undo,
@@ -108,7 +115,7 @@ export function App() {
         // the header hides the cycling pill for it — same rule as the
         // Inspector's ratio control: a control that lies about what's
         // editable is worse than no control.
-        onCycleRatio={cardState.cardType === 'showcase' ? undefined : cycleRatio}
+        onCycleRatio={cardType === 'showcase' ? undefined : cycleRatio}
         onReplayTour={startTour}
       />
 
@@ -139,7 +146,7 @@ export function App() {
             <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
               {/* Showcase is always 1:1 — the cycling chip hides for it, same
                   rule as the header pill and the Inspector's ratio control. */}
-              {cardState.cardType !== 'showcase' && (
+              {cardType !== 'showcase' && (
                 <button
                   type="button"
                   onClick={cycleRatio}
@@ -148,7 +155,7 @@ export function App() {
                   className="flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur px-2.5 py-1 shadow-sm border border-black/[0.04] dark:border-white/[0.06] cursor-pointer active:scale-95 transition max-w-[calc(100vw-5rem)] truncate [@media(pointer:coarse)]:min-h-11"
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-                  <span className="truncate">{copy[RATIO_LABEL_KEY[cardState.ratio]]}</span>
+                  <span className="truncate">{copy[RATIO_LABEL_KEY[ratio]]}</span>
                 </button>
               )}
               <TipsPopover onReplayTour={startTour} />
@@ -210,12 +217,22 @@ export function App() {
 
       {/* First-run onboarding: welcome gate + opt-in spotlight tour. */}
       <WelcomeCard open={isWelcomeOpen} onStartTour={startTour} onSkip={dismissWelcome} />
-      <OnboardingTour open={isTourOpen} onOpenChange={(next) => !next && endTour()} />
+      {isTourOpen && (
+        <Suspense fallback={null}>
+          <OnboardingTour open={isTourOpen} onOpenChange={(next) => !next && endTour()} />
+        </Suspense>
+      )}
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
-      <Toaster position="bottom-center" />
+      <Suspense fallback={null}>
+        <Toaster position="bottom-center" />
+      </Suspense>
 
-      {SHEET_DEBUG && <SheetDebugHud />}
+      {SHEET_DEBUG && (
+        <Suspense fallback={null}>
+          <SheetDebugHud />
+        </Suspense>
+      )}
     </div>
   )
 }

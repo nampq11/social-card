@@ -1,12 +1,14 @@
-import { forwardRef } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import { forwardRef, lazy, Suspense } from 'react'
 import { useCardStore } from '../lib/card-store'
 import { RATIO_INFO } from '../constants/ratios'
-import { FALLBACK_AUTHOR_NAME, FALLBACK_QR_URL } from '../constants/presets'
+import { FALLBACK_QR_URL } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
 import { ShowcaseCard } from './ShowcaseCard'
 import { useUiCopy } from '../lib/i18n'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
+import { AuthorAvatar, AuthorBio } from './AuthorSignature'
+
+const LazyQRCodeSVG = lazy(() => import('qrcode.react').then((m) => ({ default: m.QRCodeSVG })))
 
 interface CardPreviewProps {
   scale?: number
@@ -24,36 +26,6 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
 
     const sublineList = splitLines(data.sublines)
     const bioLines = splitLines(data.authorBio)
-
-    const signatureText = (alignRight: boolean) => (
-      <div className={alignRight ? 'text-right' : ''}>
-        <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
-          {data.authorName || FALLBACK_AUTHOR_NAME}
-        </h3>
-        {bioLines.length > 0 && (
-          <div
-            data-testid="author-bio"
-            className={`text-xs ${themeStyles.subtext} font-normal italic leading-tight mt-0.5 break-words`}
-          >
-            {bioLines.map((line, idx) => (
-              <p key={idx}>{line}</p>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-
-    const signatureAvatar = data.avatarUrl ? (
-      <div
-        className={`w-14 h-14 rounded-full overflow-hidden shrink-0 shadow-sm ${themeStyles.avatarBorder}`}
-      >
-        <img
-          src={data.avatarUrl}
-          alt={data.authorName || FALLBACK_AUTHOR_NAME}
-          className={`w-full h-full object-cover object-top ${data.avatarGrayscale ? 'grayscale' : ''}`}
-        />
-      </div>
-    ) : null
 
     return (
       <div
@@ -132,15 +104,17 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                   <div className="flex items-center gap-3.5 max-w-[50%]">
                     <div
                       data-testid="qr-container"
-                      className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center ${themeStyles.qrBg} shadow-sm border ${themeStyles.border}`}
+                      className={`p-1.5 rounded-lg shrink-0 flex items-center justify-center bg-white shadow-sm border ${themeStyles.border}`}
                     >
-                      <QRCodeSVG
-                        value={data.qrUrl || FALLBACK_QR_URL}
-                        size={48}
-                        fgColor={themeStyles.qrFg}
-                        bgColor="transparent"
-                        level="M"
-                      />
+                      <Suspense fallback={null}>
+                        <LazyQRCodeSVG
+                          value={data.qrUrl || FALLBACK_QR_URL}
+                          size={48}
+                          fgColor={themeStyles.qrFg}
+                          bgColor="transparent"
+                          level="M"
+                        />
+                      </Suspense>
                     </div>
                     {data.qrCta && (
                       <span
@@ -151,18 +125,36 @@ export const CardPreview = forwardRef<HTMLDivElement, CardPreviewProps>(
                     )}
                   </div>
                 )}
-
                 {data.qrEnabled ? (
                   /* Right: Circular Avatar & Author Signature */
                   <div className="flex items-center gap-3.5 shrink-0 ml-auto">
-                    {signatureText(true)}
-                    {signatureAvatar}
+                    <AuthorBio
+                      name={data.authorName}
+                      bioLines={bioLines}
+                      subtextClass={themeStyles.subtext}
+                      align="right"
+                    />
+                    <AuthorAvatar
+                      url={data.avatarUrl}
+                      name={data.authorName}
+                      grayscale={data.avatarGrayscale}
+                      borderClass={themeStyles.avatarBorder}
+                    />
                   </div>
                 ) : (
                   /* Centered signature: avatar first, then name + bio */
                   <div className="flex items-center gap-3.5 shrink-0">
-                    {signatureAvatar}
-                    {signatureText(false)}
+                    <AuthorAvatar
+                      url={data.avatarUrl}
+                      name={data.authorName}
+                      grayscale={data.avatarGrayscale}
+                      borderClass={themeStyles.avatarBorder}
+                    />
+                    <AuthorBio
+                      name={data.authorName}
+                      bioLines={bioLines}
+                      subtextClass={themeStyles.subtext}
+                    />
                   </div>
                 )}
               </div>

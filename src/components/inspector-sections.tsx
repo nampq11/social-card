@@ -1,13 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import type {
-  AnnotationSide,
-  CardState,
-  AspectRatio,
-  CardTheme,
-  CardType,
-  Shot,
-  ShotFit,
-} from '../types'
+import React, { type ChangeEvent, useEffect, useRef, useState, type ReactNode } from 'react'
+import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, ShotFit } from '../types'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
@@ -21,7 +13,6 @@ import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Slider } from './ui/Slider'
 import { Select, fieldSurfaceClass } from './ui/Select'
 import { FieldLabel } from './ui/FieldLabel'
-import { Field } from '@base-ui/react/field'
 import {
   Square,
   RectangleVertical,
@@ -38,7 +29,7 @@ import { Checkbox } from './ui/Checkbox'
 import { Switch } from './ui/Switch'
 import { PresetCard } from './ui/PresetCard'
 import { SwatchPicker } from './ui/SwatchPicker'
-import { toast } from 'sonner'
+import { toast } from '../lib/toast'
 import { clsx } from 'clsx'
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:
@@ -62,29 +53,43 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
 
+const CARD_TYPES: CardType[] = ['quote', 'showcase']
+
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
 // dedicated atomic switch action; the checked segment mirrors the Card Type.
-export const CardTypeSwitcherSection: React.FC = () => {
+export function CardTypeSwitcherSection() {
   const { copy } = useUiCopy()
   const cardType = useCardStore((s) => s.card.cardType)
   const switchCardType = useCardStore((s) => s.switchCardType)
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <Stack>
       <FieldLabel id="card-type-label">{copy.card_type_label}</FieldLabel>
       <SegmentedControl<CardType>
         aria-labelledby="card-type-label"
         value={cardType}
         onChange={switchCardType}
         className="w-full"
-        options={[
-          { value: 'quote', label: copy.card_type_quote },
-          { value: 'showcase', label: copy.card_type_showcase },
-        ]}
+        options={CARD_TYPES.map((t) => ({ value: t, label: copy[`card_type_${t}`] }))}
       />
-    </div>
+    </Stack>
   )
+}
+
+const SHOT_FIT_OPTIONS = ['auto', 'cover', 'contain'] as const
+
+// The one hint caption typography: the tertiary meta line under a label or
+// beside a control (cap hints, badges, counters). One definition so the
+// six call sites can't drift.
+function Hint({ children }: { children: ReactNode }) {
+  return <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">{children}</span>
+}
+
+// The control-stack rhythm: the one vertical flow gap shared by section
+// bodies and field groups, so spacing can't drift between sections.
+function Stack({ children }: { children: ReactNode }) {
+  return <div className="flex flex-col gap-1.5">{children}</div>
 }
 
 // One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
@@ -92,7 +97,7 @@ export const CardTypeSwitcherSection: React.FC = () => {
 // thumbnail grid shows upload order — the first Shot renders in the Hero
 // Slot — with a delete per Shot. Adding disables at MAX_SHOTS with the cap
 // spelled out, mirroring the store's own refusal.
-export const ScreenshotsSection: React.FC = () => {
+export function ScreenshotsSection() {
   const { copy } = useUiCopy()
   // Select the array reference itself (stable while untouched); defaulting
   // inside the selector would mint a fresh [] per check and loop React's
@@ -108,7 +113,7 @@ export const ScreenshotsSection: React.FC = () => {
   const [selectedShotId, setSelectedShotId] = useState<string | null>(null)
   const selectedShot = shots.find((shot) => shot.id === selectedShotId)
 
-  const handleShotPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleShotPick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     // Clear value so re-picking the same file still triggers onChange
     event.target.value = ''
@@ -131,9 +136,9 @@ export const ScreenshotsSection: React.FC = () => {
     <div className="flex flex-col gap-2">
       <FieldLabel
         aside={
-          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
+          <Hint>
             {shots.length}/{MAX_SHOTS}
-          </span>
+          </Hint>
         }
       >
         {copy.shots_label}
@@ -176,7 +181,7 @@ export const ScreenshotsSection: React.FC = () => {
       )}
 
       {selectedShot && (
-        <div className="flex flex-col gap-1.5">
+        <Stack>
           <FieldLabel id={`shot-fit-label-${selectedShot.id}`}>{copy.shot_fit_label}</FieldLabel>
           {/* Tự động = no override: the derived default (ADR 0006 §1). */}
           <SegmentedControl<'auto' | ShotFit>
@@ -188,13 +193,9 @@ export const ScreenshotsSection: React.FC = () => {
                 : setShotFit(selectedShot.id, choice)
             }
             className="w-full"
-            options={[
-              { value: 'auto', label: copy.shot_fit_auto },
-              { value: 'cover', label: copy.shot_fit_cover },
-              { value: 'contain', label: copy.shot_fit_contain },
-            ]}
+            options={SHOT_FIT_OPTIONS.map((f) => ({ value: f, label: copy[`shot_fit_${f}`] }))}
           />
-        </div>
+        </Stack>
       )}
 
       <Button
@@ -207,11 +208,7 @@ export const ScreenshotsSection: React.FC = () => {
         <Plus className="w-3 h-3" />
         <span>{copy.shots_add}</span>
       </Button>
-      {atCap && (
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {copy.shots_cap_hint}
-        </span>
-      )}
+      {atCap && <Hint>{copy.shots_cap_hint}</Hint>}
       <input
         type="file"
         ref={fileInputRef}
@@ -228,29 +225,34 @@ export const ScreenshotsSection: React.FC = () => {
 const shotName = (copy: ReturnType<typeof useUiCopy>['copy'], position: number) =>
   `${copy.shots_label} ${position}`
 
+const ANNOTATION_SIDES: AnnotationSide[] = ['left', 'right', 'top']
+
 // One Shot's line in the Annotations section: the Shot (named by upload
 // order, like the thumbnails' alt text) beside its add affordance, which
 // mirrors the store's one-annotation-per-Shot refusal by disabling.
-const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, position }) => {
-  const { copy } = useUiCopy()
-  const annotated = useCardStore(
-    (s) => s.card.showcase?.annotations.some((a) => a.shotId === shot.id) ?? false,
-  )
-  const name = shotName(copy, position)
-  const addAnnotation = useCardStore((s) => s.addAnnotation)
-
+function AnnotationAddRow({
+  name,
+  annotated,
+  addText,
+  onAdd,
+}: {
+  name: string
+  annotated: boolean
+  addText: string
+  onAdd: () => void
+}) {
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="truncate text-xs text-ink-secondary">{name}</span>
       <Button
-        onClick={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
+        onClick={onAdd}
         disabled={annotated}
-        aria-label={`${copy.annotations_add} · ${name}`}
+        aria-label={`${addText} · ${name}`}
         variant="secondary"
         size="sm"
       >
         <Plus className="w-3 h-3" />
-        <span>{copy.annotations_add}</span>
+        <span>{addText}</span>
       </Button>
     </div>
   )
@@ -260,10 +262,11 @@ const AnnotationAddRow: React.FC<{ shot: Shot; position: number }> = ({ shot, po
 // per spec #33 — no canvas selection: each row is the annotation's text, its
 // target Shot, its side, and a delete. Adding is capped at one per Shot; the
 // store refuses the add and the per-Shot add affordance mirrors that cap.
-export const AnnotationsSection: React.FC = () => {
+export function AnnotationsSection() {
   const { copy } = useUiCopy()
   const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
   const annotations = useCardStore((s) => s.card.showcase?.annotations) ?? []
+  const addAnnotation = useCardStore((s) => s.addAnnotation)
   const updateAnnotation = useCardStore((s) => s.updateAnnotation)
   const removeAnnotation = useCardStore((s) => s.removeAnnotation)
 
@@ -306,9 +309,11 @@ export const AnnotationsSection: React.FC = () => {
                 updateAnnotation(annotation.id, { side: e.target.value as AnnotationSide })
               }
             >
-              <option value="left">{copy.annotation_side_left}</option>
-              <option value="right">{copy.annotation_side_right}</option>
-              <option value="top">{copy.annotation_side_top}</option>
+              {ANNOTATION_SIDES.map((side) => (
+                <option key={side} value={side}>
+                  {copy[`annotation_side_${side}`]}
+                </option>
+              ))}
             </Select>
             <button
               type="button"
@@ -322,18 +327,23 @@ export const AnnotationsSection: React.FC = () => {
         </div>
       ))}
       {shots.length === 0 ? (
-        <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-          {copy.annotations_needs_shot_hint}
-        </span>
+        <Hint>{copy.annotations_needs_shot_hint}</Hint>
       ) : (
         <>
-          {shots.map((shot, index) => (
-            <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
-          ))}
+          {shots.map((shot, index) => {
+            const name = shotName(copy, index + 1)
+            return (
+              <AnnotationAddRow
+                key={shot.id}
+                name={name}
+                annotated={annotations.some((a) => a.shotId === shot.id)}
+                addText={copy.annotations_add}
+                onAdd={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
+              />
+            )
+          })}
           {shots.every((shot) => annotations.some((a) => a.shotId === shot.id)) && (
-            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-              {copy.annotations_cap_hint}
-            </span>
+            <Hint>{copy.annotations_cap_hint}</Hint>
           )}
         </>
       )}
@@ -341,22 +351,14 @@ export const AnnotationsSection: React.FC = () => {
   )
 }
 
-export const PresetsSection: React.FC = () => {
+export function PresetsSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const patchCard = useCardStore((s) => s.patchCard)
 
   return (
     <div className="flex flex-col gap-2">
-      <FieldLabel
-        aside={
-          <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-            {copy.presets_badge}
-          </span>
-        }
-      >
-        {copy.presets_label}
-      </FieldLabel>
+      <FieldLabel aside={<Hint>{copy.presets_badge}</Hint>}>{copy.presets_label}</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
         {PRESETS.map((p) => {
           const active = isPresetActive(data, p.state)
@@ -367,12 +369,6 @@ export const PresetsSection: React.FC = () => {
               aria-pressed={active}
               variant={active ? 'primary' : 'secondary'}
               size="sm"
-              className={clsx(
-                'text-[12px] font-medium transition',
-                active
-                  ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] shadow-sm'
-                  : 'bg-black/[0.05] text-ink-secondary hover:bg-black/[0.09] dark:bg-white/[0.06] dark:text-neutral-300 dark:hover:bg-white/[0.1]',
-              )}
             >
               {copy[p.nameKey]}
             </Button>
@@ -397,12 +393,7 @@ const PRESET_MOCK_ASPECT: Record<AspectRatio, string> = {
   '16:9': 'aspect-video',
 }
 
-const StylePresetMock: React.FC<StylePresetState> = ({
-  theme,
-  ratio,
-  headlineSize,
-  uppercaseHeadline,
-}) => {
+function StylePresetMock({ theme, ratio, headlineSize, uppercaseHeadline }: StylePresetState) {
   const tokens = CARD_THEME_STYLES[theme]
   // Headline bar weight tracks the preset's headline size (34px → 3px …
   // 54px → 5px); a caps headline reads as a wider first line.
@@ -442,8 +433,8 @@ const StylePresetMock: React.FC<StylePresetState> = ({
 // value for precision). Drafts locally and commits on blur/Enter — clamping
 // on every keystroke would fight mid-typing ("5" of "50").
 function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
-  const [draft, setDraft] = React.useState(String(value))
-  const [seenValue, setSeenValue] = React.useState(value)
+  const [draft, setDraft] = useState(String(value))
+  const [seenValue, setSeenValue] = useState(value)
   if (seenValue !== value) {
     // Derived state during render: an external size change (slider drag,
     // preset, undo) resets the draft without an effect or remount.
@@ -480,7 +471,9 @@ function HeadlineSizeInput({ value, onCommit }: { value: number; onCommit: (n: n
   )
 }
 
-export const StyleSection: React.FC = () => {
+const THEME_KEYS = ['paper', 'white', 'dark', 'mist'] as const
+
+export function StyleSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
@@ -512,7 +505,7 @@ export const StyleSection: React.FC = () => {
           headline controls would lie about what's editable; the theme stays
           (spec #33 stories 24 and 26). */}
       {!isShowcase && (
-        <div className="flex flex-col gap-1.5">
+        <Stack>
           <FieldLabel id="ratio-label">{copy.ratio_label}</FieldLabel>
           <SegmentedControl<AspectRatio>
             aria-labelledby="ratio-label"
@@ -525,31 +518,30 @@ export const StyleSection: React.FC = () => {
               { value: '16:9', label: copy.ratio_landscape, icon: <RectangleHorizontal /> },
             ]}
           />
-        </div>
+        </Stack>
       )}
 
       {/* Swatches show each theme's real card color (theme tokens are the
           fill), with the caption carrying the name a color alone can't. */}
-      <div className="flex flex-col gap-1.5">
+      <Stack>
         <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
         <SwatchPicker<CardTheme>
           aria-labelledby="theme-label"
           value={data.theme}
           onChange={(t) => update('theme', t)}
-          options={[
-            { value: 'paper', label: copy.theme_paper, swatchClass: CARD_THEME_STYLES.paper.bg },
-            { value: 'white', label: copy.theme_white, swatchClass: CARD_THEME_STYLES.white.bg },
-            { value: 'dark', label: copy.theme_dark, swatchClass: CARD_THEME_STYLES.dark.bg },
-            { value: 'mist', label: copy.theme_mist, swatchClass: CARD_THEME_STYLES.mist.bg },
-          ]}
+          options={THEME_KEYS.map((theme) => ({
+            value: theme,
+            label: copy[`theme_${theme}`],
+            swatchClass: CARD_THEME_STYLES[theme].bg,
+          }))}
         />
-      </div>
+      </Stack>
 
       {/* One label naming TWO controls (slider + typed entry): base-ui Field
           is 1:1 label-to-control, so this row keeps aria-labelledby instead. */}
       {!isShowcase && (
         <>
-          <div className="flex flex-col gap-1.5">
+          <Stack>
             <FieldLabel
               id="inspector-headline-size-label"
               aside={
@@ -578,7 +570,7 @@ export const StyleSection: React.FC = () => {
                 A
               </span>
             </div>
-          </div>
+          </Stack>
 
           <Checkbox
             id="inspector-uppercase"
@@ -592,14 +584,14 @@ export const StyleSection: React.FC = () => {
   )
 }
 
-export const HeadlineSection: React.FC = () => {
+export function HeadlineSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
 
   return (
     <div className="flex flex-col gap-4">
-      <Field.Root className="flex flex-col gap-1.5">
+      <Stack>
         <FieldLabel
           htmlFor="inspector-headline"
           aside={
@@ -614,44 +606,29 @@ export const HeadlineSection: React.FC = () => {
         >
           {copy.headline_label}
         </FieldLabel>
-        <Field.Control
+        <textarea
           id="inspector-headline"
-          render={
-            <textarea
-              rows={2}
-              value={data.headline}
-              onChange={(e) => update('headline', e.target.value)}
-              placeholder={copy.empty_headline_hint}
-              className={TEXTAREA_FIELD_CLASS}
-            />
-          }
+          rows={2}
+          value={data.headline}
+          onChange={(e) => update('headline', e.target.value)}
+          placeholder={copy.empty_headline_hint}
+          className={TEXTAREA_FIELD_CLASS}
         />
-      </Field.Root>
+      </Stack>
 
-      <Field.Root className="flex flex-col gap-1.5">
-        <FieldLabel
-          htmlFor="inspector-sublines"
-          aside={
-            <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
-              {copy.sublines_badge}
-            </span>
-          }
-        >
+      <Stack>
+        <FieldLabel htmlFor="inspector-sublines" aside={<Hint>{copy.sublines_badge}</Hint>}>
           {copy.sublines_label}
         </FieldLabel>
-        <Field.Control
+        <textarea
           id="inspector-sublines"
-          render={
-            <textarea
-              rows={3}
-              value={data.sublines}
-              onChange={(e) => update('sublines', e.target.value)}
-              placeholder={copy.sublines_hint}
-              className={`${TEXTAREA_FIELD_CLASS} font-mono`}
-            />
-          }
+          rows={3}
+          value={data.sublines}
+          onChange={(e) => update('sublines', e.target.value)}
+          placeholder={copy.sublines_hint}
+          className={`${TEXTAREA_FIELD_CLASS} font-mono`}
         />
-      </Field.Root>
+      </Stack>
 
       <Checkbox
         id="inspector-bold-sublines"
@@ -705,19 +682,22 @@ const LabeledValueRow: React.FC<{
   placeholder?: string
   valueClass: string
 }> = ({ id, label, value, onChange, placeholder, valueClass }) => (
-  <Field.Root className="flex flex-col gap-0.5 px-3.5 py-2.5">
-    <Field.Label className="text-[11px] font-medium text-ink-tertiary">{label}</Field.Label>
-    <Field.Control
+  <div className="flex flex-col gap-0.5 px-3.5 py-2.5">
+    <label htmlFor={id} className="text-[11px] font-medium text-ink-tertiary">
+      {label}
+    </label>
+    <input
       id={id}
+      type="text"
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       placeholder={placeholder}
       className={`w-full bg-transparent text-[13px] focus:outline-none ${valueClass}`}
     />
-  </Field.Root>
+  </div>
 )
 
-export const IdentitySection: React.FC = () => {
+export function IdentitySection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
@@ -737,7 +717,7 @@ export const IdentitySection: React.FC = () => {
     bio.style.height = `${bio.scrollHeight}px`
   }, [data.authorBio])
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Clear value so re-uploading the same file still triggers onChange
     e.target.value = ''
@@ -775,7 +755,7 @@ export const IdentitySection: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <Stack>
       <span className={SECTION_LABEL_CLASS}>{copy.author_label}</span>
 
       {/* Author group: avatar, grayscale switch, name, bio */}
@@ -837,46 +817,39 @@ export const IdentitySection: React.FC = () => {
             onCheckedChange={(checked) => update('avatarGrayscale', checked)}
           />
         </div>
-
         <div className={IDENTITY_DIVIDER_CLASS} />
 
-        {/* Name: label left, editable value right — the iOS settings row */}
-        <Field.Root className={IDENTITY_ROW_CLASS}>
-          <Field.Label className="shrink-0 text-[13px] text-ink">
+        <div className={IDENTITY_ROW_CLASS}>
+          <label htmlFor="inspector-author-name" className="shrink-0 text-[13px] text-ink">
             {copy.author_name_label}
-          </Field.Label>
-          <Field.Control
+          </label>
+          <input
             id="inspector-author-name"
             value={data.authorName}
             onChange={(e) => update('authorName', e.target.value)}
             className="min-w-0 flex-1 bg-transparent text-right text-[13px] font-semibold text-ink focus:outline-none placeholder:text-neutral-400"
           />
-        </Field.Root>
+        </div>
 
         <div className={IDENTITY_DIVIDER_CLASS} />
 
-        {/* Bio: same row grammar; the multiline value stays a textarea */}
-        <Field.Root className="flex items-start gap-3 px-3.5 py-2.5">
-          {/* Same line-height as the textarea so the first lines share one
-              baseline — the label rides the value's first line, iOS-style. */}
-          <Field.Label className="shrink-0 text-[13px] leading-snug text-ink">
+        <div className="flex items-start gap-3 px-3.5 py-2.5">
+          <label
+            htmlFor="inspector-author-bio"
+            className="shrink-0 text-[13px] leading-snug text-ink"
+          >
             {copy.author_bio_label}
-          </Field.Label>
-          <Field.Control
+          </label>
+          <textarea
             id="inspector-author-bio"
-            render={
-              <textarea
-                ref={bioRef}
-                rows={2}
-                value={data.authorBio}
-                onChange={(e) => update('authorBio', e.target.value)}
-                className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-ink focus:outline-none placeholder:text-neutral-400"
-              />
-            }
+            ref={bioRef}
+            rows={2}
+            value={data.authorBio}
+            onChange={(e) => update('authorBio', e.target.value)}
+            className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-ink focus:outline-none placeholder:text-neutral-400"
           />
-        </Field.Root>
+        </div>
       </div>
-
       <span className={`${SECTION_LABEL_CLASS} mt-2.5`}>{copy.qr_label}</span>
 
       {/* QR group: the visibility switch leads the fields it controls */}
@@ -920,6 +893,6 @@ export const IdentitySection: React.FC = () => {
           </>
         )}
       </div>
-    </div>
+    </Stack>
   )
 }

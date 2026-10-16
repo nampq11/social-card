@@ -1,12 +1,12 @@
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { memo, useRef, useState } from 'react'
-import { FALLBACK_AUTHOR_NAME } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
 import { clampScale, DEFAULT_SHOT_FOCUS, shotAnchorCss } from '../lib/shot-fit'
 import { useEffectiveFit } from '../lib/use-effective-fit'
 import { useShotPan } from '../lib/use-shot-pan'
 import { useUiCopy } from '../lib/i18n'
 import { useCardStore } from '../lib/card-store'
+import { AuthorAvatar, AuthorBio } from './AuthorSignature'
 import type { Annotation, AnnotationSide, CardState, CardTheme, Shot, ShotFit } from '../types'
 
 // Fixed annotation anchors (issue #33): the side picks the margin around the
@@ -268,32 +268,18 @@ export const ShowcaseCard = ({ card }: { card: CardState }) => {
         data-testid="card-footer"
         className="flex flex-col items-center gap-2 border-t border-transparent pt-6"
       >
-        {card.avatarUrl && (
-          <div
-            className={`h-14 w-14 overflow-hidden rounded-full shadow-sm ring-1 ${themeStyles.avatarBorder}`}
-          >
-            <img
-              src={card.avatarUrl}
-              alt={card.authorName || FALLBACK_AUTHOR_NAME}
-              className={`h-full w-full object-cover object-top ${card.avatarGrayscale ? 'grayscale' : ''}`}
-            />
-          </div>
-        )}
-        <div className="text-center">
-          <h3 className="text-sm font-bold tracking-tight leading-tight break-words">
-            {card.authorName || FALLBACK_AUTHOR_NAME}
-          </h3>
-          {bioLines.length > 0 && (
-            <div
-              data-testid="author-bio"
-              className={`mt-0.5 text-xs font-normal italic leading-tight break-words ${themeStyles.subtext}`}
-            >
-              {bioLines.map((line, idx) => (
-                <p key={idx}>{line}</p>
-              ))}
-            </div>
-          )}
-        </div>
+        <AuthorAvatar
+          url={card.avatarUrl}
+          name={card.authorName}
+          grayscale={card.avatarGrayscale}
+          borderClass={`ring-1 ${themeStyles.avatarBorder}`}
+        />
+        <AuthorBio
+          name={card.authorName}
+          bioLines={bioLines}
+          subtextClass={themeStyles.subtext}
+          align="center"
+        />
       </footer>
     </>
   )

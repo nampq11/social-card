@@ -12,13 +12,7 @@ export type OnboardingStatus = 'new' | 'done'
 export const ONBOARDING_STORAGE_KEY = 'social-card.onboarding'
 
 function parse(raw: string | null): OnboardingStatus | null {
-  if (raw === null) return null
-  try {
-    const value: unknown = JSON.parse(raw)
-    return value === 'done' ? 'done' : null
-  } catch {
-    return null
-  }
+  return raw === '"done"' ? 'done' : null
 }
 
 export function readOnboardingStatus(): OnboardingStatus {
@@ -49,9 +43,7 @@ export function useOnboarding() {
     setIsTourOpen(true)
   }, [finishOnboarding])
 
-  const dismissWelcome = useCallback(() => {
-    finishOnboarding()
-  }, [finishOnboarding])
+  const dismissWelcome = finishOnboarding
 
   const endTour = useCallback(() => {
     setIsTourOpen(false)

@@ -1,4 +1,3 @@
-import React from 'react'
 import { RotateCcw } from 'lucide-react'
 import { useCardStore } from '../lib/card-store'
 import { useUiCopy } from '../lib/i18n'
@@ -11,7 +10,7 @@ import { InspectorTabsNav, useInspectorTab } from './inspector-tabs'
 // without scrolling (the customize card never scrolls; the page never does).
 // overflow-y-auto stays only as the graceful-degradation floor for windows
 // shorter than any real laptop.
-export const Inspector: React.FC = () => {
+export function Inspector() {
   const { copy } = useUiCopy()
   const resetCard = useCardStore((s) => s.resetCard)
   const { tab, setTab, active } = useInspectorTab()

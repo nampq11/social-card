@@ -6,4 +6,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: '/social-card/',
   plugins: [react(), tailwindcss()],
+  build: {
+    modulePreload: {
+      polyfill: false,
+    },
+  },
 })
