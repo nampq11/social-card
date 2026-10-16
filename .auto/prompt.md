@@ -102,3 +102,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #37: Derive nameKey in PRESETS dynamically (-0.02 kb entry JS, -0.02 kb total JS).
 - Discard #38: Use type imports in inspector-tabs (entry JS unchanged).
 - Win #39: Eliminate redundant store subscriptions in AnnotationAddRow (-0.03 kb entry JS, -0.03 kb total JS).
+- Win #39: Eliminate redundant store subscriptions in AnnotationAddRow (-0.03 kb entry JS, -0.03 kb total JS).
+- Discard #40: Function declarations for LabeledValueRow & QrIconBox (+0.03 kb entry JS).
+- Win #41: Positional arguments in buttonVariants (-0.03 kb entry JS, -0.03 kb total JS).
