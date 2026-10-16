@@ -116,26 +116,23 @@ export interface StylePreset {
 export const STYLE_PRESETS: StylePreset[] = [
   {
     id: 'classic',
-    nameKey: 'style_preset_classic',
-    descKey: 'style_preset_classic_desc',
     state: { theme: 'paper', ratio: '1:1', headlineSize: 42, uppercaseHeadline: true },
   },
   {
     id: 'midnight',
-    nameKey: 'style_preset_midnight',
-    descKey: 'style_preset_midnight_desc',
     state: { theme: 'dark', ratio: '4:5', headlineSize: 46, uppercaseHeadline: true },
   },
   {
     id: 'minimal',
-    nameKey: 'style_preset_minimal',
-    descKey: 'style_preset_minimal_desc',
     state: { theme: 'white', ratio: '1:1', headlineSize: 34, uppercaseHeadline: false },
   },
   {
     id: 'billboard',
-    nameKey: 'style_preset_billboard',
-    descKey: 'style_preset_billboard_desc',
     state: { theme: 'dark', ratio: '16:9', headlineSize: 54, uppercaseHeadline: true },
   },
-]
+].map(({ id, state }) => ({
+  id,
+  nameKey: `style_preset_${id}` as UiStringKey,
+  descKey: `style_preset_${id}_desc` as UiStringKey,
+  state: state as StylePresetState,
+}))
