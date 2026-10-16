@@ -21,7 +21,6 @@ import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Slider } from './ui/Slider'
 import { Select, fieldSurfaceClass } from './ui/Select'
 import { FieldLabel } from './ui/FieldLabel'
-import { Field } from '@base-ui/react/field'
 import {
   Square,
   RectangleVertical,
@@ -599,7 +598,7 @@ export const HeadlineSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Field.Root className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <FieldLabel
           htmlFor="inspector-headline"
           aside={
@@ -614,21 +613,17 @@ export const HeadlineSection: React.FC = () => {
         >
           {copy.headline_label}
         </FieldLabel>
-        <Field.Control
+        <textarea
           id="inspector-headline"
-          render={
-            <textarea
-              rows={2}
-              value={data.headline}
-              onChange={(e) => update('headline', e.target.value)}
-              placeholder={copy.empty_headline_hint}
-              className={TEXTAREA_FIELD_CLASS}
-            />
-          }
+          rows={2}
+          value={data.headline}
+          onChange={(e) => update('headline', e.target.value)}
+          placeholder={copy.empty_headline_hint}
+          className={TEXTAREA_FIELD_CLASS}
         />
-      </Field.Root>
+      </div>
 
-      <Field.Root className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <FieldLabel
           htmlFor="inspector-sublines"
           aside={
@@ -639,19 +634,15 @@ export const HeadlineSection: React.FC = () => {
         >
           {copy.sublines_label}
         </FieldLabel>
-        <Field.Control
+        <textarea
           id="inspector-sublines"
-          render={
-            <textarea
-              rows={3}
-              value={data.sublines}
-              onChange={(e) => update('sublines', e.target.value)}
-              placeholder={copy.sublines_hint}
-              className={`${TEXTAREA_FIELD_CLASS} font-mono`}
-            />
-          }
+          rows={3}
+          value={data.sublines}
+          onChange={(e) => update('sublines', e.target.value)}
+          placeholder={copy.sublines_hint}
+          className={`${TEXTAREA_FIELD_CLASS} font-mono`}
         />
-      </Field.Root>
+      </div>
 
       <Checkbox
         id="inspector-bold-sublines"
@@ -705,16 +696,19 @@ const LabeledValueRow: React.FC<{
   placeholder?: string
   valueClass: string
 }> = ({ id, label, value, onChange, placeholder, valueClass }) => (
-  <Field.Root className="flex flex-col gap-0.5 px-3.5 py-2.5">
-    <Field.Label className="text-[11px] font-medium text-ink-tertiary">{label}</Field.Label>
-    <Field.Control
+  <div className="flex flex-col gap-0.5 px-3.5 py-2.5">
+    <label htmlFor={id} className="text-[11px] font-medium text-ink-tertiary">
+      {label}
+    </label>
+    <input
       id={id}
+      type="text"
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       placeholder={placeholder}
       className={`w-full bg-transparent text-[13px] focus:outline-none ${valueClass}`}
     />
-  </Field.Root>
+  </div>
 )
 
 export const IdentitySection: React.FC = () => {
@@ -837,46 +831,39 @@ export const IdentitySection: React.FC = () => {
             onCheckedChange={(checked) => update('avatarGrayscale', checked)}
           />
         </div>
+        <div className={IDENTITY_ROW_CLASS}>
+          <div className={IDENTITY_DIVIDER_CLASS} />
 
-        <div className={IDENTITY_DIVIDER_CLASS} />
-
-        {/* Name: label left, editable value right — the iOS settings row */}
-        <Field.Root className={IDENTITY_ROW_CLASS}>
-          <Field.Label className="shrink-0 text-[13px] text-ink">
+          <label htmlFor="inspector-author-name" className="shrink-0 text-[13px] text-ink">
             {copy.author_name_label}
-          </Field.Label>
-          <Field.Control
+          </label>
+          <input
             id="inspector-author-name"
             value={data.authorName}
             onChange={(e) => update('authorName', e.target.value)}
             className="min-w-0 flex-1 bg-transparent text-right text-[13px] font-semibold text-ink focus:outline-none placeholder:text-neutral-400"
           />
-        </Field.Root>
+        </div>
 
         <div className={IDENTITY_DIVIDER_CLASS} />
 
-        {/* Bio: same row grammar; the multiline value stays a textarea */}
-        <Field.Root className="flex items-start gap-3 px-3.5 py-2.5">
-          {/* Same line-height as the textarea so the first lines share one
-              baseline — the label rides the value's first line, iOS-style. */}
-          <Field.Label className="shrink-0 text-[13px] leading-snug text-ink">
+        <div className="flex items-start gap-3 px-3.5 py-2.5">
+          <label
+            htmlFor="inspector-author-bio"
+            className="shrink-0 text-[13px] leading-snug text-ink"
+          >
             {copy.author_bio_label}
-          </Field.Label>
-          <Field.Control
+          </label>
+          <textarea
             id="inspector-author-bio"
-            render={
-              <textarea
-                ref={bioRef}
-                rows={2}
-                value={data.authorBio}
-                onChange={(e) => update('authorBio', e.target.value)}
-                className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-ink focus:outline-none placeholder:text-neutral-400"
-              />
-            }
+            ref={bioRef}
+            rows={2}
+            value={data.authorBio}
+            onChange={(e) => update('authorBio', e.target.value)}
+            className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-0 text-right text-[13px] leading-snug text-ink focus:outline-none placeholder:text-neutral-400"
           />
-        </Field.Root>
+        </div>
       </div>
-
       <span className={`${SECTION_LABEL_CLASS} mt-2.5`}>{copy.qr_label}</span>
 
       {/* QR group: the visibility switch leads the fields it controls */}
