@@ -141,3 +141,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #59: Double verification — two identical passes at 419.21 kb; remaining levers are design decisions.
 - Win #59: Double verification — two identical passes at 419.21 kb; remaining levers are design decisions.
 - Win #60: Verification hold + cross-chunk duplication scan (zero dups; graph optimal) at 419.21 kb.
+- Win #60: Verification hold + cross-chunk duplication scan (zero dups; graph optimal) at 419.21 kb.
+- Win #61: Tooltip deferral proven contract-dead (sync-focus test); 419.21 kb is the honest floor.
