@@ -135,3 +135,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #56: Extract shared Stack component in inspector-sections (-0.22 kb entry JS).
 - Win #56: Extract shared Stack component in inspector-sections (-0.22 kb entry JS).
 - Win #57: Extract shared Code helper in i18n posting_tips (-0.14 kb entry JS).
+- Win #57: Extract shared Code helper in i18n posting_tips (-0.14 kb entry JS).
+- Win #58: Verification rerun — post-#56/#57 state reproduces exactly (419.21 kb).
