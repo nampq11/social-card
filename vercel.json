@@ -15,14 +15,6 @@
       "destination": "/assets/:match*"
     },
     {
-      "source": "/social-card/avatar.png",
-      "destination": "/avatar.png"
-    },
-    {
-      "source": "/social-card/demo-shot.png",
-      "destination": "/demo-shot.png"
-    },
-    {
       "source": "/social-card/favicon.svg",
       "destination": "/favicon.svg"
     },

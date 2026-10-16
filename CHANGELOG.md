@@ -4,12 +4,16 @@
 
 ### Changed
 
+- Moved the default avatar and factory demo shot into the build pipeline: both images are imported through Vite from `src/assets/` — the avatar ships as a hashed `/assets/` file, the 3.8 KB demo shot inlines into the entry JS — instead of loading from `public/` via runtime `BASE_URL` paths and hand-maintained Vercel rewrites.
+
 - Migrated the UI to a semantic design-token system: one Tailwind v4 vocabulary for ink, surfaces, accent, hairline, canvas, and glass, with OS-following dark values that flip the whole app with no per-element work. Unified the true duplicates (two accent blues, two brand gradients, the sheet pair, the hairline border). #45
 - Made card themes read static card tokens so an export never depends on the viewer's OS color scheme — guarded by a unit test and a new `smoke:theme` OS-emulation check. #45
 - Completed the shared primitives layer: extracted Checkbox, Switch, Slider, native Select, Tooltip, and FieldLabel from the Inspector; SegmentedControl moved into `ui/`; header and zoom icon buttons replaced native `title` hints with styled hover/focus tooltips. #45
 - Documented the token vocabulary, dark-mode mechanics, and residual literals as ADR 0007. #45
 
 ### Fixes
+
+- Fixed the factory demo shot rendering blank in production: the `/social-card/demo-shot.png` request fell through the SPA catch-all rewrite to `index.html` because `vercel.json` had no rewrite for the public asset; the dev server serves `public/` under the base path, which is why `pnpm dev` never showed it.
 
 - Fixed dark mode on OS-dark machines: three hand-written `.dark` CSS blocks (glass, canvas, card elevation) never applied because nothing sets a `dark` class, rendering light-on-light glass panels. #45
 - Kept hover tooltips working on disabled undo/redo — browsers suppress pointer events on disabled buttons, so the tooltip trigger gained a hoverable wrapper. #45

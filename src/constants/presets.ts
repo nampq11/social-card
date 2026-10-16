@@ -1,6 +1,7 @@
 import type { CardState } from '../types'
 import type { UiCopyKey, UiStringKey } from '../lib/i18n'
 import { DEMO_SHOT_ID, DEMO_SHOT_URL } from './demo-shot'
+import defaultAvatarUrl from '../assets/avatar.png'
 
 // Shared fallbacks so the preview placeholders and the default state never
 // drift apart.
@@ -19,7 +20,7 @@ export const DEFAULT_CARD_STATE: CardState = {
   sublines: 'github.com/nampq11\nthreads.net/@nampq',
   authorName: FALLBACK_AUTHOR_NAME,
   authorBio: 'AI Engineer • Building AI Agents',
-  avatarUrl: `${import.meta.env.BASE_URL}avatar.png`,
+  avatarUrl: defaultAvatarUrl,
   qrEnabled: true,
   qrUrl: FALLBACK_QR_URL,
   qrCta: 'Build Trợ lý AI cho riêng bạn!',
