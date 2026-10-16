@@ -1,58 +1,107 @@
-# Social Card — Minimalist Card Studio
+# Social Card
 
-Công cụ tạo ảnh bài viết tối giản chuẩn tỉ lệ cho **Threads, X (Twitter) & Facebook**, được thiết kế theo phong cách **Apple Design** và tối ưu cho avatar nét sáp cá nhân của Nam Pham.
+[![CI](https://github.com/nampq11/social-card/actions/workflows/ci.yml/badge.svg)](https://github.com/nampq11/social-card/actions/workflows/ci.yml)
 
-![Social Card Preview](/avatar.png)
+A minimalist card studio that renders share-ready images for Threads, X, and Facebook — straight from the browser.
 
-## 🚀 Tính năng nổi bật
+**Live app:** <https://workboost.qzz.io/social-card>
 
-- **Khớp 100% phong cách ảnh mẫu**: Card tối giản, typography phân cấp rõ nét (Be Vietnam Pro), khoảng thở rộng rãi.
-- **Apple Design Interface**: Giao diện macOS Studio với kính mờ (_Translucent Frosted Glass_), tương tác tactile `:active` nhạy bén, các nút chuyển tỉ lệ _Segmented Control_ kiểu iOS.
-- **Đa tỉ lệ mạng xã hội**:
-  - `1:1 Square` (2048 × 2048 px) cho Threads, X, Instagram.
-  - `4:5 Portrait` (1080 × 1350 px) tối ưu diện tích hiển thị trên mobile feed.
-  - `16:9 Landscape` (1920 × 1080 px) cho X card link & Facebook desktop.
-- **3 Theme màu linh hoạt**:
-  - `Giấy ngà (Paper)`: Ấm áp, tôn trọn nét vẽ sáp màu của avatar.
-  - `Trắng tinh (White)`: Tối giản, thanh lịch như ảnh mẫu gốc.
-  - `Tối OLED (Dark)`: Tương phản cao, phong cách công nghệ.
-- **Copy 1-Click vào Clipboard**: Tự động render PNG chuẩn Retina (2.5x) vào bộ nhớ tạm. Bạn chỉ cần ấn `Ctrl + V` dán trực tiếp vào Threads/X/Facebook mà không cần tải và xóa file ảnh rác trên máy.
-- **Tùy chỉnh QR Code động**: Tự động sinh mã QR dẫn về GitHub / Website / Profile cá nhân kèm lời kêu gọi (CTA).
+## About
 
----
+Social Card is a browser-based design studio for social-media images. You edit a live card — headline, screenshots, avatar, QR CTA — and export a pixel-perfect PNG sized for each platform. There is no account and no server-side processing: the whole studio runs client-side, and an export lands either on your clipboard (paste straight into Threads/X/Facebook) or as a PNG file.
 
-## 🛠 Phát triển & Chạy Local
+The interface follows Apple's design language — a viewport-locked studio shell, translucent frosted-glass panels, tactile controls, and OS-following dark mode.
+
+## Features
+
+- **Two card types**
+  - **Quote Card** — big typographic headline, sublines, optional QR CTA, and a signature footer with avatar.
+  - **Showcase Card** — a hero-plus-details collage of up to three screenshot slots with handwritten annotations and a centered author footer.
+- **Platform-ready ratios** — `1:1` Square (1800 × 1800 px), `4:5` Portrait (1600 × 2000 px), and `16:9` Landscape (2000 × 1125 px), exported at 2.5× Retina quality.
+- **Themes & style presets** — Paper, White, and Dark themes, plus one-tap style presets (Classic, Midnight, Minimal, Billboard) that set ratio, theme, and typography in a single undoable step.
+- **Card Export** — copy a Retina PNG directly to the clipboard or download it as a file.
+- **Dynamic QR code CTA** — generate a QR code pointing at any GitHub / website / profile URL.
+- **Screenshot grooming** — per-shot Fill/Fit modes, draggable Focus, 1–4× zoom, and fluid physics pan (rubber-banding, momentum, pinch and ctrl+wheel zoom).
+- **Bilingual interface** — full Vietnamese and English UI with a runtime language toggle.
+- **One-Screen Studio** — viewport-locked desktop shell (sidebar Inspector + Canvas); mobile switches to a bottom-sheet layout below 1024 px.
+- **Quality-of-life** — undo/redo, first-run onboarding tour, welcome card, and OS-following dark mode.
+
+## Tech Stack
+
+| Layer   | Choice                                                           |
+| ------- | ---------------------------------------------------------------- |
+| UI      | React 19, TypeScript, Base UI (`@base-ui/react`)                 |
+| Styling | Tailwind CSS v4 (semantic design-token vocabulary, see ADR 0007) |
+| State   | Zustand (undoable card store)                                    |
+| Export  | `html-to-image` (clipboard + PNG)                                |
+| Other   | `qrcode.react`, Sonner toasts                                    |
+| Tooling | Vite 8, Vitest + Testing Library, oxlint / oxfmt, Husky, pnpm 10 |
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 22+
+- [pnpm](https://pnpm.io/) 10+
+
+### Install & run
 
 ```bash
-# Cài đặt thư viện
 pnpm install
-
-# Khởi chạy server dev (Vite)
 pnpm dev
 ```
 
-Mở trình duyệt tại: `http://localhost:5173`
+Open <http://localhost:5173> in your browser.
 
----
+## Scripts
 
-## 🚀 Hướng dẫn Deploy lên Vercel
+| Command                             | Description                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `pnpm dev`                          | Start the Vite dev server                                                  |
+| `pnpm build`                        | Type-check (`tsc -b`) and build for production                             |
+| `pnpm preview`                      | Preview the production build locally                                       |
+| `pnpm test`                         | Run unit tests (Vitest)                                                    |
+| `pnpm lint`                         | Lint with oxlint                                                           |
+| `pnpm format` / `pnpm format:check` | Format / verify formatting with oxfmt                                      |
+| `pnpm glossary`                     | Enforce GLOSSARY.md banned terms on `src/` identifiers                     |
+| `pnpm smoke:*`                      | Headless-Chrome smoke checks (`export`, `pan`, `theme`, `tour`, `zoom`)    |
+| `pnpm check`                        | Full quality gate: glossary + lint + format + tests + build (what CI runs) |
 
-Dự án đã có sẵn file cấu hình `vercel.json` tối ưu cho Vite Single Page Application.
+## Deployment
 
-### Cách 1: Deploy qua GitHub (Khuyên dùng)
+The project ships a `vercel.json` configured for a Vite SPA served under the `/social-card` base path.
 
-1. Tạo repo mới trên GitHub (ví dụ: `social-card`).
-2. Đẩy code lên:
-   ```bash
-   git remote add origin git@github.com:nampq/social-card.git
-   git branch -M main
-   git push -u origin main
-   ```
-3. Truy cập [vercel.com/new](https://vercel.com/new), chọn repository và bấm **Deploy**.
+- **Via GitHub (recommended):** import the repository at [vercel.com/new](https://vercel.com/new) and deploy.
+- **Via Vercel CLI:**
 
-### Cách 2: Deploy trực tiếp bằng Vercel CLI
+  ```bash
+  npx vercel --prod
+  ```
 
-```bash
-# Đăng nhập và deploy production
-npx vercel --prod
+## Project Structure
+
+```text
+src/
+├── components/    # Studio UI — Header, Inspector, card previews, onboarding
+│   └── ui/        # Shared primitives (Button, Select, Slider, Tooltip, …)
+├── lib/           # Card store, export, i18n, shot fit/focus/zoom logic
+├── constants/     # Ratio & size single source of truth
+docs/
+├── adr/           # Architecture Decision Records
+scripts/           # Glossary gate + headless-Chrome smoke checks
+public/            # Static assets (demo avatar, favicon)
 ```
+
+## Documentation
+
+- [GLOSSARY.md](GLOSSARY.md) — the project's domain vocabulary (terms the code and docs are held to)
+- [docs/adr/](docs/adr/) — architecture decision records
+- [CHANGELOG.md](CHANGELOG.md) — release history
+
+## Contributing
+
+This is a personal project. Bugs and ideas are tracked in [GitHub Issues](https://github.com/nampq11/social-card/issues). If you open a pull request, `pnpm check` must pass — CI runs the same gate.
+
+## License
+
+No open-source license has been declared yet; all rights are reserved by the author.
