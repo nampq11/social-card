@@ -1,7 +1,9 @@
 # Social Card — Platform Content Marketing Strategy
 
 Marketing plan for **Social Card** (https://workboost.qzz.io/social-card) on **X, Threads, TikTok, and Facebook**.
-All posts in English. Based on 2024–2025 platform data, algorithm documentation, and indie
+Per-platform language: **X in English** (global build-in-public audience); **Threads, TikTok,
+and Facebook in Vietnamese** (founder is in Vietnam — the local indie / vibe-coding community
+is the beachhead). Based on 2024–2025 platform data, algorithm documentation, and indie
 founder case studies (Tony Dinh/Blackmagic & Xnapper, Jon Yongfook/Bannerbear, Lucia/bolta.ai,
 Senja). Sources linked inline.
 
@@ -169,6 +171,9 @@ and [code analyses](https://partyfly.github.io/x-algorithm-handbook/en/):
 ## 3. Threads — solution
 
 ### Why Threads is our best ROI platform right now
+
+> Language: **Vietnamese**. Target: the Vietnamese indie-hacker / vibe-coding community —
+> the audience day-01's Vietnamese poll already reached.
 
 - **Median engagement 6.25% — ~74% higher than X**; 500M MAU and it passed X in mobile
   DAU in Jan 2026 ([statistics roundup](https://www.socialplug.io/blog/threads-statistics)).

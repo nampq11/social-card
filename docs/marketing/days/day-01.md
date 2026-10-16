@@ -96,4 +96,4 @@ From here: **3 videos/week (Tue/Thu/Sat)** — never daily.
 - What worked: the poll. Post B (question + options, no image) beat the card post 49 views to 38 and earned the only like. Threads distributed to a cold audience — 98 of 99 viewers were non-followers, so reach doesn't depend on having followers yet.
 - What didn't: ~100 viewers converted to +0 followers. X and TikTok never ran — Threads-only day.
 - Note: both posts went out in Vietnamese, deviating from the English-only rule in platform-strategy.md. Language call needed before day-02.
-- Tomorrow's adjustment (proposed): stay Threads-only, 2 posts, repeat the poll format; too early to conclude image posts underperform (n=1 each).
+- Day-02 decision: Threads stays primary (2 posts/day, Vietnamese, poll format repeats). X = replies only, English. TikTok paused. Language split recorded in platform-strategy.md.
