@@ -64,7 +64,7 @@ export function CardTypeSwitcherSection() {
   const switchCardType = useCardStore((s) => s.switchCardType)
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <Stack>
       <FieldLabel id="card-type-label">{copy.card_type_label}</FieldLabel>
       <SegmentedControl<CardType>
         aria-labelledby="card-type-label"
@@ -73,7 +73,7 @@ export function CardTypeSwitcherSection() {
         className="w-full"
         options={CARD_TYPES.map((t) => ({ value: t, label: copy[`card_type_${t}`] }))}
       />
-    </div>
+    </Stack>
   )
 }
 
@@ -84,6 +84,12 @@ const SHOT_FIT_OPTIONS = ['auto', 'cover', 'contain'] as const
 // six call sites can't drift.
 function Hint({ children }: { children: ReactNode }) {
   return <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">{children}</span>
+}
+
+// The control-stack rhythm: the one vertical flow gap shared by section
+// bodies and field groups, so spacing can't drift between sections.
+function Stack({ children }: { children: ReactNode }) {
+  return <div className="flex flex-col gap-1.5">{children}</div>
 }
 
 // One Showcase Card's picked screenshots (GLOSSARY.md "Shot"): each pick goes
@@ -175,7 +181,7 @@ export function ScreenshotsSection() {
       )}
 
       {selectedShot && (
-        <div className="flex flex-col gap-1.5">
+        <Stack>
           <FieldLabel id={`shot-fit-label-${selectedShot.id}`}>{copy.shot_fit_label}</FieldLabel>
           {/* Tự động = no override: the derived default (ADR 0006 §1). */}
           <SegmentedControl<'auto' | ShotFit>
@@ -189,7 +195,7 @@ export function ScreenshotsSection() {
             className="w-full"
             options={SHOT_FIT_OPTIONS.map((f) => ({ value: f, label: copy[`shot_fit_${f}`] }))}
           />
-        </div>
+        </Stack>
       )}
 
       <Button
@@ -499,7 +505,7 @@ export function StyleSection() {
           headline controls would lie about what's editable; the theme stays
           (spec #33 stories 24 and 26). */}
       {!isShowcase && (
-        <div className="flex flex-col gap-1.5">
+        <Stack>
           <FieldLabel id="ratio-label">{copy.ratio_label}</FieldLabel>
           <SegmentedControl<AspectRatio>
             aria-labelledby="ratio-label"
@@ -512,12 +518,12 @@ export function StyleSection() {
               { value: '16:9', label: copy.ratio_landscape, icon: <RectangleHorizontal /> },
             ]}
           />
-        </div>
+        </Stack>
       )}
 
       {/* Swatches show each theme's real card color (theme tokens are the
           fill), with the caption carrying the name a color alone can't. */}
-      <div className="flex flex-col gap-1.5">
+      <Stack>
         <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
         <SwatchPicker<CardTheme>
           aria-labelledby="theme-label"
@@ -529,13 +535,13 @@ export function StyleSection() {
             swatchClass: CARD_THEME_STYLES[theme].bg,
           }))}
         />
-      </div>
+      </Stack>
 
       {/* One label naming TWO controls (slider + typed entry): base-ui Field
           is 1:1 label-to-control, so this row keeps aria-labelledby instead. */}
       {!isShowcase && (
         <>
-          <div className="flex flex-col gap-1.5">
+          <Stack>
             <FieldLabel
               id="inspector-headline-size-label"
               aside={
@@ -564,7 +570,7 @@ export function StyleSection() {
                 A
               </span>
             </div>
-          </div>
+          </Stack>
 
           <Checkbox
             id="inspector-uppercase"
@@ -585,7 +591,7 @@ export function HeadlineSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
+      <Stack>
         <FieldLabel
           htmlFor="inspector-headline"
           aside={
@@ -608,9 +614,9 @@ export function HeadlineSection() {
           placeholder={copy.empty_headline_hint}
           className={TEXTAREA_FIELD_CLASS}
         />
-      </div>
+      </Stack>
 
-      <div className="flex flex-col gap-1.5">
+      <Stack>
         <FieldLabel htmlFor="inspector-sublines" aside={<Hint>{copy.sublines_badge}</Hint>}>
           {copy.sublines_label}
         </FieldLabel>
@@ -622,7 +628,7 @@ export function HeadlineSection() {
           placeholder={copy.sublines_hint}
           className={`${TEXTAREA_FIELD_CLASS} font-mono`}
         />
-      </div>
+      </Stack>
 
       <Checkbox
         id="inspector-bold-sublines"
@@ -749,7 +755,7 @@ export function IdentitySection() {
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <Stack>
       <span className={SECTION_LABEL_CLASS}>{copy.author_label}</span>
 
       {/* Author group: avatar, grayscale switch, name, bio */}
@@ -887,6 +893,6 @@ export function IdentitySection() {
           </>
         )}
       </div>
-    </div>
+    </Stack>
   )
 }

@@ -131,3 +131,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #54: Demo shot becomes a public asset instead of inline base64 (-5.00 kb entry JS, -3.20 kb gzip).
 - Win #54: Demo shot becomes a public asset instead of inline base64 (-5.00 kb entry JS, -3.20 kb gzip).
 - Win #55: Verification rerun — #54 reproduces exactly (419.57 kb); plateau confirmed real.
+- Win #55: Verification rerun — #54 reproduces exactly (419.57 kb); plateau confirmed real.
+- Win #56: Extract shared Stack component in inspector-sections (-0.22 kb entry JS).
