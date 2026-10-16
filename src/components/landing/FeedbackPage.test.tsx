@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildFeedbackIssueUrl } from '../../lib/feedback-issue'
 import { renderWithUiCopy } from '../../test/card-studio'
 import { landingDictionaries } from './landing-copy'
 import { FeedbackPage } from './FeedbackPage'
@@ -21,7 +22,7 @@ describe('FeedbackPage', () => {
     renderWithUiCopy(<FeedbackPage />)
     const t = landingDictionaries.vi
 
-    const bug = screen.getByRole('radio', { name: t.feedback_kind_bug }) as HTMLInputElement
+    const bug = screen.getByRole('radio', { name: t.feedback_kinds.bug }) as HTMLInputElement
     expect(bug.checked).toBe(true)
 
     const send = screen.getByRole('button', { name: t.feedback_submit }) as HTMLButtonElement
@@ -42,7 +43,7 @@ describe('FeedbackPage', () => {
     const tab: { opener: unknown } = { opener: window }
     const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window)
 
-    fireEvent.click(screen.getByText(t.feedback_kind_idea))
+    fireEvent.click(screen.getByText(t.feedback_kinds.idea))
     fireEvent.change(screen.getByLabelText(t.feedback_message_label), {
       target: { value: 'Thêm theme tối hơn nữa' },
     })
@@ -52,18 +53,22 @@ describe('FeedbackPage', () => {
     fireEvent.click(screen.getByRole('button', { name: t.feedback_submit }))
 
     await waitFor(() => expect(open).toHaveBeenCalledTimes(1))
+    // The URL's shape is the pure builder's contract (tested in its own
+    // file); here the assertion is the wiring — all four form inputs
+    // reached the builder, and its exact output went to window.open.
     expect(open).toHaveBeenCalledWith(
-      expect.stringContaining('https://github.com/nampq11/social-card/issues/new'),
+      buildFeedbackIssueUrl({
+        kind: 'idea',
+        message: 'Thêm theme tối hơn nữa',
+        email: 'me@example.com',
+        userAgent: navigator.userAgent,
+      }),
       '_blank',
     )
     // The severed opener proves the if-branch ran; jsdom freezes the
     // location members, so the mutually exclusive same-tab fallback
     // is verified in the live browser, not here.
     expect(tab.opener).toBeNull()
-    const url = new URL(open.mock.calls[0]![0] as string)
-    expect(url.searchParams.get('title')).toBe('[Idea] Thêm theme tối hơn nữa')
-    expect(url.searchParams.get('body')).toContain('Thêm theme tối hơn nữa')
-    expect(url.searchParams.get('body')).toContain('Reply-to: me@example.com')
   })
 
   it('falls back to same-tab navigation when the new tab is blocked', async () => {

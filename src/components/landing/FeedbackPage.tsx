@@ -12,21 +12,15 @@ import {
 import { logDebug } from '../../lib/log-debug'
 import { LANDING_PATH } from '../../lib/view-route'
 import { LandingNav } from './LandingNav'
+import { SectionHeading } from './SectionHeading'
 import { useLandingCopy } from './landing-copy'
 
 // Kind pills in pick order; the copy module owns their labels.
 const KINDS: FeedbackKind[] = ['bug', 'feedback', 'idea']
 
-// The keys resolve to plain strings only — `keyof LandingCopy` would also
-// admit the structured lists (grid_items, faq_items) as "labels".
-const KIND_LABEL_KEY: Record<
-  FeedbackKind,
-  'feedback_kind_bug' | 'feedback_kind_feedback' | 'feedback_kind_idea'
-> = {
-  bug: 'feedback_kind_bug',
-  feedback: 'feedback_kind_feedback',
-  idea: 'feedback_kind_idea',
-}
+// One field skin for the page's text inputs; the textarea adds resize-y.
+const FIELD_CLASS =
+  'mt-2 w-full rounded-2xl border border-hairline bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60'
 
 // The third view: one quiet page whose only job is turning a message into
 // a prefilled GitHub issue. The shape learns from tryonenotch's /feedback
@@ -109,11 +103,13 @@ export function FeedbackPage() {
           home first, since this page has no #sections of its own. */}
       <LandingNav homeHref={LANDING_PATH} sectionHrefBase={`${LANDING_PATH}/`} />
       <main className="mx-auto w-full max-w-xl px-6 pb-24 pt-16 md:pt-24">
-        <p className="text-xs font-semibold tracking-[0.2em] text-accent">{t.feedback_eyebrow}</p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink md:text-4xl">
-          {t.feedback_title}
-        </h1>
-        <p className="mt-4 text-base text-ink-secondary md:text-lg">{t.feedback_lede}</p>
+        <SectionHeading
+          eyebrow={t.feedback_eyebrow}
+          title={t.feedback_title}
+          lede={t.feedback_lede}
+          align="start"
+          level={1}
+        />
 
         <form
           className="mt-10"
@@ -146,7 +142,7 @@ export function FeedbackPage() {
                   checked={kind === k}
                   onChange={() => setKind(k)}
                 />
-                {t[KIND_LABEL_KEY[k]]}
+                {t.feedback_kinds[k]}
               </label>
             ))}
           </div>
@@ -162,7 +158,7 @@ export function FeedbackPage() {
               onChange={(event) => setMessage(event.target.value)}
               placeholder={t.feedback_message_placeholder}
               rows={6}
-              className="mt-2 w-full resize-y rounded-2xl border border-hairline bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              className={`${FIELD_CLASS} resize-y`}
             />
             <p className="mt-1.5 text-right text-xs text-ink-tertiary">
               {message.length}/{FEEDBACK_MAX_LENGTH}
@@ -179,7 +175,7 @@ export function FeedbackPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder={t.feedback_email_placeholder}
-              className="mt-2 w-full rounded-2xl border border-hairline bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              className={FIELD_CLASS}
             />
           </div>
 
