@@ -67,3 +67,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #14: Replace @base-ui/react/field in inspector-sections with native inputs (-8.91 kb entry JS, -3.29 kb gzip).
 - Win #14: Replace @base-ui/react/field in inspector-sections with native inputs (-8.91 kb entry JS, -3.29 kb gzip).
 - Win #15: Eliminate class-variance-authority in Button.tsx with zero-dependency mapping (-0.54 kb entry JS, -0.20 kb gzip).
+- Win #15: Eliminate class-variance-authority in Button.tsx with zero-dependency mapping (-0.54 kb entry JS, -0.20 kb gzip).
+- Discard #16: Remove default React namespace imports (+0.01 kb entry JS).
+- Win #17: Simplify PresetsSection button classes & handler delegates (-0.25 kb entry JS, -0.08 kb gzip).
