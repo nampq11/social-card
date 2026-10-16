@@ -26,9 +26,5 @@ dist-ssr
 # Vercel
 .vercel
 .pi/
-
-# local design working files (review notes, prototype) — not part of the repo
-/design/
-
 # local planning working files (grilling plans, spec drafts) — not part of the repo
 plans/
