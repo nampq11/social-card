@@ -61,3 +61,4 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #9: Defer @vercel/analytics in main.tsx via React.lazy (-2.38 kb entry JS, -0.92 kb gzip).
 - Win #10: Lazy load SheetDebugHud & replace 44kB cn package with clsx in tour (-2.77 kb entry JS, -25.14 kb total JS, -9.93 kb total gzip).
 - Win #11: Disable legacy modulepreload polyfill in vite.config.ts (-0.52 kb entry JS, -0.22 kb gzip).
+- Win #12: Lazy-load QRCodeSVG in CardPreview (-15.62 kb entry JS, -5.85 kb gzip, 61ms mount time).
