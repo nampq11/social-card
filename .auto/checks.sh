@@ -5,5 +5,5 @@ set -euo pipefail
 pnpm glossary
 pnpm lint
 pnpm format:check
-pnpm test --isolate=false
+pnpm test
 pnpm build
