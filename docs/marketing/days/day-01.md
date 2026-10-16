@@ -81,18 +81,19 @@ From here: **3 videos/week (Tue/Thu/Sat)** — never daily.
 
 ## Results (fill in tonight)
 
-| Metric                   | X   | Threads | TikTok |
-| ------------------------ | --- | ------- | ------ |
-| Posts / replies sent     |     |         |
-| Impressions              |     |         |
-| Replies received         |     |         |
-| Profile visits           |     |         |
-| Link clicks (UTM-tagged) |     |         |
-| Followers (delta)        |     |         |        |
-| TikTok retention %       | —   | —       |        |
+| Metric                   | X       | Threads                                                 | TikTok  |
+| ------------------------ | ------- | ------------------------------------------------------- | ------- |
+| Posts / replies sent     | not run | 2 posts + 3 replies                                     | not run |
+| Impressions              | —       | 114 views (30-day window; 87 from the 2 posts: 49 + 38) | —       |
+| Replies received         | —       | 2 interactions (1 like, on the poll)                    | —       |
+| Profile visits           | —       | not exposed by Threads insights                         | —       |
+| Link clicks (UTM-tagged) | —       | not tracked                                             | —       |
+| Followers (delta)        | —       | +0 (99 viewers: 1 follower, 98 non-followers)           | —       |
+| TikTok retention %       | —       | —                                                       | —       |
 
 ## Learnings → tomorrow
 
-- What worked:
-- What didn't:
-- Tomorrow's adjustment:
+- What worked: the poll. Post B (question + options, no image) beat the card post 49 views to 38 and earned the only like. Threads distributed to a cold audience — 98 of 99 viewers were non-followers, so reach doesn't depend on having followers yet.
+- What didn't: ~100 viewers converted to +0 followers. X and TikTok never ran — Threads-only day.
+- Note: both posts went out in Vietnamese, deviating from the English-only rule in platform-strategy.md. Language call needed before day-02.
+- Tomorrow's adjustment (proposed): stay Threads-only, 2 posts, repeat the poll format; too early to conclude image posts underperform (n=1 each).
