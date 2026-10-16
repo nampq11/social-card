@@ -73,3 +73,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #17: Simplify PresetsSection button classes & handler delegates (-0.25 kb entry JS, -0.08 kb gzip).
 - Discard #18: Template literals instead of clsx in SwatchPicker/PresetCard (+0.01 kb entry JS).
 - Win #19: Deduplicate theme swatch options array in StyleSection (-0.14 kb entry JS, -0.13 kb total JS).
+- Win #19: Deduplicate theme swatch options array in StyleSection (-0.14 kb entry JS, -0.13 kb total JS).
+- Discard #20: Direct getState() in Slot overlay buttons (+0.01 kb entry JS).
+- Win #21: Map over ANNOTATION_SIDES constant in AnnotationsSection (-0.09 kb entry JS, -0.10 kb total JS).
