@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { dictionaries } from '../../lib/i18n'
-import { STUDIO_PATH } from '../../lib/view-route'
+import { FEEDBACK_PATH, STUDIO_PATH } from '../../lib/view-route'
 import { renderWithUiCopy } from '../../test/card-studio'
 import { landingDictionaries } from './landing-copy'
 import { Landing } from './Landing'
@@ -33,6 +33,13 @@ describe('Landing', () => {
     // Nav, hero and final CTA all carry the same destination.
     expect(studioLinks.length).toBeGreaterThanOrEqual(3)
     for (const href of studioLinks) expect(href).toBe(STUDIO_PATH)
+  })
+
+  it('links the footer to the feedback page', () => {
+    renderWithUiCopy(<Landing />)
+
+    const feedbackLink = screen.getByRole('link', { name: landingDictionaries.vi.footer_feedback })
+    expect(feedbackLink.getAttribute('href')).toBe(FEEDBACK_PATH)
   })
 
   it('switches Interface Language from the landing nav', () => {

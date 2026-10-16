@@ -5,14 +5,19 @@ import { UiCopyProvider } from './lib/i18n'
 import { resolveView } from './lib/view-route'
 
 // The deploy serves one HTML for every /social-card/* path (vercel.json
-// catch-all), so the two views split client-side here — and both are
-// code-split: the landing entry never downloads the studio, and the studio
-// keeps its own chunk for direct /social-card/studio visits.
+// catch-all), so the views split client-side here — and all of them are
+// code-split: the landing entry never downloads the studio, the studio
+// keeps its own chunk for direct /social-card/studio visits, and the
+// feedback page splits the same way off its /social-card/feedback path.
 // oxlint-disable react/only-export-components
 const view = resolveView(window.location.pathname)
 
 const Landing = lazy(() =>
   import('./components/landing/Landing').then((m) => ({ default: m.Landing })),
+)
+
+const FeedbackPage = lazy(() =>
+  import('./components/landing/FeedbackPage').then((m) => ({ default: m.FeedbackPage })),
 )
 
 const Studio = lazy(() => import('./App.tsx'))
@@ -27,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
       {/* The fallback keeps painting the shared canvas surface while a
           view chunk loads, so neither path ever flashes blank. */}
       <Suspense fallback={<div className="h-dvh apple-canvas-bg" />}>
-        {view === 'studio' ? <Studio /> : <Landing />}
+        {view === 'studio' ? <Studio /> : view === 'feedback' ? <FeedbackPage /> : <Landing />}
       </Suspense>
     </UiCopyProvider>
     {/* Vercel Web Analytics only collects on real deployments — the PROD

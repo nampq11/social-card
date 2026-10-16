@@ -5,15 +5,23 @@ import { useLandingCopy } from './landing-copy'
 import { StudioCta } from './StudioCta'
 
 // Floating glass bar mirroring the studio's own header — the landing and
-// the app should read as one product.
-export function LandingNav() {
+// the app should read as one product. The feedback page reuses the same
+// bar: its logo returns home instead of an anchor, and the section
+// anchors only exist on the landing — hence the landing-shaped defaults.
+export function LandingNav({
+  homeHref = '#top',
+  showSections = true,
+}: {
+  homeHref?: string
+  showSections?: boolean
+}) {
   const t = useLandingCopy()
   const { language, setLanguage, copy } = useUiCopy()
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
       <nav className="apple-glass mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-2xl px-3.5 py-3">
-        <a href="#top" className="flex items-center gap-2.5">
+        <a href={homeHref} className="flex items-center gap-2.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-brand-from to-brand-to text-white shadow-sm shadow-blue-500/25">
             <Layers className="size-4" />
           </div>
@@ -22,17 +30,19 @@ export function LandingNav() {
           </span>
         </a>
 
-        <div className="hidden items-center gap-6 text-sm font-medium text-ink-secondary md:flex">
-          <a className="transition-colors hover:text-ink" href="#cards">
-            {t.nav_cards}
-          </a>
-          <a className="transition-colors hover:text-ink" href="#features">
-            {t.nav_features}
-          </a>
-          <a className="transition-colors hover:text-ink" href="#faq">
-            {t.nav_faq}
-          </a>
-        </div>
+        {showSections && (
+          <div className="hidden items-center gap-6 text-sm font-medium text-ink-secondary md:flex">
+            <a className="transition-colors hover:text-ink" href="#cards">
+              {t.nav_cards}
+            </a>
+            <a className="transition-colors hover:text-ink" href="#features">
+              {t.nav_features}
+            </a>
+            <a className="transition-colors hover:text-ink" href="#faq">
+              {t.nav_faq}
+            </a>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           {/* Same Interface Language toggle as the studio header — the

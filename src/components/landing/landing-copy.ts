@@ -174,11 +174,28 @@ const vi = {
   final_title: 'Bài đăng tiếp theo của bạn xứng đáng được đẹp hơn.',
   final_body: 'Mở studio và tạo Card đầu tiên trong dưới một phút.',
 
+  // ── Feedback page (/social-card/feedback) ─────────────────────────────
+  feedback_eyebrow: 'GÓP Ý',
+  feedback_title: 'Gặp bug? Có ý tưởng?',
+  feedback_lede: 'Chọn loại phản hồi, gõ vài dòng, gửi thẳng tới GitHub của dự án.',
+  feedback_kind_label: 'Loại phản hồi',
+  feedback_kind_bug: 'Bug',
+  feedback_kind_feedback: 'Góp ý',
+  feedback_kind_idea: 'Ý tưởng',
+  feedback_message_label: 'Nội dung',
+  feedback_message_placeholder: 'Kể mình nghe điều đã xảy ra, hoặc điều bạn mong muốn…',
+  feedback_email_label: 'Email nhận phản hồi (không bắt buộc)',
+  feedback_email_placeholder: 'ban@vidu.vn',
+  feedback_submit: 'Gửi phản hồi',
+  feedback_trust:
+    'Gửi sẽ mở một issue GitHub trong tab mới (cần tài khoản GitHub) — email chỉ dùng để phản hồi bạn.',
+
   // ── Footer ────────────────────────────────────────────────────────────
   footer_story:
     'Social Card là sản phẩm indie của Nam Phạm — xây cho thói quen chia sẻ tiến trình mỗi ngày trên Threads và X. Không quảng cáo, không theo dõi.',
   footer_product_heading: 'Sản phẩm',
   footer_links_heading: 'Liên kết',
+  footer_feedback: 'Góp ý',
   footer_credit: 'Một sản phẩm indie của Nam Phạm',
 }
 
@@ -338,10 +355,27 @@ const en: typeof vi = {
   final_title: 'Your next post deserves to look better.',
   final_body: 'Open the studio and make your first card in under a minute.',
 
+  feedback_eyebrow: 'FEEDBACK',
+  feedback_title: 'Found a bug? Got an idea?',
+  feedback_lede:
+    'Pick a feedback type, type a few lines, and it lands as a GitHub issue on the project repo.',
+  feedback_kind_label: 'Feedback type',
+  feedback_kind_bug: 'Bug',
+  feedback_kind_feedback: 'Feedback',
+  feedback_kind_idea: 'Idea',
+  feedback_message_label: 'Your feedback',
+  feedback_message_placeholder: 'Tell me what happened, or what you wish existed…',
+  feedback_email_label: 'Reply email (optional)',
+  feedback_email_placeholder: 'you@example.com',
+  feedback_submit: 'Send feedback',
+  feedback_trust:
+    'Sending opens a GitHub issue in a new tab (a GitHub account is needed) — your email is only used to reply to you.',
+
   footer_story:
     'Social Card is an indie product by Nam Phạm — built for the daily habit of sharing progress on Threads and X. No ads, no tracking.',
   footer_product_heading: 'Product',
   footer_links_heading: 'Links',
+  footer_feedback: 'Feedback',
   footer_credit: 'An indie product by Nam Phạm',
 }
 

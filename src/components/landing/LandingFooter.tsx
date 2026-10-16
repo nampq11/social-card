@@ -1,5 +1,5 @@
 import { Layers } from 'lucide-react'
-import { STUDIO_PATH } from '../../lib/view-route'
+import { FEEDBACK_PATH, STUDIO_PATH } from '../../lib/view-route'
 import { useLandingCopy } from './landing-copy'
 
 const linkClass = 'text-ink-secondary transition-colors hover:text-ink'
@@ -42,6 +42,11 @@ export function LandingFooter() {
             <li>
               <a className={linkClass} href="#features">
                 {t.nav_features}
+              </a>
+            </li>
+            <li>
+              <a className={linkClass} href={FEEDBACK_PATH}>
+                {t.footer_feedback}
               </a>
             </li>
           </ul>
