@@ -78,3 +78,8 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #21: Map over ANNOTATION_SIDES constant in AnnotationsSection (-0.09 kb entry JS, -0.10 kb total JS).
 - Win #21: Map over ANNOTATION_SIDES constant in AnnotationsSection (-0.09 kb entry JS, -0.10 kb total JS).
 - Win #23: Direct string concatenation in buttonVariants & map CARD_TYPES in CardTypeSwitcherSection (-0.02 kb entry JS, -267 ms build).
+- Win #23: Direct string concatenation in buttonVariants & map CARD_TYPES in CardTypeSwitcherSection (-0.02 kb entry JS, -267 ms build).
+- Discard #24: Inline SVG path for ChevronDown in Header (+0.07 kb entry JS).
+- Discard #25: Extract static section arrays in inspector-tabs (+0.03 kb entry JS).
+- Discard #26: Imported useState and global parseInt in HeadlineSizeInput (entry JS unchanged).
+- Win #27: Map over SHOT_FIT_OPTIONS in ScreenshotsSection (-0.04 kb entry JS, -0.04 kb total JS).
