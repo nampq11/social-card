@@ -6,7 +6,7 @@
     {
       "source": "/",
       "destination": "/social-card",
-      "permanent": false
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -17,6 +17,14 @@
     {
       "source": "/social-card/favicon.svg",
       "destination": "/favicon.svg"
+    },
+    {
+      "source": "/social-card/og.png",
+      "destination": "/og.png"
+    },
+    {
+      "source": "/social-card/apple-touch-icon.png",
+      "destination": "/apple-touch-icon.png"
     },
     {
       "source": "/social-card",

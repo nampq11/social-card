@@ -1,21 +1,50 @@
 <!doctype html>
-<html lang="vi">
+<!-- The static document is the English-first crawl surface (ADR 0008); the
+     i18n provider retunes lang to the visitor's Interface Language on
+     mount. -->
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <!-- ?v=2 busts persistent browser favicon caches after the logo swap -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Crawl meta is English-first (ADR 0008): share-card scrapers never
+         run JS, and the in-page UI still defaults to Vietnamese. The
+         strings here are owned by src/lib/view-meta.ts and the FAQ block
+         by landingDictionaries.en.faq_items — view-meta-static.test.ts
+         fails the build when either drifts. -->
     <title>Social Card — Minimalist Card Studio</title>
     <meta
       name="description"
-      content="Tạo ảnh chia sẻ chuẩn tỉ lệ cho Threads, X & Facebook trong vài chục giây — Quote Card, Showcase Card, mã QR, PNG Retina. Miễn phí, không cần tài khoản."
+      content="Create share-ready card images for Threads, X & Facebook in under a minute — Quote Cards, Showcase Cards, a QR call-to-action, pixel-exact Retina PNG. Free, no account, nothing to install."
     />
+    <link rel="canonical" href="https://workboost.qzz.io/social-card" />
     <meta property="og:title" content="Social Card — Minimalist Card Studio" />
     <meta
       property="og:description"
-      content="Tạo ảnh chia sẻ chuẩn tỉ lệ cho Threads, X & Facebook trong vài chục giây — Quote Card, Showcase Card, mã QR, PNG Retina. Miễn phí, không cần tài khoản."
+      content="Create share-ready card images for Threads, X & Facebook in under a minute — Quote Cards, Showcase Cards, a QR call-to-action, pixel-exact Retina PNG. Free, no account, nothing to install."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://workboost.qzz.io/social-card" />
+    <meta property="og:site_name" content="Social Card" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://workboost.qzz.io/social-card/og.png" />
+    <meta property="og:image:width" content="2000" />
+    <meta property="og:image:height" content="1125" />
+    <meta
+      property="og:image:alt"
+      content="The Social Card studio on desktop: a glass Inspector on the left, a Showcase card on the dot canvas"
+    />
+    <!-- X reads og:title/description/image as fallbacks; the card type is
+         the one twitter:* tag without an og equivalent. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Browser chrome tint mirrors --color-canvas (src/index.css), the
+         dominant surface on every view. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0b0c" />
+    <!-- Hand-rendered home-screen icon for iOS (public/apple-touch-icon.png),
+         served through the same vercel.json rewrite as the favicon. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
       /* Paint the shell's background for the system color scheme before the
          app mounts, so dark-mode users get no light-theme flash. */
@@ -39,6 +68,58 @@
     <script>
       if (window.location.pathname === '/' || window.location.pathname === '') {
         window.history.replaceState(null, '', '/social-card')
+      }
+    </script>
+    <!-- Static FAQPage structured data: on a client-rendered page the head
+         is the only content a non-JS crawler ever sees. Mirrors
+         landingDictionaries.en.faq_items exactly — view-meta-static.test.ts
+         fails the build when the two drift, so edit both together. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is Social Card really free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. No paid tier, no export limits, and no account."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are my images uploaded to a server?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Editing and rendering happen entirely in your browser — an image only leaves your machine when you paste or upload it yourself."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What quality do exports have?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Every ratio exports a pixel-exact 2.5× Retina PNG: 1800 × 1800 for 1:1, 1600 × 2000 for 4:5, 2000 × 1125 for 16:9."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does it work on phones?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. The studio has a small-screen layout with a control sheet at the bottom — drag, edit and export just like on desktop."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I use it in English?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes — hit the VI/EN button on the toolbar; your choice is remembered for next time."
+            }
+          }
+        ]
       }
     </script>
   </head>
