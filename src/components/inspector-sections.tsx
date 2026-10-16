@@ -1,13 +1,5 @@
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react'
-import type {
-  AnnotationSide,
-  CardState,
-  AspectRatio,
-  CardTheme,
-  CardType,
-  Shot,
-  ShotFit,
-} from '../types'
+import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, ShotFit } from '../types'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
 import { ingestScreenshot } from '../lib/shot-ingest'
@@ -229,26 +221,29 @@ const ANNOTATION_SIDES: AnnotationSide[] = ['left', 'right', 'top']
 // One Shot's line in the Annotations section: the Shot (named by upload
 // order, like the thumbnails' alt text) beside its add affordance, which
 // mirrors the store's one-annotation-per-Shot refusal by disabling.
-function AnnotationAddRow({ shot, position }: { shot: Shot; position: number }) {
-  const { copy } = useUiCopy()
-  const annotated = useCardStore(
-    (s) => s.card.showcase?.annotations.some((a) => a.shotId === shot.id) ?? false,
-  )
-  const name = shotName(copy, position)
-  const addAnnotation = useCardStore((s) => s.addAnnotation)
-
+function AnnotationAddRow({
+  name,
+  annotated,
+  addText,
+  onAdd,
+}: {
+  name: string
+  annotated: boolean
+  addText: string
+  onAdd: () => void
+}) {
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="truncate text-xs text-ink-secondary">{name}</span>
       <Button
-        onClick={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
+        onClick={onAdd}
         disabled={annotated}
-        aria-label={`${copy.annotations_add} · ${name}`}
+        aria-label={`${addText} · ${name}`}
         variant="secondary"
         size="sm"
       >
         <Plus className="w-3 h-3" />
-        <span>{copy.annotations_add}</span>
+        <span>{addText}</span>
       </Button>
     </div>
   )
@@ -262,6 +257,7 @@ export function AnnotationsSection() {
   const { copy } = useUiCopy()
   const shots = useCardStore((s) => s.card.showcase?.shots) ?? []
   const annotations = useCardStore((s) => s.card.showcase?.annotations) ?? []
+  const addAnnotation = useCardStore((s) => s.addAnnotation)
   const updateAnnotation = useCardStore((s) => s.updateAnnotation)
   const removeAnnotation = useCardStore((s) => s.removeAnnotation)
 
@@ -327,9 +323,18 @@ export function AnnotationsSection() {
         </span>
       ) : (
         <>
-          {shots.map((shot, index) => (
-            <AnnotationAddRow key={shot.id} shot={shot} position={index + 1} />
-          ))}
+          {shots.map((shot, index) => {
+            const name = shotName(copy, index + 1)
+            return (
+              <AnnotationAddRow
+                key={shot.id}
+                name={name}
+                annotated={annotations.some((a) => a.shotId === shot.id)}
+                addText={copy.annotations_add}
+                onAdd={() => addAnnotation({ shotId: shot.id, text: '', side: 'left' })}
+              />
+            )
+          })}
           {shots.every((shot) => annotations.some((a) => a.shotId === shot.id)) && (
             <span className="text-[11px] text-ink-tertiary dark:text-neutral-500">
               {copy.annotations_cap_hint}
