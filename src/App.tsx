@@ -17,7 +17,6 @@ import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
 import { Tooltip } from './components/ui/Tooltip'
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react'
-import { Toaster } from 'sonner'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
@@ -33,6 +32,7 @@ const OnboardingTour = lazy(() =>
 const SheetDebugHud = lazy(() =>
   import('./components/SheetDebugHud').then((m) => ({ default: m.SheetDebugHud })),
 )
+const Toaster = lazy(() => import('sonner').then((m) => ({ default: m.Toaster })))
 
 /** Canvas padding follows the shell: mobile keeps a slim margin; desktop
  * reserves the floating Inspector's rail unless focus mode collapsed it. */
@@ -224,7 +224,9 @@ export function App() {
       )}
 
       {/* Export feedback lives in this toast region — bottom-center per spec. */}
-      <Toaster position="bottom-center" />
+      <Suspense fallback={null}>
+        <Toaster position="bottom-center" />
+      </Suspense>
 
       {SHEET_DEBUG && (
         <Suspense fallback={null}>

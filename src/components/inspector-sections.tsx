@@ -29,7 +29,7 @@ import { Checkbox } from './ui/Checkbox'
 import { Switch } from './ui/Switch'
 import { PresetCard } from './ui/PresetCard'
 import { SwatchPicker } from './ui/SwatchPicker'
-import { toast } from 'sonner'
+import { toast } from '../lib/toast'
 import { clsx } from 'clsx'
 
 // The Inspector's control groups, one component per group (GLOSSARY.md:

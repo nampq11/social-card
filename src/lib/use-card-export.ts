@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from './toast'
 import { copyCardToClipboard, downloadCardImage } from './export'
 import { toFilename } from './card-text'
 import { useCardStore } from './card-store'
