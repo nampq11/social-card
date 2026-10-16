@@ -105,3 +105,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #39: Eliminate redundant store subscriptions in AnnotationAddRow (-0.03 kb entry JS, -0.03 kb total JS).
 - Discard #40: Function declarations for LabeledValueRow & QrIconBox (+0.03 kb entry JS).
 - Win #41: Positional arguments in buttonVariants (-0.03 kb entry JS, -0.03 kb total JS).
+- Win #41: Positional arguments in buttonVariants (-0.03 kb entry JS, -0.03 kb total JS).
+- Win #42: Eliminate clsx in Button.tsx & prune unused font weights in index.html (-0.02 kb entry JS, 58ms mount).
