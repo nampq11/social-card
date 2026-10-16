@@ -7,7 +7,7 @@ export function LandingHero() {
 
   return (
     <section id="top" className="apple-canvas-bg relative overflow-hidden">
-      <div className="mx-auto max-w-6xl px-6 pt-20 text-center md:pt-28">
+      <div className="mx-auto max-w-6xl px-6 pb-20 pt-20 text-center md:pb-28 md:pt-28">
         <p className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface px-3.5 py-1.5 text-xs font-medium text-ink-secondary">
           <span className="size-2 rounded-full bg-green shadow-[0_0_6px_var(--color-green)]" />
           {t.hero_badge}
@@ -23,7 +23,7 @@ export function LandingHero() {
           {t.hero_lede}
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 md:mt-12">
           <StudioCta large />
           <a
             href="#cards"
@@ -33,14 +33,20 @@ export function LandingHero() {
           </a>
           {/* The page's one handwritten aside — the annotation voice the
               Showcase Card itself uses (Patrick Hand, slight tilt). */}
-          <span aria-hidden className="hidden -rotate-6 font-hand text-xl text-accent sm:inline">
+          <span
+            aria-hidden
+            className="ms-2 hidden -rotate-3 font-hand text-xl text-accent sm:inline"
+          >
             {t.hero_hint} →
           </span>
         </div>
 
-        <p className="mt-14 text-sm text-ink-tertiary md:mt-16">{t.hero_trust}</p>
+        {/* Trust microcopy clusters with the actions it qualifies; the
+            product shot below earns its own air — actions tight, visual
+            loose. */}
+        <p className="mt-5 text-sm text-ink-tertiary">{t.hero_trust}</p>
 
-        <div className="mt-8 md:mt-10">
+        <div className="mt-16 md:mt-20">
           <img
             src={studioShot}
             alt={t.hero_shot_alt}
