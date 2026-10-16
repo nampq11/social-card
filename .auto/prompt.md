@@ -65,3 +65,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #12: Lazy-load QRCodeSVG in CardPreview (-15.62 kb entry JS, -5.85 kb gzip, 61ms mount time).
 - Discard #13: Ref-based studio shortcuts handler (+0.20 kb entry JS).
 - Win #14: Replace @base-ui/react/field in inspector-sections with native inputs (-8.91 kb entry JS, -3.29 kb gzip).
+- Win #14: Replace @base-ui/react/field in inspector-sections with native inputs (-8.91 kb entry JS, -3.29 kb gzip).
+- Win #15: Eliminate class-variance-authority in Button.tsx with zero-dependency mapping (-0.54 kb entry JS, -0.20 kb gzip).
