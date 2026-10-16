@@ -76,3 +76,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #19: Deduplicate theme swatch options array in StyleSection (-0.14 kb entry JS, -0.13 kb total JS).
 - Discard #20: Direct getState() in Slot overlay buttons (+0.01 kb entry JS).
 - Win #21: Map over ANNOTATION_SIDES constant in AnnotationsSection (-0.09 kb entry JS, -0.10 kb total JS).
+- Win #21: Map over ANNOTATION_SIDES constant in AnnotationsSection (-0.09 kb entry JS, -0.10 kb total JS).
+- Win #23: Direct string concatenation in buttonVariants & map CARD_TYPES in CardTypeSwitcherSection (-0.02 kb entry JS, -267 ms build).
