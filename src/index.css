@@ -132,7 +132,7 @@
     opacity 120ms ease;
 }
 
-/* DESIGN.md button micro-interaction: scale(0.95) */
+/* Button press micro-interaction: scale(0.95) */
 .apple-button:active {
   transform: scale(0.95);
   transition-duration: 70ms;
