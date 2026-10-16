@@ -1,5 +1,3 @@
-import { clsx } from 'clsx'
-
 // Shared primitives layer: one visual language for every button in the
 // studio (Header actions, Inspector controls, app-root toolbar).
 // `apple-button` carries the tactile press feedback defined in index.css.
@@ -42,7 +40,6 @@ export function Button({
   type = 'button',
   ...props
 }: ButtonProps) {
-  return (
-    <button type={type} className={clsx(buttonVariants(variant, size), className)} {...props} />
-  )
+  const base = buttonVariants(variant, size)
+  return <button type={type} className={className ? `${base} ${className}` : base} {...props} />
 }
