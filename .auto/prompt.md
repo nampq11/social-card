@@ -150,3 +150,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #64: Post-discard verification — revert restored 419.21 kb exactly (7th identical run).
 - Win #64: Post-discard verification — revert restored 419.21 kb exactly (7th identical run).
 - Win #65: Verification hold (8th identical); lazy popover content rejected on first-open flicker.
+- Win #65: Verification hold (8th identical); lazy popover content rejected on first-open flicker.
+- Win #66: Verification hold (9th identical); StrictMode removal rejected (~0.1 kB vs lost dev checks).
