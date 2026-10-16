@@ -97,3 +97,5 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Discard #34: Precompute ratio pixel string in RATIO_INFO (+0.12 kb entry JS).
 - Discard #35: Derive isShowcase from card data (+0.06 kb entry JS).
 - Win #36: Derive nameKey and descKey in STYLE_PRESETS dynamically (-0.09 kb entry JS, -0.10 kb total JS).
+- Win #36: Derive nameKey and descKey in STYLE_PRESETS dynamically (-0.09 kb entry JS, -0.10 kb total JS).
+- Win #37: Derive nameKey in PRESETS dynamically (-0.02 kb entry JS, -0.02 kb total JS).
