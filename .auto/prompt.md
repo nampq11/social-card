@@ -70,3 +70,6 @@ Optimize web performance of Social Card Studio. Reduce initial JavaScript bundle
 - Win #15: Eliminate class-variance-authority in Button.tsx with zero-dependency mapping (-0.54 kb entry JS, -0.20 kb gzip).
 - Discard #16: Remove default React namespace imports (+0.01 kb entry JS).
 - Win #17: Simplify PresetsSection button classes & handler delegates (-0.25 kb entry JS, -0.08 kb gzip).
+- Win #17: Simplify PresetsSection button classes & handler delegates (-0.25 kb entry JS, -0.08 kb gzip).
+- Discard #18: Template literals instead of clsx in SwatchPicker/PresetCard (+0.01 kb entry JS).
+- Win #19: Deduplicate theme swatch options array in StyleSection (-0.14 kb entry JS, -0.13 kb total JS).
