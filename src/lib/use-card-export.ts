@@ -77,9 +77,15 @@ export function useCardExport() {
   const download = useCallback(
     () =>
       // The filename reads Card State at call time, so an edit made after the
-      // last render still names the file correctly.
+      // last render still names the file correctly. It names what the card
+      // shows: the Term in Definition mode (the headline is invisible there),
+      // the headline everywhere else.
       runExport(
-        (card) => downloadCardImage(card, toFilename(useCardStore.getState().card.headline)),
+        (card) => {
+          const { headline, cardType, definition } = useCardStore.getState().card
+          const visibleTitle = cardType === 'definition' ? definition?.term || headline : headline
+          return downloadCardImage(card, toFilename(visibleTitle))
+        },
         {
           loading: uiCopy.download_processing,
           success: uiCopy.download_success,

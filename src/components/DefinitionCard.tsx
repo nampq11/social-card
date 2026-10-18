@@ -78,10 +78,13 @@ export const DefinitionCard = ({ card }: { card: CardState }) => {
         )}
       </div>
 
-      {/* Signature footer: avatar beside name + bio, centered. */}
+      {/* Signature footer: avatar beside name + bio, centered. text-white
+          because the name heading carries no color of its own and would
+          otherwise inherit the theme ink the frame root paints under the
+          photo — unreadable dark-on-dark outside the dark theme. */}
       <footer
         data-testid="card-footer"
-        className="relative flex items-center justify-center gap-3.5 border-t border-transparent pt-6"
+        className="relative flex items-center justify-center gap-3.5 border-t border-transparent pt-6 text-white"
       >
         <AuthorAvatar
           url={card.avatarUrl}

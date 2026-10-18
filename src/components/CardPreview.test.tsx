@@ -853,7 +853,10 @@ describe('Definition Card', () => {
     const order = avatar?.compareDocumentPosition(name as Node) ?? 0
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    // White-on-photo ink: the bio block carries the fixed white subtext.
+    // White-on-photo ink: the footer pins white so the colorless name
+    // heading cannot inherit the frame root's theme ink (dark-on-dark),
+    // and the bio block carries the fixed white subtext.
+    expect(footer.className).toContain('text-white')
     const bio = footer.querySelector('[data-testid="author-bio"]')!
     expect(bio.className).toContain('text-white/70')
   })

@@ -112,6 +112,29 @@ describe('useCardExport', () => {
     expect(downloadCardImage).toHaveBeenCalledWith(cardNode, 'ship-ai-notebook.png')
   })
 
+  it('download names the file after the Term in Definition mode, falling back to the headline', async () => {
+    const { result } = renderExporter()
+
+    act(() => {
+      useCardStore.getState().switchCardType('definition')
+      useCardStore.getState().patchDefinition({ term: 'Tự học' })
+    })
+    await act(async () => {
+      await result.current.download()
+    })
+    expect(downloadCardImage).toHaveBeenLastCalledWith(cardNode, 'tu-hoc.png')
+
+    // An emptied Term names the file after the shared headline — the one
+    // title the card still carries (the factory headline in this harness).
+    act(() => {
+      useCardStore.getState().patchDefinition({ term: '' })
+    })
+    await act(async () => {
+      await result.current.download()
+    })
+    expect(downloadCardImage).toHaveBeenLastCalledWith(cardNode, 'em-vua-duoc-tau-dat.png')
+  })
+
   it('guards re-entry: a second copy while one runs is ignored', async () => {
     const deferred = deferredExport<boolean>()
     vi.mocked(copyCardToClipboard).mockReturnValue(deferred.promise)
