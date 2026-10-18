@@ -28,7 +28,7 @@ _Avoid_: theme preset, look
 The complete editable model of one card — all Card Content fields plus style choices (ratio, theme, headline size, uppercase, bold sublines, grayscale avatar).
 _Avoid_: form data, settings
 **Card Type**:
-The archetype of a card — Quote or Showcase — deciding which Card Content fields exist and which layout the Card Preview renders.
+The archetype of a card — Quote, Showcase, or Definition — deciding which Card Content fields exist and which layout the Card Preview renders.
 _Avoid_: layout, variant
 
 **Quote Card**:
@@ -38,6 +38,18 @@ _Avoid_: default card, text card
 **Showcase Card**:
 The product-announcement Card Type: up to three Screenshot Slots in a hero-plus-details collage, handwritten Annotations, and a centered author footer. Always 1:1.
 _Avoid_: product card, screenshot card, collage mode
+
+**Definition Card**:
+The photo-quote Card Type: a full-bleed background photo under a dark Scrim, white three-tier typography — bold Term with its phonetic tag, the observation paragraph, the extra-bold punchline — and a centered signature footer. Ratio stays selectable; the photo replaces the theme.
+_Avoid_: dictionary card, photo card
+
+**Term**:
+The word or phrase a Definition Card defines — the first tier's bold headline, optionally followed by a phonetic tag (e.g. `/self-learning/`).
+_Avoid_: keyword, word (when referring to the field)
+
+**Scrim**:
+The darkness layer between a Definition Card's background photo and its white typography — a 0..1 Card State field the user dials with one slider. Absent from Card State means 0.45.
+_Avoid_: dimmer, photo overlay
 
 **Screenshot Slot**:
 One image holder of a Showcase Card: the single full-width Hero Slot on top, or one of up to two Detail Slots side-by-side below.

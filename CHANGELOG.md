@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Features
+
+- Added the Definition Card Type: a third archetype with a full-bleed background photo under an adjustable scrim and white three-tier typography (bold term with phonetic tag, observation paragraph, extra-bold punchline), a "Self-learning" reference Preset, an in-house generated demo background, non-destructive type switching, and per-field undo coalescing (one typing burst or scrim drag = one undo step). #63
+- Generalized the Card Type seams the Definition Card exposed: the Card Preview's type branch became a compile-exhaustive body map, and the scattered Showcase boolean became a per-type capability record driving ratio/theme/headline control visibility. ADR 0009. #63
+
 ### Changed
 
 - Moved the default avatar and factory demo shot into the build pipeline: both images are imported through Vite from `src/assets/` — the avatar ships as a hashed `/assets/` file, the 3.8 KB demo shot inlines into the entry JS — instead of loading from `public/` via runtime `BASE_URL` paths and hand-maintained Vercel rewrites.
