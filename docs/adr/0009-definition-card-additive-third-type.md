@@ -61,10 +61,12 @@ union).
 - Illegal states remain representable (a populated `definition` nest
   while `cardType === 'quote'`); the ADR 0004 double mitigation carries
   over unchanged.
-- The next Card Type plugs into three Records — `CARD_TYPES` (inspector
-  switcher), `CARD_TYPE_CAPABILITIES`, `CARD_BODIES` — plus its Inspector
-  sections entry; the TypeScript checker walks the author through the
-  list.
+- The next Card Type plugs into three compile-exhaustive Records —
+  `CARD_TYPE_CAPABILITIES`, `CARD_BODIES`, and `CONTENT_SECTIONS` (the
+  Inspector's per-type section list) — where the TypeScript checker walks
+  the author through the list. The switcher's `CARD_TYPES` option array is
+  not one of them: a plain array compiles silently without the new type,
+  so a label test pins it instead of the checker.
 - Definition selects no theme: the background photo replaces it, so the
   theme controls hide (`themeSelectable: false`). Ratio stays selectable
   (`ratioSelectable: true`): the three-tier layout is ratio-agnostic,
