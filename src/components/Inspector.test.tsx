@@ -29,9 +29,10 @@ beforeEach(() => {
 })
 
 // jsdom has no canvas, so the real ingest cannot run here; the seam under
-// test is that a picked file goes through ingestScreenshot into the store.
+// test is that a picked file goes through the ingest helper into the store.
 vi.mock('../lib/shot-ingest', () => ({
-  ingestScreenshot: vi.fn(async () => 'data:image/jpeg;base64,ingested'),
+  ingestPickedFile: vi.fn(async () => 'data:image/jpeg;base64,ingested'),
+  BACKGROUND_MAX_EDGE: 2000,
 }))
 
 // The Inspector itself renders no toast region; its error-toast assertions

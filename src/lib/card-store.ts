@@ -119,7 +119,10 @@ export const useCardStore = create<CardStore>((set) => ({
 
   patchCard: (patch) =>
     set((state) => {
-      const keys = Object.keys(patch)
+      const keys = Object.keys(patch) as (keyof CardState)[]
+      // A patch repeating the stored values changes nothing and costs no
+      // step (sliders fire their clamped, unchanged value at the bounds).
+      if (keys.every((key) => patch[key] === state.card[key])) return state
       const coalesce = continuesEdit(keys.length === 1 ? keys[0] : null)
       const next = { ...state.card, ...patch }
       return coalesce ? { card: next } : undoStep(state, next)
@@ -128,23 +131,21 @@ export const useCardStore = create<CardStore>((set) => ({
   // Definition edits mirror patchCard's rhythm through the nest: a
   // single-field patch carries a nest-qualified coalesce key, so one typing
   // burst per field and one scrim drag each fold into a single undo step
-  // while different fields never merge. The empty-field baseline only
-  // matters for a hand-seeded card with no nest — the factory and the
-  // reference preset always carry one.
+  // while different fields never merge. Background swaps are discrete
+  // choices (a pick, the demo reset) and never coalesce — a reset folding
+  // into the pick it undoes would strand that picked state between steps.
+  // The empty-field baseline only matters for a hand-seeded card with no
+  // nest — the factory and the reference preset always carry one.
   patchDefinition: (patch) =>
     set((state) => {
-      const keys = Object.keys(patch)
-      const coalesce = continuesEdit(keys.length === 1 ? `definition:${keys[0]}` : null)
-      const next = {
-        ...state.card,
-        definition: {
-          term: '',
-          observation: '',
-          punchline: '',
-          ...state.card.definition,
-          ...patch,
-        },
-      }
+      const current = { term: '', observation: '', punchline: '', ...state.card.definition }
+      const keys = Object.keys(patch) as (keyof DefinitionContent)[]
+      // Same no-op rule as patchCard: repeated values cost no undo step.
+      if (keys.every((key) => patch[key] === current[key])) return state
+      const coalesceKey =
+        keys.length === 1 && keys[0] !== 'backgroundImageUrl' ? `definition:${keys[0]}` : null
+      const coalesce = continuesEdit(coalesceKey)
+      const next = { ...state.card, definition: { ...current, ...patch } }
       return coalesce ? { card: next } : undoStep(state, next)
     }),
 

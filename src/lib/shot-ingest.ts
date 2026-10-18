@@ -1,6 +1,13 @@
+import { logDebug } from './log-debug'
+
 // Longest edge a stored Shot may have. Larger screenshots are scaled down on
 // pick so exports stay fast and files stay shareable (spec #33, story 19).
 export const SHOT_MAX_EDGE = 1600
+
+// Longest edge a Definition Card's background photo may have: its card
+// exports at 1600×2000 (4:5 at 2.5×), so a 2000px long edge keeps the
+// exported photo at native resolution rather than upscaling.
+export const BACKGROUND_MAX_EDGE = 2000
 
 // JPEG quality for the re-encode: high enough to hide recompression noise on
 // screenshot text, small enough to keep stored shots and exports shareable.
@@ -56,4 +63,25 @@ export const ingestScreenshot = async (file: File, maxEdge?: number): Promise<st
   context.drawImage(screenshot, 0, 0, policy.width, policy.height)
   screenshot.close()
   return canvas.toDataURL(policy.mimeType, policy.quality)
+}
+
+// One picked-file change event → one ingested data URL, shared by every
+// file-picker control (Shots, the Definition background). Resets the input's
+// value so re-picking the same file still fires a change, returns null when
+// the picker was cancelled, and re-throws ingest failures after logging them
+// under the calling control's tag — callers own the toast copy.
+export const ingestPickedFile = async (
+  event: { target: EventTarget & HTMLInputElement },
+  logTag: string,
+  maxEdge?: number,
+): Promise<string | null> => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return null
+  try {
+    return await ingestScreenshot(file, maxEdge)
+  } catch (error) {
+    logDebug(logTag, `failed to ingest "${file.name}" (${file.size} bytes)`, error)
+    throw error
+  }
 }

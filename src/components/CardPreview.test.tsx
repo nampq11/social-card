@@ -784,6 +784,14 @@ describe('Definition Card', () => {
     expect(screen.queryByTestId('definition-punchline')).toBeNull()
   })
 
+  it('shows the empty-term hint instead of a blank tier, like the Quote headline', () => {
+    renderDefinition({
+      definition: { term: '', observation: '', punchline: '' },
+    })
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('NHẬP THUẬT NGỮ TẠI ĐÂY')
+  })
+
   it('paints the background photo under a scrim at the stored opacity', () => {
     const { container } = renderDefinition({
       definition: {

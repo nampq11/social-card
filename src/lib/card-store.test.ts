@@ -43,6 +43,23 @@ describe('card-store history', () => {
     expect(s().canUndo).toBe(false)
   })
 
+  it('a patch repeating the stored value costs no undo step', () => {
+    // Sliders fire their clamped, unchanged value at the bounds; a dead step
+    // there makes the next undo appear to do nothing.
+    s().patchCard({ headlineSize: 48 })
+    vi.useFakeTimers()
+    try {
+      vi.advanceTimersByTime(700)
+      s().patchCard({ headlineSize: 48 })
+    } finally {
+      vi.useRealTimers()
+    }
+
+    expect(s().past).toHaveLength(1)
+    s().undo()
+    expect(s().card.headlineSize).toBe(DEFAULT_CARD_STATE.headlineSize)
+  })
+
   it('does not coalesce patches to different keys', () => {
     s().patchCard({ headline: 'a' })
     s().patchCard({ theme: 'dark' })
@@ -94,11 +111,15 @@ describe('card-store history', () => {
   })
 
   it('caps the undo stack at 50 steps', () => {
-    // Alternating key NAMES defeats coalescing (values are irrelevant —
-    // the coalesce window is keyed by property name), so every patch is
-    // one step.
+    // Alternating key NAMES defeats coalescing (the window is keyed by
+    // property name) and flipping values defeats the no-op guard (a patch
+    // repeating its stored value costs no step), so every patch is one step.
     for (let i = 0; i < 60; i++) {
-      s().patchCard(i % 2 === 0 ? { theme: 'dark' } : { ratio: '16:9' })
+      s().patchCard(
+        i % 2 === 0
+          ? { theme: i % 4 === 0 ? 'dark' : 'mist' }
+          : { ratio: i % 4 === 1 ? '16:9' : '4:5' },
+      )
     }
     expect(s().past.length).toBe(50)
 
@@ -636,6 +657,38 @@ describe('card-store definition content (issue #63)', () => {
     s().patchDefinition({ term: 'Tự học', punchline: 'Câu chốt' })
 
     expect(s().past.length).toBe(1)
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('a patch repeating the stored values costs no undo step', () => {
+    vi.useFakeTimers()
+    try {
+      s().patchDefinition({ scrimOpacity: 0.7 })
+      vi.advanceTimersByTime(700)
+
+      // The scrim slider fires its clamped, unchanged value at its bounds —
+      // that must not become a dead undo step that makes undo look broken.
+      s().patchDefinition({ scrimOpacity: 0.7 })
+      expect(s().past).toHaveLength(1)
+
+      s().undo()
+      expect(s().card.definition).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('background swaps never coalesce: a reset right after a pick stays undoable', () => {
+    s().patchDefinition({ backgroundImageUrl: 'data:image/jpeg;base64,picked' })
+
+    // The demo reset lands inside the pick's coalesce window but is a
+    // discrete choice — folding would strand the picked state between steps.
+    s().patchDefinition({ backgroundImageUrl: 'data:image/jpeg;base64,demo' })
+    expect(s().past).toHaveLength(2)
+
+    s().undo()
+    expect(s().card.definition?.backgroundImageUrl).toBe('data:image/jpeg;base64,picked')
     s().undo()
     expect(s().card.definition).toBeUndefined()
   })

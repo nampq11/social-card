@@ -2,7 +2,7 @@ import React, { type ChangeEvent, useEffect, useRef, useState, type ReactNode } 
 import type { AnnotationSide, CardState, AspectRatio, CardTheme, CardType, ShotFit } from '../types'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { MAX_SHOTS, useCardStore } from '../lib/card-store'
-import { ingestScreenshot } from '../lib/shot-ingest'
+import { BACKGROUND_MAX_EDGE, ingestPickedFile } from '../lib/shot-ingest'
 import {
   PRESETS,
   STYLE_PRESETS,
@@ -117,18 +117,10 @@ export function ScreenshotsSection() {
   const selectedShot = shots.find((shot) => shot.id === selectedShotId)
 
   const handleShotPick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    // Clear value so re-picking the same file still triggers onChange
-    event.target.value = ''
-    if (!file) return
     try {
-      addShot(await ingestScreenshot(file))
-    } catch (error) {
-      logDebug(
-        'ScreenshotsSection.handleShotPick',
-        `failed to ingest "${file.name}" (${file.size} bytes)`,
-        error,
-      )
+      const dataUrl = await ingestPickedFile(event, 'ScreenshotsSection.handleShotPick')
+      if (dataUrl) addShot(dataUrl)
+    } catch {
       toast.error(copy.shot_file_error)
     }
   }
@@ -656,11 +648,6 @@ export function HeadlineSection() {
   )
 }
 
-// A Definition Card's photos export at 1600×2000 (4:5 at 2.5×), so the
-// background ingest caps the long edge at 2000 instead of the screenshot cap
-// — the exported photo stays at native resolution rather than upscaling.
-const BACKGROUND_MAX_EDGE = 2000
-
 // The Definition Card's content (GLOSSARY.md): the three text tiers, the
 // background photo, and the scrim that keeps the white type legible over it.
 // Every field writes through patchDefinition's per-field undo rhythm.
@@ -671,20 +658,14 @@ export function DefinitionSection() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleBackgroundPick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    // Clear value so re-picking the same file still triggers onChange
-    event.target.value = ''
-    if (!file) return
     try {
-      patchDefinition({
-        backgroundImageUrl: await ingestScreenshot(file, BACKGROUND_MAX_EDGE),
-      })
-    } catch (error) {
-      logDebug(
+      const dataUrl = await ingestPickedFile(
+        event,
         'DefinitionSection.handleBackgroundPick',
-        `failed to ingest "${file.name}" (${file.size} bytes)`,
-        error,
+        BACKGROUND_MAX_EDGE,
       )
+      if (dataUrl) patchDefinition({ backgroundImageUrl: dataUrl })
+    } catch {
       toast.error(copy.definition_bg_error)
     }
   }

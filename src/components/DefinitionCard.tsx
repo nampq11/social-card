@@ -1,5 +1,6 @@
 import { DEFAULT_SCRIM_OPACITY } from '../constants/presets'
 import { splitLines } from '../lib/card-text'
+import { useUiCopy } from '../lib/i18n'
 import { AuthorAvatar, AuthorBio } from './AuthorSignature'
 import type { CardState } from '../types'
 
@@ -12,6 +13,7 @@ import type { CardState } from '../types'
 // Renders no QR — the QR block belongs to the Quote Card only, the same rule
 // the Showcase Card follows.
 export const DefinitionCard = ({ card }: { card: CardState }) => {
+  const { copy } = useUiCopy()
   const definition = card.definition
   const bioLines = splitLines(card.authorBio)
   const scrim = definition?.scrimOpacity ?? DEFAULT_SCRIM_OPACITY
@@ -45,7 +47,9 @@ export const DefinitionCard = ({ card }: { card: CardState }) => {
           data-testid="definition-term"
           className="text-6xl font-bold tracking-tight text-white break-words"
         >
-          {definition?.term}
+          {/* An emptied Term keeps its tier with the hint, like QuoteCard's
+              headline — never a blank reserved band on the card. */}
+          {definition?.term || copy.definition_empty_term_hint}
         </h1>
         {definition?.phonetic && (
           <p
