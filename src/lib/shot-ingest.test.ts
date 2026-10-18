@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { screenshotIngestPolicy } from './shot-ingest'
+import { ingestPickedFile, screenshotIngestPolicy } from './shot-ingest'
 
 describe('screenshotIngestPolicy', () => {
   it('keeps screenshots already under the cap untouched', () => {
@@ -50,5 +50,16 @@ describe('screenshotIngestPolicy', () => {
       mimeType: 'image/jpeg',
       quality: 0.9,
     })
+  })
+})
+
+describe('ingestPickedFile', () => {
+  it('returns null on a cancelled pick and still resets the input value', async () => {
+    // A cancelled picker fires change with no file; the reset is what lets
+    // re-picking the same file fire again. The ingest itself needs canvas —
+    // jsdom lacks it, so only this no-file path is unit-tested.
+    const target = { files: null, value: 'stale' } as unknown as HTMLInputElement
+    await expect(ingestPickedFile({ target }, 'test')).resolves.toBeNull()
+    expect(target.value).toBe('')
   })
 })

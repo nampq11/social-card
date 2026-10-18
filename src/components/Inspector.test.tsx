@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from 'sonner'
 import { Inspector } from './Inspector'
 import { useCardStore } from '../lib/card-store'
-import { DEFAULT_CARD_STATE } from '../constants/presets'
+import { DEFAULT_CARD_STATE, DEMO_DEFINITION } from '../constants/presets'
+import { DEMO_BACKGROUND_URL } from '../constants/demo-background'
 import type { CardState } from '../types'
 import { toastRegion } from '../test/toast-region'
 import { renderWithUiCopy, setupCardStudioTest } from '../test/card-studio'
@@ -28,9 +29,10 @@ beforeEach(() => {
 })
 
 // jsdom has no canvas, so the real ingest cannot run here; the seam under
-// test is that a picked file goes through ingestScreenshot into the store.
+// test is that a picked file goes through the ingest helper into the store.
 vi.mock('../lib/shot-ingest', () => ({
-  ingestScreenshot: vi.fn(async () => 'data:image/jpeg;base64,ingested'),
+  ingestPickedFile: vi.fn(async () => 'data:image/jpeg;base64,ingested'),
+  BACKGROUND_MAX_EDGE: 2000,
 }))
 
 // The Inspector itself renders no toast region; its error-toast assertions
@@ -763,5 +765,117 @@ describe('Inspector Card Type labels', () => {
 
     expect(screen.getByText('Annotations')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Add annotation · Screenshots 1' })).not.toBeNull()
+  })
+
+  it('labels the Definition segment in English', () => {
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en')
+    renderInspector()
+
+    const group = screen.getByRole('radiogroup', { name: 'Card type' })
+    expect(within(group).getByRole('radio', { name: 'Definition' })).not.toBeNull()
+  })
+})
+
+describe('Inspector Definition section', () => {
+  const switchToDefinition = () => {
+    const result = renderInspector()
+    fireEvent.click(screen.getByRole('radio', { name: 'Định nghĩa' }))
+    return result
+  }
+
+  it('swaps the Headline editor for the Definition fields while Presets stay', () => {
+    switchToDefinition()
+
+    expect(useCardStore.getState().card.cardType).toBe('definition')
+    expect(screen.getByLabelText('Thuật ngữ')).not.toBeNull()
+    expect(screen.getByLabelText('Phiên âm')).not.toBeNull()
+    expect(screen.getByLabelText('Quan sát')).not.toBeNull()
+    expect(screen.getByLabelText('Câu chốt')).not.toBeNull()
+    // Presets stay (the reference preset is definition-targeted)…
+    expect(screen.getByText('Mẫu nhanh')).not.toBeNull()
+    // …while the Quote-only Headline editor is gone.
+    expect(screen.queryByLabelText('Tiêu đề chính')).toBeNull()
+  })
+
+  it('edits the term through the definition nest', () => {
+    switchToDefinition()
+
+    fireEvent.change(screen.getByLabelText('Thuật ngữ'), { target: { value: 'Tập trung' } })
+
+    expect(useCardStore.getState().card.definition?.term).toBe('Tập trung')
+  })
+
+  it('picks a background through the ingest and offers the demo reset', async () => {
+    const { container } = switchToDefinition()
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+
+    // The factory background is the demo, so no reset affordance yet.
+    expect(screen.queryByRole('button', { name: 'Dùng ảnh nền gốc' })).toBeNull()
+
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['jpeg-bytes'], 'bg.jpg', { type: 'image/jpeg' })] },
+    })
+
+    await waitFor(() => {
+      expect(useCardStore.getState().card.definition?.backgroundImageUrl).toBe(
+        'data:image/jpeg;base64,ingested',
+      )
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Dùng ảnh nền gốc' }))
+    expect(useCardStore.getState().card.definition?.backgroundImageUrl).toBe(DEMO_BACKGROUND_URL)
+  })
+
+  it('stores the scrim as 0..1 from the integer-stepped slider', () => {
+    switchToDefinition()
+
+    const scrim = screen.getByRole('slider', { name: 'Độ tối lớp phủ' })
+    // The factory scrim is the absent-field default: 45 on the 0..100 control.
+    expect(scrim.getAttribute('aria-valuenow')).toBe('45')
+
+    fireEvent.change(scrim, { target: { value: '80' } })
+
+    expect(useCardStore.getState().card.definition?.scrimOpacity).toBe(0.8)
+    expect(
+      screen.getByRole('slider', { name: 'Độ tối lớp phủ' }).getAttribute('aria-valuenow'),
+    ).toBe('80')
+  })
+
+  it('applies the reference preset in one undoable step and tracks its active state', () => {
+    switchToDefinition()
+
+    // Only the definition-targeted preset is offered; the Quote presets
+    // would be lying controls in this mode.
+    const reference = screen.getByRole('button', { name: 'Định nghĩa (Tự học)' })
+    expect(screen.queryByRole('button', { name: /Mẫu gốc/ })).toBeNull()
+    expect(reference.getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.click(reference)
+
+    const card = useCardStore.getState().card
+    expect(card.ratio).toBe('4:5')
+    expect(card.authorBio).toBe('Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư')
+    expect(card.definition).toBe(DEMO_DEFINITION)
+    expect(reference.getAttribute('aria-pressed')).toBe('true')
+
+    // One step back returns the pre-click state (ratio still 1:1 here).
+    act(() => useCardStore.getState().undo())
+    expect(useCardStore.getState().card.ratio).toBe('1:1')
+    expect(reference.getAttribute('aria-pressed')).toBe('false')
+
+    // Any manual edit to the nest replaces its reference identity.
+    fireEvent.click(reference)
+    fireEvent.change(screen.getByLabelText('Thuật ngữ'), { target: { value: 'Khác' } })
+    expect(reference.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('keeps the ratio control but hides theme, style presets and headline controls', () => {
+    switchToDefinition()
+    fireEvent.click(screen.getByRole('radio', { name: /Kiểu/ }))
+
+    expect(screen.getByRole('radiogroup', { name: 'Tỉ lệ khung hình' })).not.toBeNull()
+    expect(screen.queryByRole('radiogroup', { name: 'Màu nền' })).toBeNull()
+    expect(screen.queryByText('Mẫu phong cách')).toBeNull()
+    expect(screen.queryByRole('slider', { name: /Cỡ chữ tiêu đề/ })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: 'In hoa' })).toBeNull()
   })
 })

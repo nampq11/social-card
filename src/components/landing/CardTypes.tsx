@@ -1,3 +1,4 @@
+import definitionShot from '../../assets/landing/card-definition-demo.webp'
 import quoteShot from '../../assets/landing/card-quote-mist.png'
 import showcaseShot from '../../assets/landing/card-showcase-paper.png'
 import { PointList } from './PointList'
@@ -10,20 +11,27 @@ function CardExample({
   name,
   desc,
   points,
+  width = 1800,
+  height = 1800,
 }: {
   src: string
   alt: string
   name: string
   desc: string
   points: string[]
+  /** Intrinsic export size: reserves the layout box and its aspect ratio
+   *  before the asset loads. Defaults are the 1:1 export; the Definition
+   *  Card ships its native 4:5. */
+  width?: number
+  height?: number
 }) {
   return (
     <article className="flex flex-col rounded-3xl border border-hairline bg-surface p-6 md:p-8">
       <img
         src={src}
         alt={alt}
-        width={1800}
-        height={1800}
+        width={width}
+        height={height}
         loading="lazy"
         className="card-elevation mx-auto w-full max-w-sm rounded-2xl"
       />
@@ -36,8 +44,8 @@ function CardExample({
   )
 }
 
-// The two Card Types side by side, each shown as a real export — the
-// gallery that answers "what does this app make?" before any copy does.
+// The Card Types side by side, each shown as a real export — the gallery
+// that answers "what does this app make?" before any copy does.
 export function CardTypes() {
   const t = useLandingCopy()
 
@@ -45,7 +53,7 @@ export function CardTypes() {
     <section id="cards" className={SECTION_SPACING}>
       <div className={SECTION_CONTAINER}>
         <SectionHeading eyebrow={t.cards_eyebrow} title={t.cards_title} lede={t.cards_lede} />
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           <CardExample
             src={quoteShot}
             alt={t.card_quote_alt}
@@ -59,6 +67,15 @@ export function CardTypes() {
             name={t.showcase_name}
             desc={t.showcase_desc}
             points={t.showcase_points}
+          />
+          <CardExample
+            src={definitionShot}
+            alt={t.card_definition_alt}
+            name={t.definition_name}
+            desc={t.definition_desc}
+            points={t.definition_points}
+            width={1600}
+            height={2000}
           />
         </div>
       </div>

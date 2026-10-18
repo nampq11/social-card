@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { dictionaries } from '../../lib/i18n'
 import { FEEDBACK_PATH, STUDIO_PATH } from '../../lib/view-route'
@@ -64,5 +64,18 @@ describe('Landing', () => {
     // jsdom keeps <details> content in the DOM unopened, so the answer is
     // asserted structurally — the toggle behavior belongs to the browser.
     expect(screen.getByText(first.answer)).toBeTruthy()
+  })
+
+  it('shows every Card Type in the gallery', () => {
+    renderWithUiCopy(<Landing />)
+
+    // The gallery answers "what does this app make?" — a Card Type missing
+    // from it ships invisible. Scoped to the section because the marquee
+    // ticker repeats the card names higher up the page.
+    const gallery = within(document.getElementById('cards')!)
+    expect(gallery.getByText(landingDictionaries.vi.quote_name)).toBeTruthy()
+    expect(gallery.getByText(landingDictionaries.vi.showcase_name)).toBeTruthy()
+    expect(gallery.getByText(landingDictionaries.vi.definition_name)).toBeTruthy()
+    expect(gallery.getByAltText(landingDictionaries.vi.card_definition_alt)).toBeTruthy()
   })
 })

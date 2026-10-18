@@ -1,6 +1,6 @@
 # ADR 0004: Card Type discrimination — shared-flat Card State with nested type content
 
-- **Status:** Accepted
+- **Status:** Accepted (the third-type clause is resolved by ADR 0009)
 - **Date:** 2026-10-14
 - **Deciders:** Nam Pham
 

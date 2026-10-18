@@ -43,6 +43,23 @@ describe('card-store history', () => {
     expect(s().canUndo).toBe(false)
   })
 
+  it('a patch repeating the stored value costs no undo step', () => {
+    // Sliders fire their clamped, unchanged value at the bounds; a dead step
+    // there makes the next undo appear to do nothing.
+    s().patchCard({ headlineSize: 48 })
+    vi.useFakeTimers()
+    try {
+      vi.advanceTimersByTime(700)
+      s().patchCard({ headlineSize: 48 })
+    } finally {
+      vi.useRealTimers()
+    }
+
+    expect(s().past).toHaveLength(1)
+    s().undo()
+    expect(s().card.headlineSize).toBe(DEFAULT_CARD_STATE.headlineSize)
+  })
+
   it('does not coalesce patches to different keys', () => {
     s().patchCard({ headline: 'a' })
     s().patchCard({ theme: 'dark' })
@@ -94,11 +111,15 @@ describe('card-store history', () => {
   })
 
   it('caps the undo stack at 50 steps', () => {
-    // Alternating key NAMES defeats coalescing (values are irrelevant —
-    // the coalesce window is keyed by property name), so every patch is
-    // one step.
+    // Alternating key NAMES defeats coalescing (the window is keyed by
+    // property name) and flipping values defeats the no-op guard (a patch
+    // repeating its stored value costs no step), so every patch is one step.
     for (let i = 0; i < 60; i++) {
-      s().patchCard(i % 2 === 0 ? { theme: 'dark' } : { ratio: '16:9' })
+      s().patchCard(
+        i % 2 === 0
+          ? { theme: i % 4 === 0 ? 'dark' : 'mist' }
+          : { ratio: i % 4 === 1 ? '16:9' : '4:5' },
+      )
     }
     expect(s().past.length).toBe(50)
 
@@ -557,5 +578,134 @@ describe('card-store overrides vs the derived default (issue #38)', () => {
     s().setShotFit(shot.id, 'cover')
     s().setShotFit(shot.id, 'cover')
     expect(s().past.length).toBe(stepsBefore + 1)
+  })
+})
+
+describe('card-store definition content (issue #63)', () => {
+  // These contracts enter from a Quote card with no definition nest, so
+  // materialization is observable; the factory itself carries the demo one.
+  beforeEach(() => {
+    useCardStore.setState({
+      card: { ...DEFAULT_CARD_STATE, cardType: 'quote', definition: undefined },
+      past: [],
+      future: [],
+      canUndo: false,
+      canRedo: false,
+    })
+  })
+
+  it('materializes the nest on the first edit as one undo step', () => {
+    s().patchDefinition({ term: 'Tự học' })
+
+    // The materialized nest carries empty-string baselines for the required
+    // fields the patch didn't touch — '' renders as absent, like headline.
+    expect(s().card.definition).toEqual({ term: 'Tự học', observation: '', punchline: '' })
+    expect(s().canUndo).toBe(true)
+
+    // One step back: the card never carried a definition nest.
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('coalesces a typing burst on one field into a single undo step', () => {
+    s().patchDefinition({ term: 'T' })
+    s().patchDefinition({ term: 'Tự' })
+    s().patchDefinition({ term: 'Tự học' })
+
+    expect(s().past.length).toBe(1)
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('keeps bursts on different fields as separate undo steps', () => {
+    s().patchDefinition({ term: 'Tự học' })
+    s().patchDefinition({ observation: 'a' })
+    s().patchDefinition({ observation: 'ab' })
+
+    // The observation burst folds; the term edit before it does not.
+    s().undo()
+    expect(s().card.definition?.observation).toBe('')
+    expect(s().card.definition?.term).toBe('Tự học')
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('coalesces a scrim drag into one undo step, then expires like any drag', () => {
+    vi.useFakeTimers()
+    try {
+      s().patchDefinition({ scrimOpacity: 0.5 })
+      s().patchDefinition({ scrimOpacity: 0.6 })
+      s().patchDefinition({ scrimOpacity: 0.7 })
+      expect(s().past.length).toBe(1)
+
+      vi.advanceTimersByTime(700)
+      s().patchDefinition({ scrimOpacity: 0.8 })
+      expect(s().past.length).toBe(2)
+
+      // The first undo pops the post-expiry window (back to 0.7); the
+      // second returns to the never-touched card with no scrim stored.
+      s().undo()
+      expect(s().card.definition?.scrimOpacity).toBe(0.7)
+      s().undo()
+      expect(s().card.definition?.scrimOpacity).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('applies a multi-field patch as its own atomic undo step', () => {
+    s().patchDefinition({ term: 'Tự học', punchline: 'Câu chốt' })
+
+    expect(s().past.length).toBe(1)
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('a patch repeating the stored values costs no undo step', () => {
+    vi.useFakeTimers()
+    try {
+      s().patchDefinition({ scrimOpacity: 0.7 })
+      vi.advanceTimersByTime(700)
+
+      // The scrim slider fires its clamped, unchanged value at its bounds —
+      // that must not become a dead undo step that makes undo look broken.
+      s().patchDefinition({ scrimOpacity: 0.7 })
+      expect(s().past).toHaveLength(1)
+
+      s().undo()
+      expect(s().card.definition).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('background swaps never coalesce: a reset right after a pick stays undoable', () => {
+    s().patchDefinition({ backgroundImageUrl: 'data:image/jpeg;base64,picked' })
+
+    // The demo reset lands inside the pick's coalesce window but is a
+    // discrete choice — folding would strand the picked state between steps.
+    s().patchDefinition({ backgroundImageUrl: 'data:image/jpeg;base64,demo' })
+    expect(s().past).toHaveLength(2)
+
+    s().undo()
+    expect(s().card.definition?.backgroundImageUrl).toBe('data:image/jpeg;base64,picked')
+    s().undo()
+    expect(s().card.definition).toBeUndefined()
+  })
+
+  it('switching is non-destructive: definition content survives round trips', () => {
+    s().patchDefinition({ term: 'Tự học', scrimOpacity: 0.3 })
+    s().switchCardType('definition')
+    expect(s().card.cardType).toBe('definition')
+
+    s().switchCardType('showcase')
+    s().switchCardType('quote')
+    expect(s().card.cardType).toBe('quote')
+    expect(s().card.definition).toMatchObject({ term: 'Tự học', scrimOpacity: 0.3 })
+
+    // The definition switch leaves the shared ratio untouched: the layout
+    // is ratio-agnostic and the control stays honest (only Showcase pins).
+    s().switchCardType('definition')
+    expect(s().card.ratio).toBe(DEFAULT_CARD_STATE.ratio)
   })
 })

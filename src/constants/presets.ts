@@ -1,6 +1,7 @@
-import type { CardState } from '../types'
+import type { CardState, DefinitionContent } from '../types'
 import type { UiCopyKey, UiStringKey } from '../lib/i18n'
 import { DEMO_SHOT_ID, DEMO_SHOT_URL } from './demo-shot'
+import { DEMO_BACKGROUND_URL } from './demo-background'
 import defaultAvatarUrl from '../assets/avatar.png'
 
 // Shared fallbacks so the preview placeholders and the default state never
@@ -8,14 +9,35 @@ import defaultAvatarUrl from '../assets/avatar.png'
 export const FALLBACK_AUTHOR_NAME = 'Nam Phạm'
 export const FALLBACK_QR_URL = 'https://github.com/nampq11'
 
+// The scrim darkness a Definition Card renders when its scrimOpacity was
+// never touched (absent-field default, ADR 0005): dark enough for AAA white
+// text over the factory background, light enough to keep the photo visible.
+export const DEFAULT_SCRIM_OPACITY = 0.45
+
+// The Definition Card's factory content — the reference card's copy over the
+// in-house demo background. One object shared by DEFAULT_CARD_STATE and the
+// self-learning Preset so the two can never drift; isPresetActive keeps
+// matching by reference until the first edit replaces the nest.
+export const DEMO_DEFINITION: DefinitionContent = {
+  term: 'Tự học',
+  phonetic: '/self-learning/',
+  observation:
+    'Học hết khóa này tới khóa khác, lưu đầy máy những tài liệu hay rồi vẫn đứng hình khi phải tự làm một thứ cho ra hồn.',
+  punchline: 'Bạn đang học, hay chỉ sưu tầm cảm giác mình tiến bộ?',
+  backgroundImageUrl: DEMO_BACKGROUND_URL,
+}
+
 // The factory card is a Showcase holding the demo Shot: the studio opens on
 // a filled collage (never an empty dashed frame), and the first-run tour's
 // gesture steps always have a live Screenshot Slot to point at. Quote
-// fields stay — they are shared content, and switching back to Quote
-// restores them untouched (ADR 0004).
+// fields and the definition nest stay — they are content, and switching to
+// either restores them untouched (ADR 0004). The definition nest carries the
+// demo content, so the first switch to Definition also lands on a filled
+// card, never an empty frame.
 export const DEFAULT_CARD_STATE: CardState = {
   cardType: 'showcase',
   showcase: { shots: [{ id: DEMO_SHOT_ID, dataUrl: DEMO_SHOT_URL }], annotations: [] },
+  definition: DEMO_DEFINITION,
   headline: 'Em vừa được tậu đất:',
   sublines: 'github.com/nampq11\nthreads.com/@builtaiwithnam',
   authorName: FALLBACK_AUTHOR_NAME,
@@ -94,6 +116,19 @@ export const PRESETS: Preset[] = [
       uppercaseHeadline: true,
       boldSublines: true,
       avatarGrayscale: true,
+    },
+  },
+  {
+    id: 'self-learning',
+    nameKey: 'preset_self_learning',
+    // The Definition reference card in one click: the 4:5 photo format plus
+    // the demo content (shared object, so it stays in sync with the factory
+    // nest) and the reference signature's two-line bio.
+    state: {
+      cardType: 'definition',
+      ratio: '4:5',
+      authorBio: 'Founder độc lập / Build mỗi ngày\nMentor / Nhà đầu tư',
+      definition: DEMO_DEFINITION,
     },
   },
 ]

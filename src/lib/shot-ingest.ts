@@ -1,6 +1,13 @@
+import { logDebug } from './log-debug'
+
 // Longest edge a stored Shot may have. Larger screenshots are scaled down on
 // pick so exports stay fast and files stay shareable (spec #33, story 19).
 export const SHOT_MAX_EDGE = 1600
+
+// Longest edge a Definition Card's background photo may have: its card
+// exports at 1600×2000 (4:5 at 2.5×), so a 2000px long edge keeps the
+// exported photo at native resolution rather than upscaling.
+export const BACKGROUND_MAX_EDGE = 2000
 
 // JPEG quality for the re-encode: high enough to hide recompression noise on
 // screenshot text, small enough to keep stored shots and exports shareable.
@@ -15,18 +22,18 @@ export interface ScreenshotPolicy {
   quality: number
 }
 
-// Scale factor that caps the longer edge at SHOT_MAX_EDGE; 1 means untouched.
-const capScale = (width: number, height: number): number =>
-  Math.min(1, SHOT_MAX_EDGE / Math.max(width, height))
-
-// Pure normalization policy for one uploaded screenshot: given its natural
-// dimensions, returns the dimensions to draw (long edge capped at
-// SHOT_MAX_EDGE, aspect preserved) and the encode decision — always a JPEG
-// re-encode, whatever the source format. No DOM, no canvas — the thin wrapper
+// Pure normalization policy for one uploaded image: given its natural
+// dimensions, returns the dimensions to draw (long edge capped at maxEdge,
+// aspect preserved) and the encode decision — always a JPEG re-encode,
+// whatever the source format. No DOM, no canvas — the thin wrapper
 // (ingestScreenshot) supplies those, which is why this is unit-tested while
 // the wrapper is not (jsdom has no canvas).
-export const screenshotIngestPolicy = (width: number, height: number): ScreenshotPolicy => {
-  const scale = capScale(width, height)
+export const screenshotIngestPolicy = (
+  width: number,
+  height: number,
+  maxEdge: number = SHOT_MAX_EDGE,
+): ScreenshotPolicy => {
+  const scale = Math.min(1, maxEdge / Math.max(width, height))
   return {
     width: Math.round(width * scale),
     height: Math.round(height * scale),
@@ -37,11 +44,14 @@ export const screenshotIngestPolicy = (width: number, height: number): Screensho
 
 // Thin canvas wrapper around screenshotIngestPolicy: loads the picked file,
 // draws it at the policy's dimensions, and encodes with the policy's decision
-// into the data URL stored on the Shot. Deliberately unit-untested — jsdom
-// has no canvas; this is verified by the manual export smoke check (ticket 7).
-export const ingestScreenshot = async (file: File): Promise<string> => {
+// into the data URL stored on the Shot. The optional maxEdge raises the cap
+// for backgrounds — a Definition Card's photo fills a 4:5 canvas that exports
+// at 1600×2000, so screenshots keep the 1600 cap while photos cap at 2000.
+// Deliberately unit-untested — jsdom has no canvas; this is verified by the
+// manual export smoke check (ticket 7).
+const ingestScreenshot = async (file: File, maxEdge?: number): Promise<string> => {
   const screenshot = await createImageBitmap(file)
-  const policy = screenshotIngestPolicy(screenshot.width, screenshot.height)
+  const policy = screenshotIngestPolicy(screenshot.width, screenshot.height, maxEdge)
   const canvas = document.createElement('canvas')
   canvas.width = policy.width
   canvas.height = policy.height
@@ -53,4 +63,25 @@ export const ingestScreenshot = async (file: File): Promise<string> => {
   context.drawImage(screenshot, 0, 0, policy.width, policy.height)
   screenshot.close()
   return canvas.toDataURL(policy.mimeType, policy.quality)
+}
+
+// One picked-file change event → one ingested data URL, shared by every
+// file-picker control (Shots, the Definition background). Resets the input's
+// value so re-picking the same file still fires a change, returns null when
+// the picker was cancelled, and re-throws ingest failures after logging them
+// under the calling control's tag — callers own the toast copy.
+export const ingestPickedFile = async (
+  event: { target: EventTarget & HTMLInputElement },
+  logTag: string,
+  maxEdge?: number,
+): Promise<string | null> => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return null
+  try {
+    return await ingestScreenshot(file, maxEdge)
+  } catch (error) {
+    logDebug(logTag, `failed to ingest "${file.name}" (${file.size} bytes)`, error)
+    throw error
+  }
 }

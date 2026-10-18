@@ -1,7 +1,15 @@
 import { create } from 'zustand'
-import type { Annotation, AnnotationSide, CardState, CardType, Shot } from '../types'
+import type {
+  Annotation,
+  AnnotationSide,
+  CardState,
+  CardType,
+  DefinitionContent,
+  Shot,
+} from '../types'
 import type { ShotFit, ShotFocus } from '../types'
 import { clampFocus, clampScale, shotFit } from './shot-fit'
+import { CARD_TYPE_CAPABILITIES } from '../constants/card-type-capabilities'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -22,6 +30,7 @@ interface CardStore {
   canUndo: boolean
   canRedo: boolean
   patchCard: (patch: Partial<CardState>) => void
+  patchDefinition: (patch: Partial<DefinitionContent>) => void
   resetCard: () => void
   undo: () => void
   redo: () => void
@@ -111,9 +120,33 @@ export const useCardStore = create<CardStore>((set) => ({
 
   patchCard: (patch) =>
     set((state) => {
-      const keys = Object.keys(patch)
+      const keys = Object.keys(patch) as (keyof CardState)[]
+      // A patch repeating the stored values changes nothing and costs no
+      // step (sliders fire their clamped, unchanged value at the bounds).
+      if (keys.every((key) => patch[key] === state.card[key])) return state
       const coalesce = continuesEdit(keys.length === 1 ? keys[0] : null)
       const next = { ...state.card, ...patch }
+      return coalesce ? { card: next } : undoStep(state, next)
+    }),
+
+  // Definition edits mirror patchCard's rhythm through the nest: a
+  // single-field patch carries a nest-qualified coalesce key, so one typing
+  // burst per field and one scrim drag each fold into a single undo step
+  // while different fields never merge. Background swaps are discrete
+  // choices (a pick, the demo reset) and never coalesce — a reset folding
+  // into the pick it undoes would strand that picked state between steps.
+  // The empty-field baseline only matters for a hand-seeded card with no
+  // nest — the factory and the reference preset always carry one.
+  patchDefinition: (patch) =>
+    set((state) => {
+      const current = { term: '', observation: '', punchline: '', ...state.card.definition }
+      const keys = Object.keys(patch) as (keyof DefinitionContent)[]
+      // Same no-op rule as patchCard: repeated values cost no undo step.
+      if (keys.every((key) => patch[key] === current[key])) return state
+      const coalesceKey =
+        keys.length === 1 && keys[0] !== 'backgroundImageUrl' ? `definition:${keys[0]}` : null
+      const coalesce = continuesEdit(coalesceKey)
+      const next = { ...state.card, definition: { ...current, ...patch } }
       return coalesce ? { card: next } : undoStep(state, next)
     }),
 
@@ -337,9 +370,10 @@ export const useCardStore = create<CardStore>((set) => ({
       // Requesting the current Card Type changes nothing and costs no step.
       if (next === state.card.cardType) return state
       lastEdit = null
-      // Showcase is always 1:1; leaving does not restore the pre-excursion
+      // A type whose ratio is not selectable pins 1:1 (the capability
+      // record owns the policy); leaving does not restore the pre-excursion
       // ratio — ratio is shared style, not per-type content (issue #33).
-      const ratio = next === 'showcase' ? '1:1' : state.card.ratio
+      const ratio = CARD_TYPE_CAPABILITIES[next].ratioSelectable ? state.card.ratio : '1:1'
       return undoStep(state, { ...state.card, cardType: next, ratio })
     }),
 }))
