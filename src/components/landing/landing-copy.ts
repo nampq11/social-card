@@ -20,9 +20,9 @@ const vi = {
   hero_title_a: 'Card ảnh đẹp,',
   hero_title_b: 'hoàn thành trong một nhấp.',
   hero_lede:
-    'Social Card là studio một màn hình cho ảnh mạng xã hội: Quote Card để kể chuyện, Showcase Card để khoe sản phẩm, mã QR kêu gọi hành động — xuất PNG Retina 2.5× đúng tỉ lệ từng nền tảng, dán thẳng vào Threads hoặc X.',
+    'Social Card là studio một màn hình cho ảnh mạng xã hội: Quote Card để kể chuyện, Showcase Card để khoe sản phẩm, Definition Card kiểu từ điển viral, mã QR kêu gọi hành động — xuất PNG Retina 2.5× đúng tỉ lệ từng nền tảng, dán thẳng vào Threads hoặc X.',
   hero_trust: 'Không cần tài khoản · Không cài đặt · Miễn phí',
-  hero_cta_secondary: 'Xem hai loại Card',
+  hero_cta_secondary: 'Xem ba loại Card',
   hero_hint: 'miễn phí, không cần đăng ký!',
   hero_shot_alt:
     'Studio Social Card trên desktop: bảng điều khiển kính mờ bên trái, thẻ Showcase trên canvas chấm',
@@ -31,6 +31,7 @@ const vi = {
   marquee_items: [
     'Quote Card',
     'Showcase Card',
+    'Definition Card',
     'Mã QR kêu gọi hành động',
     '4 theme Card',
     '3 tỉ lệ khung hình',
@@ -41,10 +42,10 @@ const vi = {
   ],
 
   // ── Card types ────────────────────────────────────────────────────────
-  cards_eyebrow: 'HAI LOẠI CARD',
-  cards_title: 'Kể chuyện, hoặc khoe sản phẩm.',
+  cards_eyebrow: 'BA LOẠI CARD',
+  cards_title: 'Kể chuyện, khoe sản phẩm, hoặc định nghĩa một khái niệm.',
   cards_lede:
-    'Cùng một studio, hai cách kể: chọn loại Card ngay trong bảng điều khiển và đổi qua lại bất cứ lúc nào mà không mất nội dung.',
+    'Cùng một studio, ba cách kể: chọn loại Card ngay trong bảng điều khiển và đổi qua lại bất cứ lúc nào mà không mất nội dung.',
   quote_name: 'Quote Card',
   quote_desc:
     'Dành cho câu nói, quan điểm, tech note — typography lớn, tác giả và avatar ở chân Card.',
@@ -61,8 +62,18 @@ const vi = {
     'Ghi chú viết tay (Patrick Hand) chỉ điểm',
     'Chân trang tác giả + mã QR kêu gọi',
   ],
+  definition_name: 'Definition Card',
+  definition_desc:
+    'Dành cho khái niệm cần "định nghĩa" — ảnh nền phủ kín Card dưới lớp tối, chữ trắng ba tầng: thuật ngữ kèm phiên âm, quan sát, câu chốt.',
+  definition_points: [
+    'Ảnh nền phủ kín Card, lớp tối chỉnh được',
+    'Thuật ngữ đậm kèm phiên âm, kiểu mục từ điển',
+    'Câu chốt đậm cỡ lớn — định dạng viral 4:5',
+  ],
   card_quote_alt: 'Một Quote Card theme Sương với tiêu đề "Làm ít, làm sâu, làm thật."',
   card_showcase_alt: 'Một Showcase Card theme Giấy với ảnh hero và chân trang tác giả',
+  card_definition_alt:
+    'Một Definition Card: thuật ngữ "Tự học" kèm phiên âm /self-learning/, đoạn quan sát và câu chốt đậm trên ảnh nền dưới lớp tối',
 
   // ── One-screen studio ─────────────────────────────────────────────────
   studio_eyebrow: 'MỘT MÀN HÌNH',
@@ -215,9 +226,9 @@ const en: typeof vi = {
   hero_title_a: 'Beautiful card images,',
   hero_title_b: 'done in one click.',
   hero_lede:
-    'Social Card is a one-screen studio for social images: a Quote Card for storytelling, a Showcase Card for your product, a QR call-to-action — exported as a pixel-exact 2.5× Retina PNG you paste straight into Threads or X.',
+    'Social Card is a one-screen studio for social images: a Quote Card for storytelling, a Showcase Card for your product, a Definition Card in viral dictionary style, a QR call-to-action — exported as a pixel-exact 2.5× Retina PNG you paste straight into Threads or X.',
   hero_trust: 'No account · Nothing to install · Free',
-  hero_cta_secondary: 'See the two card types',
+  hero_cta_secondary: 'See the three card types',
   hero_hint: 'free, no sign-up!',
   hero_shot_alt:
     'The Social Card studio on desktop: a glass Inspector on the left, a Showcase card on the dot canvas',
@@ -225,6 +236,7 @@ const en: typeof vi = {
   marquee_items: [
     'Quote Card',
     'Showcase Card',
+    'Definition Card',
     'QR call-to-action',
     '4 card themes',
     '3 aspect ratios',
@@ -234,10 +246,10 @@ const en: typeof vi = {
     'Dark mode',
   ],
 
-  cards_eyebrow: 'TWO CARD TYPES',
-  cards_title: 'Tell a story, or show the product.',
+  cards_eyebrow: 'THREE CARD TYPES',
+  cards_title: 'Tell a story, show the product, or define a term.',
   cards_lede:
-    'One studio, two ways to speak: pick the card type in the Inspector and switch any time without losing content.',
+    'One studio, three ways to speak: pick the card type in the Inspector and switch any time without losing content.',
   quote_name: 'Quote Card',
   quote_desc:
     'For sayings, opinions, tech notes — big typography with the author and avatar at the card foot.',
@@ -254,8 +266,18 @@ const en: typeof vi = {
     'Handwritten (Patrick Hand) annotations',
     'Author footer + QR call-to-action',
   ],
+  definition_name: 'Definition Card',
+  definition_desc:
+    'For concepts worth defining — a full-bleed photo under a dark scrim with white type in three tiers: the term with its phonetic tag, the observation, the punchline.',
+  definition_points: [
+    'Full-bleed photo with an adjustable scrim',
+    'Bold term with phonetic tag, dictionary-style',
+    'Extra-bold punchline — a viral 4:5 format',
+  ],
   card_quote_alt: 'A Quote Card in the Mist theme with the headline "Làm ít, làm sâu, làm thật."',
   card_showcase_alt: 'A Showcase Card in the Paper theme: a hero shot and the author footer',
+  card_definition_alt:
+    'A Definition Card: the term "Tự học" with the phonetic tag /self-learning/, an observation and a bold punchline over a photo under a dark scrim',
 
   studio_eyebrow: 'ONE SCREEN',
   studio_title: 'Edit and see it instantly. On any screen.',
