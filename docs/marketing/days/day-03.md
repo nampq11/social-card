@@ -57,17 +57,24 @@ First cross-post lands day 5.
 
 ## Results (fill in tonight)
 
-| Metric                   | X   | Threads | TikTok |
-| ------------------------ | --- | ------- | ------ |
-| Posts / replies sent     |     |         | —      |
-| Impressions              |     |         | —      |
-| Replies received         |     |         | —      |
-| Profile visits           |     |         | —      |
-| Link clicks (UTM-tagged) |     |         | —      |
-| Followers (delta)        |     |         | —      |
+| Metric                   | X       | Threads                                                 | TikTok |
+| ------------------------ | ------- | ------------------------------------------------------- | ------ |
+| Posts / replies sent     | not run | 0 — day spent building the landing page                 | —      |
+| Impressions              | —       | no new posts (day-2 posts still accruing: 187 at close) | —      |
+| Replies received         | —       | —                                                       | —      |
+| Profile visits           | —       | —                                                       | —      |
+| Link clicks (UTM-tagged) | —       | see site analytics below                                | —      |
+| Followers (delta)        | —       | not checked                                             | —      |
+
+### Site (Vercel, last 7 days to Oct 18) — first funnel data
+
+- 22 visitors / 95 page views / 36% bounce — all after Oct 15; Oct 11–14 (pre-marketing) was flat 0
+- Referrers: lthreads.com 4, l.facebook.com 1, l.messenger.com 1 — first confirmed content → site traffic
+- Pages: /social-card 22, /studio 6 (27% of visitors went past the landing page), /feedback 1
+- Traffic spike Oct 15–17 coincides exactly with day-1/2 posts
 
 ## Learnings → tomorrow
 
-- What worked:
-- What didn't:
-- Tomorrow's adjustment:
+- What worked: skipping content to ship the landing page. Site analytics now close the loop the plan was built on (post → profile/bio → site → studio). Threads is a confirmed referrer, and the traffic curve tracks posting days 1:1 — zero before marketing started.
+- What didn't: nothing posted — card-vs-poll stays unresolved another day and day-04 inherits the posting debt. Sample is still too small to read the bounce rate (+36%) as good or bad.
+- Tomorrow's adjustment: run this plan as day-04 with one content change — Post A folds in the honest "skipped a day to build" angle (build-in-public pillar P2). → day-04.md
