@@ -57,7 +57,8 @@ union).
 
 - Definition content round-trips non-destructively through type switches,
   exactly like Showcase content, through the same `switchCardType`
-  action (unchanged).
+  action (its non-destructive semantics unchanged; the Showcase ratio pin
+  now reads the capability record instead of a hardcoded type name).
 - Illegal states remain representable (a populated `definition` nest
   while `cardType === 'quote'`); the ADR 0004 double mitigation carries
   over unchanged.
@@ -65,8 +66,8 @@ union).
   `CARD_TYPE_CAPABILITIES`, `CARD_BODIES`, and `CONTENT_SECTIONS` (the
   Inspector's per-type section list) — where the TypeScript checker walks
   the author through the list. The switcher's `CARD_TYPES` option array is
-  not one of them: a plain array compiles silently without the new type,
-  so a label test pins it instead of the checker.
+  derived from the capability record's keys, so it cannot silently omit a
+  registered type; its label test pins the copy, not the presence.
 - Definition selects no theme: the background photo replaces it, so the
   theme controls hide (`themeSelectable: false`). Ratio stays selectable
   (`ratioSelectable: true`): the three-tier layout is ratio-agnostic,

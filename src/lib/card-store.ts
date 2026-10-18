@@ -9,6 +9,7 @@ import type {
 } from '../types'
 import type { ShotFit, ShotFocus } from '../types'
 import { clampFocus, clampScale, shotFit } from './shot-fit'
+import { CARD_TYPE_CAPABILITIES } from '../constants/card-type-capabilities'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
 
 // The Card State — the complete editable model of one card (all Card Content
@@ -369,9 +370,10 @@ export const useCardStore = create<CardStore>((set) => ({
       // Requesting the current Card Type changes nothing and costs no step.
       if (next === state.card.cardType) return state
       lastEdit = null
-      // Showcase is always 1:1; leaving does not restore the pre-excursion
+      // A type whose ratio is not selectable pins 1:1 (the capability
+      // record owns the policy); leaving does not restore the pre-excursion
       // ratio — ratio is shared style, not per-type content (issue #33).
-      const ratio = next === 'showcase' ? '1:1' : state.card.ratio
+      const ratio = CARD_TYPE_CAPABILITIES[next].ratioSelectable ? state.card.ratio : '1:1'
       return undoStep(state, { ...state.card, cardType: next, ratio })
     }),
 }))

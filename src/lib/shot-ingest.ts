@@ -49,7 +49,7 @@ export const screenshotIngestPolicy = (
 // at 1600×2000, so screenshots keep the 1600 cap while photos cap at 2000.
 // Deliberately unit-untested — jsdom has no canvas; this is verified by the
 // manual export smoke check (ticket 7).
-export const ingestScreenshot = async (file: File, maxEdge?: number): Promise<string> => {
+const ingestScreenshot = async (file: File, maxEdge?: number): Promise<string> => {
   const screenshot = await createImageBitmap(file)
   const policy = screenshotIngestPolicy(screenshot.width, screenshot.height, maxEdge)
   const canvas = document.createElement('canvas')

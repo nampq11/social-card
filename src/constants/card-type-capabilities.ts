@@ -4,11 +4,13 @@ import type { CardType } from '../types'
 // show. One row per Card Type; a control that would edit a field the type
 // never renders is worse than no control (spec #33's rule), so each flag
 // names a policy that real consumers read — StyleSection consumes all four,
-// the header's ratio pill and the mobile ratio chip read ratioSelectable.
-// No speculative flags: an entry exists only when some surface queries it.
+// the header's ratio pill, the mobile ratio chip, and the store's type
+// switch (the pin on switch) read ratioSelectable. No speculative flags:
+// an entry exists only when some surface queries it.
 export interface CardTypeCapabilities {
   /** The ratio control and the header's ratio cycler. Types whose layout
-   *  breaks off-square (the Showcase collage) pin their ratio instead. */
+   *  breaks off-square (the Showcase collage) pin their ratio instead —
+   *  switchCardType enforces that pin from this flag, one policy home. */
   ratioSelectable: boolean
   /** The theme swatches. Types that paint their own background — the
    *  Definition Card's photo under a scrim — cover the theme entirely. */

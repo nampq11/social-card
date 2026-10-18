@@ -56,7 +56,10 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
 
-const CARD_TYPES: CardType[] = ['quote', 'showcase', 'definition']
+// Derived from the capability record so the switcher can never silently
+// omit a type the other Records already registered (keys keep declaration
+// order); the label test pins the copy, not the presence.
+const CARD_TYPES = Object.keys(CARD_TYPE_CAPABILITIES) as CardType[]
 
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
