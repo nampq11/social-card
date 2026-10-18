@@ -179,6 +179,19 @@ describe('App', () => {
     expect(ratioBtn.textContent).toContain('Square')
   })
 
+  it('keeps the ratio pill cycling in Definition mode (only Showcase pins its ratio)', () => {
+    renderApp()
+    act(() => {
+      useCardStore.getState().switchCardType('definition')
+    })
+
+    const ratioBtn = screen.getByRole('button', { name: /Bấm để chuyển đổi tỷ lệ khung hình/ })
+    fireEvent.click(ratioBtn)
+
+    expect(useCardStore.getState().card.ratio).toBe('4:5')
+    expect(ratioBtn.textContent).toContain('Portrait')
+  })
+
   it('drives the Zoom HUD readout through the zoom buttons', () => {
     renderApp()
 

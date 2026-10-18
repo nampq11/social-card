@@ -745,3 +745,116 @@ describe('shot fit v2: auto-fit, zoom, on-shot controls (issue #38)', () => {
     expect(shot.scale).toBeUndefined()
   })
 })
+
+describe('Definition Card', () => {
+  // The render helper pins quote; definition tests pass their own cardType.
+  const renderDefinition = (state: Partial<CardState> = {}) =>
+    renderCard({ cardType: 'definition', ...state })
+
+  it('renders the three type tiers with the phonetic tag italic', () => {
+    renderDefinition({
+      definition: {
+        term: 'Tự học',
+        phonetic: '/self-learning/',
+        observation: 'Quan sát đủ dài để xuống dòng.',
+        punchline: 'Câu chốt?',
+      },
+    })
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.textContent).toBe('Tự học')
+
+    const phonetic = screen.getByTestId('definition-phonetic')
+    expect(phonetic.textContent).toBe('/self-learning/')
+    expect(phonetic.className).toContain('italic')
+
+    expect(screen.getByTestId('definition-observation').textContent).toBe(
+      'Quan sát đủ dài để xuống dòng.',
+    )
+    expect(screen.getByTestId('definition-punchline').textContent).toBe('Câu chốt?')
+  })
+
+  it('omits the phonetic tag and empty tiers instead of rendering blanks', () => {
+    renderDefinition({
+      definition: { term: 'Tự học', observation: '', punchline: '' },
+    })
+
+    expect(screen.queryByTestId('definition-phonetic')).toBeNull()
+    expect(screen.queryByTestId('definition-observation')).toBeNull()
+    expect(screen.queryByTestId('definition-punchline')).toBeNull()
+  })
+
+  it('paints the background photo under a scrim at the stored opacity', () => {
+    const { container } = renderDefinition({
+      definition: {
+        term: 'Tự học',
+        observation: 'a',
+        punchline: 'b',
+        backgroundImageUrl: 'data:image/jpeg;base64,bg',
+        scrimOpacity: 0.8,
+      },
+    })
+
+    const cardNode = container.querySelector('#social-card-node')!
+    const photo = cardNode.querySelector('[data-testid="definition-background"]')
+    expect(photo?.getAttribute('src')).toBe('data:image/jpeg;base64,bg')
+    expect(photo?.className).toContain('object-cover')
+
+    const scrim = cardNode.querySelector('[data-testid="definition-scrim"]') as HTMLElement
+    expect(scrim.style.opacity).toBe('0.8')
+  })
+
+  it('renders the default scrim when scrimOpacity was never touched', () => {
+    const { container } = renderDefinition({
+      definition: { term: 'Tự học', observation: 'a', punchline: 'b' },
+    })
+
+    const scrim = container.querySelector('[data-testid="definition-scrim"]') as HTMLElement
+    // The absent-field default (ADR 0005 pattern): 0.45 without storing it.
+    expect(scrim.style.opacity).toBe('0.45')
+  })
+
+  it('keeps the near-black base when no photo was ever set', () => {
+    const { container } = renderDefinition({
+      definition: { term: 'Tự học', observation: 'a', punchline: 'b' },
+    })
+
+    const cardNode = container.querySelector('#social-card-node')!
+    expect(cardNode.querySelector('[data-testid="definition-background"]')).toBeNull()
+    // The base layer still paints so white type keeps contrast.
+    expect(cardNode.querySelector('.bg-neutral-950')).not.toBeNull()
+  })
+
+  it('never renders the QR block, even when qrEnabled survived a switch', () => {
+    const { container } = renderDefinition({
+      qrEnabled: true,
+      qrCta: 'Quét mã',
+      definition: { term: 'Tự học', observation: 'a', punchline: 'b' },
+    })
+
+    expect(screen.queryByText('Quét mã')).toBeNull()
+    expect(container.querySelector('[data-testid="qr-container"]')).toBeNull()
+  })
+
+  it('signs with the centered avatar-then-name footer in white', () => {
+    const { container } = renderDefinition({
+      authorName: 'Nam Pham',
+      avatarUrl: 'https://example.com/a.png',
+      definition: { term: 'Tự học', observation: 'a', punchline: 'b' },
+    })
+
+    const cardNode = container.querySelector('#social-card-node')!
+    const footer = cardNode.querySelector('[data-testid="card-footer"]')!
+    expect(footer.className).toContain('justify-center')
+
+    const name = screen.getByText('Nam Pham')
+    const avatar = footer.querySelector('img')
+    expect(avatar).not.toBeNull()
+    const order = avatar?.compareDocumentPosition(name as Node) ?? 0
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    // White-on-photo ink: the bio block carries the fixed white subtext.
+    const bio = footer.querySelector('[data-testid="author-bio"]')!
+    expect(bio.className).toContain('text-white/70')
+  })
+})
