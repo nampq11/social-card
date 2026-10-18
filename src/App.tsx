@@ -13,6 +13,7 @@ import { useOnboarding } from './lib/onboarding'
 import { Header } from './components/Header'
 import { CardPreview } from './components/CardPreview'
 import { useCardExport } from './lib/use-card-export'
+import { CARD_TYPE_CAPABILITIES } from './constants/card-type-capabilities'
 import { useUiCopy, type UiStringKey } from './lib/i18n'
 import { Button } from './components/ui/Button'
 import { Tooltip } from './components/ui/Tooltip'
@@ -111,11 +112,11 @@ export function App() {
         isDesktop={isDesktop}
         isInspectorCollapsed={isInspectorCollapsed}
         onToggleInspector={toggleInspector}
-        // Showcase is always 1:1 (the store enforces it on type switch), so
-        // the header hides the cycling pill for it — same rule as the
+        // Ratio-selectable types own the cycling pill; Showcase pins 1:1
+        // (the store enforces it on type switch) — same rule as the
         // Inspector's ratio control: a control that lies about what's
         // editable is worse than no control.
-        onCycleRatio={cardType === 'showcase' ? undefined : cycleRatio}
+        onCycleRatio={CARD_TYPE_CAPABILITIES[cardType].ratioSelectable ? cycleRatio : undefined}
         onReplayTour={startTour}
       />
 
@@ -144,9 +145,10 @@ export function App() {
               vertical axis against the centered Card. */}
           {!isDesktop && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              {/* Showcase is always 1:1 — the cycling chip hides for it, same
-                  rule as the header pill and the Inspector's ratio control. */}
-              {cardType !== 'showcase' && (
+              {/* The cycling chip hides for ratio-pinned types (Showcase),
+                  same rule as the header pill and the Inspector's ratio
+                  control. */}
+              {CARD_TYPE_CAPABILITIES[cardType].ratioSelectable && (
                 <button
                   type="button"
                   onClick={cycleRatio}

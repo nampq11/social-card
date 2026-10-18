@@ -11,8 +11,20 @@ import {
   AnnotationsSection,
   StyleSection,
   HeadlineSection,
+  DefinitionSection,
   IdentitySection,
 } from './inspector-sections'
+
+// The Content tab's sections per Card Type: the type switcher leads in every
+// mode, then the type's own content editor(s). Quote keeps Presets + the
+// Headline editor, Showcase swaps both for Screenshots + Annotations
+// (Presets write Quote-only fields), Definition keeps Presets (its reference
+// preset lives there) and swaps the Headline editor for the Definition one.
+const CONTENT_SECTIONS: Record<CardType, React.FC[]> = {
+  quote: [CardTypeSwitcherSection, PresetsSection, HeadlineSection],
+  showcase: [CardTypeSwitcherSection, ScreenshotsSection, AnnotationsSection],
+  definition: [CardTypeSwitcherSection, PresetsSection, DefinitionSection],
+}
 
 // The one section grouping (GLOSSARY: Inspector): the Mobile Sheet's tabs
 // and the desktop Inspector's tabs both render from this registry, so the
@@ -40,13 +52,9 @@ export const INSPECTOR_TABS: InspectorTab[] = [
     id: 'content',
     nameKey: 'tab_content',
     icon: <Type />,
-    // The type switcher leads the Content tab in BOTH modes (spec #33) —
-    // Quote mode's only new control. Showcase swaps Presets + Headline
-    // (dead in that mode) for the Screenshots section.
-    sections: (cardType) =>
-      cardType === 'showcase'
-        ? [CardTypeSwitcherSection, ScreenshotsSection, AnnotationsSection]
-        : [CardTypeSwitcherSection, PresetsSection, HeadlineSection],
+    // The type switcher leads the Content tab in EVERY mode (spec #33);
+    // the rest of the list is the per-type registry above.
+    sections: (cardType) => CONTENT_SECTIONS[cardType],
   },
   { id: 'style', nameKey: 'tab_style', icon: <Palette />, sections: () => [StyleSection] },
   {

@@ -7,8 +7,11 @@ import {
   PRESETS,
   STYLE_PRESETS,
   DEFAULT_CARD_STATE,
+  DEFAULT_SCRIM_OPACITY,
   type StylePresetState,
 } from '../constants/presets'
+import { DEMO_BACKGROUND_URL } from '../constants/demo-background'
+import { CARD_TYPE_CAPABILITIES } from '../constants/card-type-capabilities'
 import { CARD_THEME_STYLES } from '../constants/card-theme'
 import { Slider } from './ui/Slider'
 import { Select, fieldSurfaceClass } from './ui/Select'
@@ -53,7 +56,7 @@ function isPresetActive<S extends Partial<CardState>>(card: CardState, state: S)
   return (Object.keys(state) as (keyof CardState)[]).every((key) => card[key] === state[key])
 }
 
-const CARD_TYPES: CardType[] = ['quote', 'showcase']
+const CARD_TYPES: CardType[] = ['quote', 'showcase', 'definition']
 
 // The Card Type switcher (spec #33): the one control visible in BOTH modes —
 // Quote mode's only new control. Pressing a segment calls the store's
@@ -355,12 +358,16 @@ export function PresetsSection() {
   const { copy } = useUiCopy()
   const data = useCardStore((s) => s.card)
   const patchCard = useCardStore((s) => s.patchCard)
+  // A preset targets the Card Type its state switches to (undefined = quote):
+  // a preset that writes fields the current type never renders would be a
+  // lying control, so the grid only shows the current type's presets.
+  const visible = PRESETS.filter((p) => (p.state.cardType ?? 'quote') === data.cardType)
 
   return (
     <div className="flex flex-col gap-2">
       <FieldLabel aside={<Hint>{copy.presets_badge}</Hint>}>{copy.presets_label}</FieldLabel>
       <div className="flex flex-wrap gap-1.5">
-        {PRESETS.map((p) => {
+        {visible.map((p) => {
           const active = isPresetActive(data, p.state)
           return (
             <Button
@@ -478,13 +485,18 @@ export function StyleSection() {
   const data = useCardStore((s) => s.card)
   const update = useCardUpdate()
   const patchCard = useCardStore((s) => s.patchCard)
-  const isShowcase = useCardStore((s) => s.card.cardType === 'showcase')
+  // Which controls are honest to show is per-Card-Type policy (the
+  // capabilities map), not a showcase exception: Definition keeps the ratio
+  // but covers the theme with its photo, Showcase pins its ratio but keeps
+  // the theme.
+  const capabilities = CARD_TYPE_CAPABILITIES[data.cardType]
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Style Presets write Quote-only fields, so they are hidden entirely
-          in Showcase mode; the theme below stays (spec #33 story 26). */}
-      {!isShowcase && (
+      {/* Style Presets write Quote-only fields, so they render in Quote mode
+          only; the theme below stays for every theme-selectable type (spec
+          #33 story 26). */}
+      {capabilities.stylePresets && (
         <div className="flex flex-col gap-2">
           <FieldLabel>{copy.style_presets_label}</FieldLabel>
           <div className="grid grid-cols-2 gap-1.5">
@@ -501,10 +513,9 @@ export function StyleSection() {
           </div>
         </div>
       )}
-      {/* Showcase is always 1:1 and renders no headline, so the ratio and
-          headline controls would lie about what's editable; the theme stays
-          (spec #33 stories 24 and 26). */}
-      {!isShowcase && (
+      {/* Ratio-selectable types own the ratio control; Showcase pins 1:1
+          (spec #33 stories 24), and a pinned ratio is not editable. */}
+      {capabilities.ratioSelectable && (
         <Stack>
           <FieldLabel id="ratio-label">{copy.ratio_label}</FieldLabel>
           <SegmentedControl<AspectRatio>
@@ -522,24 +533,29 @@ export function StyleSection() {
       )}
 
       {/* Swatches show each theme's real card color (theme tokens are the
-          fill), with the caption carrying the name a color alone can't. */}
-      <Stack>
-        <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
-        <SwatchPicker<CardTheme>
-          aria-labelledby="theme-label"
-          value={data.theme}
-          onChange={(t) => update('theme', t)}
-          options={THEME_KEYS.map((theme) => ({
-            value: theme,
-            label: copy[`theme_${theme}`],
-            swatchClass: CARD_THEME_STYLES[theme].bg,
-          }))}
-        />
-      </Stack>
+          fill), with the caption carrying the name a color alone can't.
+          Definition covers the theme with its photo, so the swatches would
+          lie and stay hidden there. */}
+      {capabilities.themeSelectable && (
+        <Stack>
+          <FieldLabel id="theme-label">{copy.theme_label}</FieldLabel>
+          <SwatchPicker<CardTheme>
+            aria-labelledby="theme-label"
+            value={data.theme}
+            onChange={(t) => update('theme', t)}
+            options={THEME_KEYS.map((theme) => ({
+              value: theme,
+              label: copy[`theme_${theme}`],
+              swatchClass: CARD_THEME_STYLES[theme].bg,
+            }))}
+          />
+        </Stack>
+      )}
 
       {/* One label naming TWO controls (slider + typed entry): base-ui Field
-          is 1:1 label-to-control, so this row keeps aria-labelledby instead. */}
-      {!isShowcase && (
+          is 1:1 label-to-control, so this row keeps aria-labelledby instead.
+          Headline controls edit Quote-only fields. */}
+      {capabilities.headlineControls && (
         <>
           <Stack>
             <FieldLabel
@@ -636,6 +652,139 @@ export function HeadlineSection() {
         checked={data.boldSublines}
         onCheckedChange={(checked) => update('boldSublines', checked)}
       />
+    </div>
+  )
+}
+
+// A Definition Card's photos export at 1600×2000 (4:5 at 2.5×), so the
+// background ingest caps the long edge at 2000 instead of the screenshot cap
+// — the exported photo stays at native resolution rather than upscaling.
+const BACKGROUND_MAX_EDGE = 2000
+
+// The Definition Card's content (GLOSSARY.md): the three text tiers, the
+// background photo, and the scrim that keeps the white type legible over it.
+// Every field writes through patchDefinition's per-field undo rhythm.
+export function DefinitionSection() {
+  const { copy } = useUiCopy()
+  const definition = useCardStore((s) => s.card.definition)
+  const patchDefinition = useCardStore((s) => s.patchDefinition)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleBackgroundPick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    // Clear value so re-picking the same file still triggers onChange
+    event.target.value = ''
+    if (!file) return
+    try {
+      patchDefinition({
+        backgroundImageUrl: await ingestScreenshot(file, BACKGROUND_MAX_EDGE),
+      })
+    } catch (error) {
+      logDebug(
+        'DefinitionSection.handleBackgroundPick',
+        `failed to ingest "${file.name}" (${file.size} bytes)`,
+        error,
+      )
+      toast.error(copy.definition_bg_error)
+    }
+  }
+
+  // The slider is integer-stepped (ui/Slider); the stored 0..1 float maps to
+  // 0..100 at the control, so one drag tick is one point of darkness.
+  const scrim = definition?.scrimOpacity ?? DEFAULT_SCRIM_OPACITY
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Stack>
+        <FieldLabel htmlFor="inspector-definition-term">{copy.definition_term_label}</FieldLabel>
+        <input
+          id="inspector-definition-term"
+          value={definition?.term ?? ''}
+          onChange={(e) => patchDefinition({ term: e.target.value })}
+          className={`w-full ${fieldSurfaceClass}`}
+        />
+      </Stack>
+
+      <Stack>
+        <FieldLabel htmlFor="inspector-definition-phonetic">
+          {copy.definition_phonetic_label}
+        </FieldLabel>
+        <input
+          id="inspector-definition-phonetic"
+          value={definition?.phonetic ?? ''}
+          onChange={(e) => patchDefinition({ phonetic: e.target.value })}
+          className={`w-full ${fieldSurfaceClass}`}
+        />
+      </Stack>
+
+      <Stack>
+        <FieldLabel htmlFor="inspector-definition-observation">
+          {copy.definition_observation_label}
+        </FieldLabel>
+        <textarea
+          id="inspector-definition-observation"
+          rows={3}
+          value={definition?.observation ?? ''}
+          onChange={(e) => patchDefinition({ observation: e.target.value })}
+          className={TEXTAREA_FIELD_CLASS}
+        />
+      </Stack>
+
+      <Stack>
+        <FieldLabel htmlFor="inspector-definition-punchline">
+          {copy.definition_punchline_label}
+        </FieldLabel>
+        <textarea
+          id="inspector-definition-punchline"
+          rows={2}
+          value={definition?.punchline ?? ''}
+          onChange={(e) => patchDefinition({ punchline: e.target.value })}
+          className={TEXTAREA_FIELD_CLASS}
+        />
+      </Stack>
+
+      <Stack>
+        <FieldLabel>{copy.definition_background_label}</FieldLabel>
+        <div className="flex flex-col items-stretch gap-1">
+          <Button onClick={() => fileInputRef.current?.click()} variant="secondary" size="sm">
+            <Upload className="w-3 h-3" />
+            <span>{copy.change_photo}</span>
+          </Button>
+          {definition?.backgroundImageUrl &&
+            definition.backgroundImageUrl !== DEMO_BACKGROUND_URL && (
+              <Button
+                onClick={() => patchDefinition({ backgroundImageUrl: DEMO_BACKGROUND_URL })}
+                variant="ghost"
+                size="sm"
+              >
+                {copy.definition_bg_use_demo}
+              </Button>
+            )}
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleBackgroundPick}
+          accept="image/*"
+          className="hidden"
+        />
+      </Stack>
+
+      <Stack>
+        <FieldLabel
+          id="inspector-definition-scrim-label"
+          aside={<Hint>{Math.round(scrim * 100)}%</Hint>}
+        >
+          {copy.definition_scrim_label}
+        </FieldLabel>
+        <Slider
+          value={Math.round(scrim * 100)}
+          min={0}
+          max={100}
+          aria-labelledby="inspector-definition-scrim-label"
+          onValueChange={(v) => patchDefinition({ scrimOpacity: v / 100 })}
+        />
+      </Stack>
     </div>
   )
 }

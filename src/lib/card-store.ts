@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import type { Annotation, AnnotationSide, CardState, CardType, Shot } from '../types'
+import type {
+  Annotation,
+  AnnotationSide,
+  CardState,
+  CardType,
+  DefinitionContent,
+  Shot,
+} from '../types'
 import type { ShotFit, ShotFocus } from '../types'
 import { clampFocus, clampScale, shotFit } from './shot-fit'
 import { DEFAULT_CARD_STATE } from '../constants/presets'
@@ -22,6 +29,7 @@ interface CardStore {
   canUndo: boolean
   canRedo: boolean
   patchCard: (patch: Partial<CardState>) => void
+  patchDefinition: (patch: Partial<DefinitionContent>) => void
   resetCard: () => void
   undo: () => void
   redo: () => void
@@ -114,6 +122,29 @@ export const useCardStore = create<CardStore>((set) => ({
       const keys = Object.keys(patch)
       const coalesce = continuesEdit(keys.length === 1 ? keys[0] : null)
       const next = { ...state.card, ...patch }
+      return coalesce ? { card: next } : undoStep(state, next)
+    }),
+
+  // Definition edits mirror patchCard's rhythm through the nest: a
+  // single-field patch carries a nest-qualified coalesce key, so one typing
+  // burst per field and one scrim drag each fold into a single undo step
+  // while different fields never merge. The empty-field baseline only
+  // matters for a hand-seeded card with no nest — the factory and the
+  // reference preset always carry one.
+  patchDefinition: (patch) =>
+    set((state) => {
+      const keys = Object.keys(patch)
+      const coalesce = continuesEdit(keys.length === 1 ? `definition:${keys[0]}` : null)
+      const next = {
+        ...state.card,
+        definition: {
+          term: '',
+          observation: '',
+          punchline: '',
+          ...state.card.definition,
+          ...patch,
+        },
+      }
       return coalesce ? { card: next } : undoStep(state, next)
     }),
 

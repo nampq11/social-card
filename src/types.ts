@@ -2,7 +2,7 @@ export type AspectRatio = '1:1' | '4:5' | '16:9'
 
 export type CardTheme = 'white' | 'paper' | 'dark' | 'mist'
 
-export type CardType = 'quote' | 'showcase'
+export type CardType = 'quote' | 'showcase' | 'definition'
 
 // One uploaded screenshot in a Showcase Card's content, carrying a stable
 // identity (GLOSSARY.md "Shot"). Array order is upload order; the first Shot
@@ -46,6 +46,22 @@ export interface ShowcaseContent {
   annotations: Annotation[]
 }
 
+// All Definition-only Card Content (GLOSSARY.md "Definition Card"), nested
+// behind the cardType discriminator like the showcase nest (ADR 0004/0009):
+// a bold Term with its phonetic tag, an observation paragraph, and a
+// punchline, painted in white over a full-bleed background photo and a dark
+// scrim. The optional fields follow the absent-field-default pattern of Shot
+// adjustments (ADR 0005): absent means "never touched" and renders the
+// default — no phonetic tag, the factory background, DEFAULT_SCRIM_OPACITY.
+export interface DefinitionContent {
+  term: string
+  observation: string
+  punchline: string
+  phonetic?: string
+  backgroundImageUrl?: string
+  scrimOpacity?: number // 0..1, rendered as `?? DEFAULT_SCRIM_OPACITY`
+}
+
 export interface CardState {
   cardType: CardType
   headline: string
@@ -63,4 +79,5 @@ export interface CardState {
   boldSublines: boolean
   avatarGrayscale: boolean
   showcase?: ShowcaseContent
+  definition?: DefinitionContent
 }
