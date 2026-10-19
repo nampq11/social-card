@@ -1,15 +1,17 @@
-# Day 05 — Saturday Peak & The Before/After Showcase
+# Day 05 — Monday Reset & The Before/After Showcase
 
 > Fill **Results** + **Learnings** tonight — day-06 is written from what worked.
 > Day 4 proved: **Visual Cards work (122 views, 21 profile visits, +2 followers)**; **Text-only polls choke (4 views)**.
 > Day 5 Rule: **100% of posts must have a Card.** Never post text-only on Threads.
 > Language split: **Threads & Facebook = Vietnamese, X = English**.
-> Schedule: Weekend peak today is **Saturday 1 PM – 4 PM (90 viewers)** and evening **7 PM – 9:30 PM**. Space posts ≥5h apart to prevent cannibalization.
+> Schedule: Today is **Monday (Thứ Hai)** — weekday browsing habits apply.
+> Post A: Lunch break window (~11:45 – 12:15) or evening commute (~17:00 – 17:30).
+> Post B: Evening relax peak (~19:30 – 20:30). Space posts ≥5h apart to prevent cannibalization.
 > First Facebook cross-post lands today per platform roadmap.
 
 ## Threads — 2 posts today (Vietnamese)
 
-**Post A — ~13:30 (Thứ Bảy Peak Window: 1 PM – 4 PM), Build-in-public milestone card (topic tag: Social Card)**
+**Post A — ~11:45–12:15 (Giờ nghỉ trưa Thứ Hai) hoặc ~17:00 (Tan tầm), Build-in-public milestone card (topic tag: Social Card)**
 
 Caption:
 
