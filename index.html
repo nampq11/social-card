@@ -5,8 +5,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <!-- ?v=2 busts persistent browser favicon caches after the logo swap -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- Crawl meta is English-first (ADR 0008): share-card scrapers never
          run JS, and the in-page UI still defaults to Vietnamese. The
@@ -68,6 +70,18 @@
     <script>
       if (window.location.pathname === '/' || window.location.pathname === '') {
         window.history.replaceState(null, '', '/social-card')
+      }
+    </script>
+    <!-- WebSite structured data (ADR 0008): explicitly establishes site
+         identity for Google Search and crawlers to avoid inheriting the
+         parent domain name on shared subdomains. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Social Card",
+        "alternateName": ["Social Card Studio", "WorkBoost Social Card"],
+        "url": "https://workboost.qzz.io/social-card"
       }
     </script>
     <!-- Static FAQPage structured data: on a client-rendered page the head

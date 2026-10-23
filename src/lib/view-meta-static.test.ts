@@ -82,19 +82,51 @@ describe('index.html crawl surface', () => {
   it('links the hand-rendered home-screen icon', () => {
     expect(indexHtml).toMatch(/<link rel="apple-touch-icon" href="[^"]*"/)
   })
+  it('links standard raster and vector favicons for search crawlers and browsers', () => {
+    expect(indexHtml).toMatch(/<link rel="icon" href="\/favicon\.ico" sizes="48x48"/)
+    expect(indexHtml).toMatch(/<link rel="icon" type="image\/svg\+xml" href="\/favicon\.svg/)
+    expect(indexHtml).toMatch(
+      /<link rel="icon" type="image\/png" sizes="48x48" href="\/favicon-48x48\.png"/,
+    )
+  })
+
+  it('publishes WebSite structured data for Google site identity', () => {
+    const scripts = [
+      ...indexHtml.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g),
+    ]
+    const siteJson = scripts
+      .map(
+        (m) =>
+          JSON.parse(m[1]) as {
+            '@type': string
+            name?: string
+            url?: string
+            alternateName?: string[]
+          },
+      )
+      .find((j) => j['@type'] === 'WebSite')
+    if (!siteJson) throw new Error('no WebSite JSON-LD script in index.html')
+    expect(siteJson.name).toBe('Social Card')
+    expect(siteJson.url).toBe(canonicalUrl('landing'))
+    expect(siteJson.alternateName).toContain('Social Card Studio')
+  })
 
   it('mirrors the EN FAQ dictionary as FAQPage structured data', () => {
-    const jsonLdText = indexHtml.match(
-      /<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/,
-    )
-    if (!jsonLdText) throw new Error('no FAQPage JSON-LD script in index.html')
-    const jsonLd = JSON.parse(jsonLdText[1]) as {
-      '@type': string
-      mainEntity: { name: string; acceptedAnswer: { text: string } }[]
-    }
-    expect(jsonLd['@type']).toBe('FAQPage')
+    const scripts = [
+      ...indexHtml.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g),
+    ]
+    const faqJson = scripts
+      .map(
+        (m) =>
+          JSON.parse(m[1]) as {
+            '@type': string
+            mainEntity?: { name: string; acceptedAnswer: { text: string } }[]
+          },
+      )
+      .find((j) => j['@type'] === 'FAQPage')
+    if (!faqJson || !faqJson.mainEntity) throw new Error('no FAQPage JSON-LD script in index.html')
     // Order-inclusive: FAQ order is user-visible on the page too.
-    expect(jsonLd.mainEntity.map((q) => [q.name, q.acceptedAnswer.text])).toEqual(
+    expect(faqJson.mainEntity.map((q) => [q.name, q.acceptedAnswer.text])).toEqual(
       landingDictionaries.en.faq_items.map((item) => [item.question, item.answer]),
     )
   })
@@ -114,10 +146,12 @@ describe('public crawl files', () => {
     expect(projectFile('../../public/robots.txt')).toContain(`Sitemap: ${SITE_URL}/sitemap.xml`)
   })
 
-  it('ships the og preview and home-screen icon assets', () => {
+  it('ships the og preview, home-screen icon, and favicon assets', () => {
     // Tags pointing at a missing file are a silent 404 preview — fail here
     // instead of in production.
     expect(existsSync(new URL('../../public/og.png', import.meta.url))).toBe(true)
     expect(existsSync(new URL('../../public/apple-touch-icon.png', import.meta.url))).toBe(true)
+    expect(existsSync(new URL('../../public/favicon.ico', import.meta.url))).toBe(true)
+    expect(existsSync(new URL('../../public/favicon-48x48.png', import.meta.url))).toBe(true)
   })
 })
