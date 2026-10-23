@@ -19,6 +19,14 @@
       "destination": "/favicon.svg"
     },
     {
+      "source": "/social-card/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "source": "/social-card/favicon-48x48.png",
+      "destination": "/favicon-48x48.png"
+    },
+    {
       "source": "/social-card/og.png",
       "destination": "/og.png"
     },
